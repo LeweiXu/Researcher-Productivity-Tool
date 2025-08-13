@@ -14,6 +14,9 @@ Nowadays, researchers in top universities are required to complete their researc
 3. The University of Sydney: https://ses.library.usyd.edu.au/
 4. The University of Queensland: https://espace.library.uq.edu.au/
 5. The University of New South Wales: https://unsworks.unsw.edu.au/
-6. Monash University: https://bridges.monash.edu/
-7. The University of Western Australia: https://research-repository.uwa.edu.au/
-8. The University of Adelaide: https://digital.library.adelaide.edu.au/
+6. Monash University
+   - https://research.monash.edu/en/organisations/department-of-accounting/persons/ (Accounting)
+   - https://research.monash.edu/en/organisations/banking-finance/persons/ (Finance)
+   - https://research.monash.edu/en/organisations/centre-for-quantitative-finance-and-investment-strategies/persons/ (Finance)
+8. The University of Western Australia: https://research-repository.uwa.edu.au/
+9. The University of Adelaide: https://digital.library.adelaide.edu.au/
