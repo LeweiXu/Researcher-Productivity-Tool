@@ -25,3 +25,5 @@ Nowadays, researchers in top universities are required to complete their researc
    - https://research-repository.uwa.edu.au/en/organisations/uwa-business-school
 8. The University of Adelaide: https://digital.library.adelaide.edu.au/
    - https://digital.library.adelaide.edu.au/browse/author?scope=9952f540-778a-45dd-a309-6604e8753669 (Business)
+   - https://business.adelaide.edu.au/research/accounting#lead-researchers (lead accounting reasearchers)
+   - https://business.adelaide.edu.au/research/finance-and-business-analytics (finance and business analytics staff members)
