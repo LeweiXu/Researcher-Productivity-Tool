@@ -19,7 +19,7 @@ Nowadays, researchers in top universities are required to complete their researc
     - https://business.uq.edu.au/research/research-areas/accounting (Accounting)
     - https://business.uq.edu.au/research/research-areas/finance (Finance)
 7. The University of New South Wales
-    - https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BBanking%2Band%2BFinance&sort=relevance&startRank=1&numRanks=12
+    - https://research.unsw.edu.au/researcher?faculty=Business
     - https://unsworks.unsw.edu.au/entities/orgunit/4751a553-5213-4e75-a91f-84d9ec3841e8?spc.sf=dc.date.issued&spc.sd=DESC&spc.rpp=100 (business school, no persons page)
 9. Monash University
     - https://research.monash.edu/en/organisations/department-of-accounting/persons/ (Accounting)
