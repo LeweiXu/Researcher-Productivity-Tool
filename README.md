@@ -11,7 +11,7 @@ Nowadays, researchers in top universities are required to complete their researc
     - https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953 (Finance)
     - https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951 (Accounting)
 2. The Australian National University: https://openresearch-repository.anu.edu.au/
-    - https://openresearch-repository.anu.edu.au/browse/type?scope=428d70c5-9362-4b98-b4cb-f92ee03b64c4&value=Journal%20article&bbm.return=1&bbm.page=1&bbm.rpp=100 (Can't find specific field)
+    - https://researchportalplus.anu.edu.au/en/organisations/anu-college-of-business-and-economics/persons/ (business & economics)
 4. The University of Sydney: https://ses.library.usyd.edu.au/
     - https://ses.library.usyd.edu.au/discover?filtertype_1=department&filter_relational_operator_1=contains&filter_1=business+school&submit_apply_filter=&query= (business school, no persons page)
 5. The University of Queensland: https://espace.library.uq.edu.au/
