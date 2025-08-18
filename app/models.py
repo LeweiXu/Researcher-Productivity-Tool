@@ -2,46 +2,47 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text, Table
 from sqlalchemy.orm import relationship
 from app.database import Base  # <-- Import Base from main.py
 
-# Association table for many-to-many relationship between Researcher and Article
-researcher_article_association = Table(
-    "researcher_article_association",
+# Association table for many-to-many relationship between Researcher and Publications
+researcher_publication_association = Table(
+    "Researcher_publication_association",
     Base.metadata,
-    Column("researcher_id", Integer, ForeignKey("researchers.id"), primary_key=True),
-    Column("article_id", Integer, ForeignKey("articles.id"), primary_key=True)
+    Column("researcher_id", Integer, ForeignKey("Researchers.id"), primary_key=True),
+    Column("publication_id", Integer, ForeignKey("Publications.id"), primary_key=True)
 )
 
-class Researcher(Base):
-    __tablename__ = "researchers"
+class Researchers(Base):
+    __tablename__ = "Researchers"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     university = Column(String, nullable=False)
     profile_url = Column(String, nullable=True)
-    articles = relationship(
-        "Article",
-        secondary="researcher_article_association",
-        back_populates="researchers"
+    publications = relationship(
+        "Publications",
+        secondary="Researcher_publication_association",
+        back_populates="Researchers"
     )
 
-class Journal(Base):
-    __tablename__ = "journals"
+class Journals(Base):
+    __tablename__ = "Journals"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     abdc_rank = Column(String, nullable=True)
     impact_factor = Column(String, nullable=True)
     publisher = Column(String, nullable=True)
-    articles = relationship("Article", back_populates="journal")
+    publications = relationship("Publications", back_populates="Journal")
 
-class Article(Base):
-    __tablename__ = "articles"
+class Publications(Base):
+    __tablename__ = "Publications"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     date = Column(Date, nullable=True)
-    article_type = Column(String, nullable=True)
-    article_url = Column(String, nullable=False)
-    journal_id = Column(Integer, ForeignKey("journals.id"), nullable=True)
+    publication_type = Column(String, nullable=True)
+    publication_url = Column(String, nullable=False)
+    journal_name = Column(String, nullable=False)
+    journal_id = Column(Integer, ForeignKey("Journals.id"), nullable=True)
     researchers = relationship(
-        "Researcher",
-        secondary="researcher_article_association",
-        back_populates="articles"
+        "Researchers",
+        secondary="Researcher_publication_association",
+        back_populates="Publications"
     )
-    journal = relationship("Journal", back_populates="articles")
+    journal = relationship("Journals", back_populates="Publications")
