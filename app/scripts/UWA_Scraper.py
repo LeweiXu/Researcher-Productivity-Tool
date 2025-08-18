@@ -105,7 +105,14 @@ def write_to_db(publications_info, name, profile_url):
             title, year, type_val, journal, publication_url = publication
             db_publication = db.query(Publications).filter_by(title=title, publication_url=publication_url).first()
             if not db_publication:
-                db_publication = Publications(title=title, year=year, publication_type=type_val, journal_name=journal, publication_url=publication_url)
+                db_publication = Publications(
+                    title=title,
+                    year=year,
+                    publication_type=type_val,
+                    journal_name=journal,
+                    publication_url=publication_url,
+                    researcher_id=researcher.id
+                )
                 db.add(db_publication)
                 db.commit()
                 db.refresh(db_publication)

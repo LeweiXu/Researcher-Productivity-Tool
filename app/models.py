@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text, Table
 from sqlalchemy.orm import relationship
-from app.database import Base  # <-- Import Base from main.py
+from app.database import Base
 
 # Association table for many-to-many relationship between Researcher and Publications
 researcher_publication_association = Table(
@@ -39,6 +39,7 @@ class Publications(Base):
     publication_type = Column(String, nullable=True)
     publication_url = Column(String, nullable=False)
     journal_name = Column(String, nullable=False)
+    researcher_id = Column(Integer, ForeignKey("Researchers.id"), nullable=False)
     journal_id = Column(Integer, ForeignKey("Journals.id"), nullable=True)
     researcher = relationship(
         "Researchers",
