@@ -12,6 +12,7 @@ Nowadays, researchers in top universities are required to complete their researc
     - https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951 (Accounting)
 2. The Australian National University
     - https://researchportalplus.anu.edu.au/en/organisations/anu-college-of-business-and-economics/persons/ (business & economics)
+    - https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics/persons/
 4. The University of Sydney
     - https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=-1&Academic=true&HDR=true&+departmentCode=-1 (business school profiles)
     - https://ses.library.usyd.edu.au/discover?filtertype_1=department&filter_relational_operator_1=contains&filter_1=business+school&submit_apply_filter=&query= (business school, no persons page)
