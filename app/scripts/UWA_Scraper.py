@@ -152,7 +152,7 @@ def main():
         print(f"Found {len(profile_urls)} profile URLs")
 
     csv_header = ["Title", "Date", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
-    csv_filename = "./app/csv_files/UWA.csv"
+    csv_filename = "./app/files/UWA.csv"
     with open(csv_filename, mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
