@@ -27,8 +27,7 @@ Nowadays, researchers in top universities are required to complete their researc
     - https://research.monash.edu/en/organisations/banking-finance/persons/ (Finance)
     - https://research.monash.edu/en/organisations/centre-for-quantitative-finance-and-investment-strategies/persons/ (Finance)
 10. The University of Western Australia
-    - https://research-repository.uwa.edu.au/en/organisations/chief-finance-office
-    - https://research-repository.uwa.edu.au/en/organisations/uwa-business-school
+    - https://www.uwa.edu.au/schools/business/accounting-and-finance
 11. The University of Adelaide
     - https://digital.library.adelaide.edu.au/browse/author?scope=9952f540-778a-45dd-a309-6604e8753669 (Business)
     - https://business.adelaide.edu.au/research/accounting#lead-researchers (lead accounting reasearchers)
