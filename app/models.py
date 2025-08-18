@@ -16,10 +16,10 @@ class Researchers(Base):
     name = Column(String, nullable=False)
     university = Column(String, nullable=False)
     profile_url = Column(String, nullable=True)
-    publications = relationship(
+    publication = relationship(
         "Publications",
         secondary="Researcher_publication_association",
-        back_populates="researchers"
+        back_populates="researcher"
     )
 
 class Journals(Base):
@@ -29,20 +29,20 @@ class Journals(Base):
     abdc_rank = Column(String, nullable=True)
     impact_factor = Column(String, nullable=True)
     publisher = Column(String, nullable=True)
-    publications = relationship("Publications", back_populates="journal")
+    publication = relationship("Publications", back_populates="journal")
 
 class Publications(Base):
     __tablename__ = "Publications"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    date = Column(Date, nullable=True)
+    year = Column(Integer, nullable=True)
     publication_type = Column(String, nullable=True)
     publication_url = Column(String, nullable=False)
     journal_name = Column(String, nullable=False)
     journal_id = Column(Integer, ForeignKey("Journals.id"), nullable=True)
-    researchers = relationship(
+    researcher = relationship(
         "Researchers",
         secondary="Researcher_publication_association",
-        back_populates="publications"
+        back_populates="publication"
     )
-    journal = relationship("Journals", back_populates="publications")
+    journal = relationship("Journals", back_populates="publication")

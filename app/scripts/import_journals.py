@@ -1,5 +1,5 @@
 import pandas as pd
-from app.models import Journal
+from app.models import Journals
 from app.main import SessionLocal
 
 # Path to the CSV file
@@ -21,9 +21,9 @@ def import_journals():
     try:
         for _, row in df.iterrows():
             # Check if journal already exists
-            existing = session.query(Journal).filter_by(name=row['name']).first()
+            existing = session.query(Journals).filter_by(name=row['name']).first()
             if not existing:
-                journal = Journal(
+                journal = Journals(
                     name=row['name'],
                     abdc_rank=row['abdc_rank'],
                     impact_factor=None,

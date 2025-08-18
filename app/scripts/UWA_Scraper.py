@@ -44,9 +44,9 @@ def scrape_publications(profile_url, driver):
             # Year
             try:
                 date_span = div.find_element(By.CSS_SELECTOR, "span.date")
-                date = date_span.text.strip()
+                year = date_span.text.strip()[-4:]
             except Exception:
-                date = ""
+                year = ""
             # Type
             try:
                 type_span = div.find_element(By.CSS_SELECTOR, "span.type_classification_parent")
@@ -58,12 +58,12 @@ def scrape_publications(profile_url, driver):
             try:
                 if "Contribution to journal" in type_val:
                     journal_span = div.find_element(By.CSS_SELECTOR, "span.journal a span")
-                    journal = journal_span.text.strip()
+                    journal = journal_span.text.strip()[:-1] # Remove trailing full stop
                 else:
                     journal = "N/A"
             except Exception:
                 journal = "N/A"
-            publications_info.append([title, date, type_val, journal, publication_url])
+            publications_info.append([title, year, type_val, journal, publication_url])
             print(f"Found publication: {title}")
         page += 1
     return name, publications_info
@@ -102,24 +102,16 @@ def write_to_db(publications_info, name, profile_url):
             db.commit()
             db.refresh(researcher)
         for publication in publications_info:
-            title, date_str, type_val, journal, publication_url = publication
-            # Parse date string to datetime.date or None
-            date_obj = None
-            if date_str:
-                try:
-                    # Expecting format '01 Jan 2025'
-                    date_obj = datetime.datetime.strptime(date_str, "%d %b %Y").date()
-                except Exception:
-                    date_obj = None
+            title, year, type_val, journal, publication_url = publication
             db_publication = db.query(Publications).filter_by(title=title, publication_url=publication_url).first()
             if not db_publication:
-                db_publication = Publications(title=title, date=date_obj, publication_type=type_val, journal_name=journal, publication_url=publication_url)
+                db_publication = Publications(title=title, year=year, publication_type=type_val, journal_name=journal, publication_url=publication_url)
                 db.add(db_publication)
                 db.commit()
                 db.refresh(db_publication)
             # Link researcher and publication (if not already linked)
-            if db_publication not in researcher.publications:
-                researcher.publications.append(db_publication)
+            if db_publication not in researcher.publication:
+                researcher.publication.append(db_publication)
                 db.commit()
     finally:
         db.close()
@@ -136,7 +128,7 @@ def update():
     profile_urls = find_profile_urls("https://www.uwa.edu.au/schools/business/accounting-and-finance", driver)
     print(f"Found {len(profile_urls)} profile URLs")
 
-    csv_header = ["Title", "Date", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
+    csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
     csv_filename = "./app/files/UWA.csv"
     with open(csv_filename, mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
