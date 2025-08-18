@@ -19,7 +19,7 @@ class Researchers(Base):
     publications = relationship(
         "Publications",
         secondary="Researcher_publication_association",
-        back_populates="Researchers"
+        back_populates="researchers"
     )
 
 class Journals(Base):
@@ -29,7 +29,7 @@ class Journals(Base):
     abdc_rank = Column(String, nullable=True)
     impact_factor = Column(String, nullable=True)
     publisher = Column(String, nullable=True)
-    publications = relationship("Publications", back_populates="Journal")
+    publications = relationship("Publications", back_populates="journal")
 
 class Publications(Base):
     __tablename__ = "Publications"
@@ -43,6 +43,6 @@ class Publications(Base):
     researchers = relationship(
         "Researchers",
         secondary="Researcher_publication_association",
-        back_populates="Publications"
+        back_populates="publications"
     )
-    journal = relationship("Journals", back_populates="Publications")
+    journal = relationship("Journals", back_populates="publications")

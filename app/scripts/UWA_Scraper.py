@@ -1,5 +1,5 @@
 from app.main import SessionLocal
-from app.models import Researcher, Article
+from app.models import Researchers, Publications
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -8,10 +8,10 @@ import time
 import csv
 import datetime
 
-def scrape_articles(profile_url, driver):
+def scrape_publications(profile_url, driver):
     """
-    Finds article info for a given researcher
-    Returns: (name, articles_info) where articles_info is a list of [Title, Date, Type, Journal, Article URL]
+    Finds publication info for a given researcher
+    Returns: (name, publications_info) where publications_info is a list of [Title, Date, Type, Journal, Article URL]
     """
     driver.get(profile_url)
     time.sleep(2)
@@ -23,24 +23,24 @@ def scrape_articles(profile_url, driver):
             name = driver.find_element(By.CSS_SELECTOR, "h1").text.strip()
         except Exception:
             name = ""
-    articles_info = []
+    publications_info = []
     page = 0
     while True:
         page_url = f"{profile_url}/publications/?page={page}"
         driver.get(page_url)
         time.sleep(2)
-        article_divs = driver.find_elements(By.CSS_SELECTOR, "div.rendering_researchoutput_portal-short")
-        if not article_divs:
+        publication_divs = driver.find_elements(By.CSS_SELECTOR, "div.rendering_researchoutput_portal-short")
+        if not publication_divs:
             break
-        for div in article_divs:
+        for div in publication_divs:
             # Title and URL
             try:
                 a_tag = div.find_element(By.CSS_SELECTOR, "h3.title a")
                 title = a_tag.text.strip()
-                article_url = a_tag.get_attribute("href")
+                publication_url = a_tag.get_attribute("href")
             except Exception:
                 title = ""
-                article_url = ""
+                publication_url = ""
             # Year
             try:
                 date_span = div.find_element(By.CSS_SELECTOR, "span.date")
@@ -63,54 +63,46 @@ def scrape_articles(profile_url, driver):
                     journal = "N/A"
             except Exception:
                 journal = "N/A"
-            articles_info.append([title, date, type_val, journal, article_url])
-            print(f"Found article: {title}")
+            publications_info.append([title, date, type_val, journal, publication_url])
+            print(f"Found publication: {title}")
         page += 1
-    return name, articles_info
+    return name, publications_info
 
-def find_profile_urls(org, driver):
-    """Finds the urls to profiles on an organization main page, handling pagination."""
+def find_profile_urls(page_url, driver):
+    """Finds all researcher profile URLs on the page using Selenium by matching href prefix."""
     profile_urls = set()
-    page = 0
-    while True:
-        page_url = f"{org}?page={page}"
-        driver.get(page_url)
-        time.sleep(2)
-        urls = driver.find_elements(By.CSS_SELECTOR, "ul.grid-results li.grid-result-item h3.title a")
-        found_on_page = 0
-        for url in urls:
-            href = url.get_attribute("href")
-            if href and href.startswith("https://research-repository.uwa.edu.au/en/persons/"):
-                profile_urls.add(href)
-                found_on_page += 1
-        if found_on_page == 0:
-            break
-        page += 1
+    driver.get(page_url)
+    time.sleep(2)
+    a_tags = driver.find_elements(By.TAG_NAME, "a")
+    for a in a_tags:
+        href = a.get_attribute("href")
+        if href and href.startswith("https://research-repository.uwa.edu.au/en/persons/"):
+            profile_urls.add(href)
     return list(profile_urls)    
 
-def write_to_csv(articles_info, name, profile_url, csv_filename):
+def write_to_csv(publications_info, name, profile_url, csv_filename):
     print("Writing scraped data to CSV")
     with open(csv_filename, mode="a", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
-        for article in articles_info:
-            csv_write = article.copy()
+        for publication in publications_info:
+            csv_write = publication.copy()
             csv_write.append(name)
             csv_write.append(profile_url)
             writer.writerow(csv_write)
 
-def write_to_db(articles_info, name, profile_url):
+def write_to_db(publications_info, name, profile_url):
     print("Writing scraped data to database")
     db = SessionLocal()
     try:
         # Check if researcher exists
-        researcher = db.query(Researcher).filter_by(name=name, profile_url=profile_url).first()
+        researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
         if not researcher:
-            researcher = Researcher(name=name, university="UWA", profile_url=profile_url)
+            researcher = Researchers(name=name, university="UWA", profile_url=profile_url)
             db.add(researcher)
             db.commit()
             db.refresh(researcher)
-        for article in articles_info:
-            title, date_str, type_val, journal, article_url = article
+        for publication in publications_info:
+            title, date_str, type_val, journal, publication_url = publication
             # Parse date string to datetime.date or None
             date_obj = None
             if date_str:
@@ -119,37 +111,30 @@ def write_to_db(articles_info, name, profile_url):
                     date_obj = datetime.datetime.strptime(date_str, "%d %b %Y").date()
                 except Exception:
                     date_obj = None
-            db_article = db.query(Article).filter_by(title=title, article_url=article_url).first()
-            if not db_article:
-                db_article = Article(title=title, date=date_obj, article_type=type_val, article_url=article_url)
-                db.add(db_article)
+            db_publication = db.query(Publications).filter_by(title=title, publication_url=publication_url).first()
+            if not db_publication:
+                db_publication = Publications(title=title, date=date_obj, publication_type=type_val, journal_name=journal, publication_url=publication_url)
+                db.add(db_publication)
                 db.commit()
-                db.refresh(db_article)
-            # Link researcher and article (if not already linked)
-            if db_article not in researcher.articles:
-                researcher.articles.append(db_article)
+                db.refresh(db_publication)
+            # Link researcher and publication (if not already linked)
+            if db_publication not in researcher.publications:
+                researcher.publications.append(db_publication)
                 db.commit()
     finally:
         db.close()
 
-def main():
+def update():
     options = uc.ChromeOptions()
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1280,800")
     options.add_argument("--lang=en-US,en")
     # options.add_argument("--headless")  # Uncomment for headless mode
-
     driver = uc.Chrome(version_main=138, options=options)
 
-    organizations = ['https://research-repository.uwa.edu.au/en/organisations/chief-finance-office/persons/']
-                    #  'https://research-repository.uwa.edu.au/en/organisations/uwa-business-school/persons/'
-    
-    profile_urls = []
-    for org in organizations:
-        print(f"Searching for profile URLs for field: {org}")
-        profile_urls.extend(find_profile_urls(org, driver))
-        print(f"Found {len(profile_urls)} profile URLs")
+    profile_urls = find_profile_urls("https://www.uwa.edu.au/schools/business/accounting-and-finance", driver)
+    print(f"Found {len(profile_urls)} profile URLs")
 
     csv_header = ["Title", "Date", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
     csv_filename = "./app/files/UWA.csv"
@@ -160,12 +145,12 @@ def main():
     for profile_url in profile_urls:
         print(f"Scraping profile: {profile_url}")
         time.sleep(5)
-        name, articles_info = scrape_articles(profile_url, driver)
-        print(f"Found {len(articles_info)} articles in {profile_url}")
+        name, publications_info = scrape_publications(profile_url, driver)
+        print(f"Found {len(publications_info)} publications in {profile_url}")
 
-        write_to_csv(articles_info, name, profile_url, csv_filename)
-        write_to_db(articles_info, name, profile_url)
+        write_to_csv(publications_info, name, profile_url, csv_filename)
+        write_to_db(publications_info, name, profile_url)
 
 # Example usage:
 if __name__ == "__main__":
-    main()
+    update()
