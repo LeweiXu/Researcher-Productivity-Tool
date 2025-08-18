@@ -10,25 +10,25 @@ Nowadays, researchers in top universities are required to complete their researc
 1. The University of Melbourne
     - https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953 (Finance)
     - https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951 (Accounting)
-2. The Australian National University: https://openresearch-repository.anu.edu.au/
+2. The Australian National University
     - https://researchportalplus.anu.edu.au/en/organisations/anu-college-of-business-and-economics/persons/ (business & economics)
-4. The University of Sydney: https://ses.library.usyd.edu.au/
+4. The University of Sydney
     - https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=-1&Academic=true&HDR=true&+departmentCode=-1 (business school profiles)
     - https://ses.library.usyd.edu.au/discover?filtertype_1=department&filter_relational_operator_1=contains&filter_1=business+school&submit_apply_filter=&query= (business school, no persons page)
-6. The University of Queensland: https://espace.library.uq.edu.au/
+6. The University of Queensland
     - https://business.uq.edu.au/research/research-areas/accounting (Accounting)
     - https://business.uq.edu.au/research/research-areas/finance (Finance)
-7. The University of New South Wales: https://unsworks.unsw.edu.au/
-   - https://research.unsw.edu.au/researcher?faculty=Business (business school profiles)
-   - https://unsworks.unsw.edu.au/entities/orgunit/4751a553-5213-4e75-a91f-84d9ec3841e8?spc.sf=dc.date.issued&spc.sd=DESC&spc.rpp=100 (business school, no persons page)
+7. The University of New South Wales
+    - https://research.unsw.edu.au/researcher?faculty=Business (business school profiles)
+    - https://unsworks.unsw.edu.au/entities/orgunit/4751a553-5213-4e75-a91f-84d9ec3841e8?spc.sf=dc.date.issued&spc.sd=DESC&spc.rpp=100 (business school, no persons page)
 9. Monash University
-   - https://research.monash.edu/en/organisations/department-of-accounting/persons/ (Accounting)
-   - https://research.monash.edu/en/organisations/banking-finance/persons/ (Finance)
-   - https://research.monash.edu/en/organisations/centre-for-quantitative-finance-and-investment-strategies/persons/ (Finance)
-10. The University of Western Australia:
-   - https://research-repository.uwa.edu.au/en/organisations/chief-finance-office
-   - https://research-repository.uwa.edu.au/en/organisations/uwa-business-school
-11. The University of Adelaide: https://digital.library.adelaide.edu.au/
-   - https://digital.library.adelaide.edu.au/browse/author?scope=9952f540-778a-45dd-a309-6604e8753669 (Business)
-   - https://business.adelaide.edu.au/research/accounting#lead-researchers (lead accounting reasearchers)
-   - https://business.adelaide.edu.au/research/finance-and-business-analytics (finance and business analytics staff members)
+    - https://research.monash.edu/en/organisations/department-of-accounting/persons/ (Accounting)
+    - https://research.monash.edu/en/organisations/banking-finance/persons/ (Finance)
+    - https://research.monash.edu/en/organisations/centre-for-quantitative-finance-and-investment-strategies/persons/ (Finance)
+10. The University of Western Australia
+    - https://research-repository.uwa.edu.au/en/organisations/chief-finance-office
+    - https://research-repository.uwa.edu.au/en/organisations/uwa-business-school
+11. The University of Adelaide
+    - https://digital.library.adelaide.edu.au/browse/author?scope=9952f540-778a-45dd-a309-6604e8753669 (Business)
+    - https://business.adelaide.edu.au/research/accounting#lead-researchers (lead accounting reasearchers)
+    - https://business.adelaide.edu.au/research/finance-and-business-analytics (finance and business analytics staff members)
