@@ -1,6 +1,6 @@
 import pandas as pd
 from app.models import Journals
-from app.main import SessionLocal
+from app.database import SessionLocal
 
 # Path to the CSV file
 CSV_PATH = "./app/files/2022 JQL.csv"

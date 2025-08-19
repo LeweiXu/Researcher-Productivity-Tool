@@ -1,4 +1,4 @@
-from app.main import SessionLocal
+from app.database import SessionLocal
 from app.models import Publications, Journals
 from fuzzywuzzy import process
 
