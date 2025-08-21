@@ -79,7 +79,8 @@ def openAlex(title, year, author_id = None, institution_id = None):
             match = re.search(r'W\d+', openalex_id)
             if match:
                 return f"https://openalex.org/{match.group(0)}"
-        return ""
+        else:
+            return f"https://www.google.com/search?q={title}"
     except Exception as e:
         print("Error:", e)
         return ""
