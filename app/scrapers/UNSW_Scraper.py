@@ -194,7 +194,7 @@ def profile(page_url, driver):
 
 
 # ---------------- Main Function ----------------
-def main():
+def scrape_UNSW():
     # start_time = time.time()  # Start timer for testing purpose
 
     driver = webdriver.Chrome()
@@ -218,21 +218,28 @@ def main():
             start_rank += num_ranks
             time.sleep(1)
 
-    csv_filename = "UNSW.csv"
-    csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
-    with open(csv_filename, mode="w", newline='', encoding="utf-8-sig") as f:
-        writer = csv.writer(f)
-        writer.writerow(csv_header)
-        for url in profile_urls:
-            name, publications_info = scraping(url, driver)
-            for pub in publications_info:
-                writer.writerow(pub + [name, url])
+    all_data = []
+    for url in profile_urls:
+        name, publications_info = scraping(url, driver)
+        for pub in publications_info:
+            all_data.append(pub + [name, url])
+
+    # csv_filename = "UNSW.csv"
+    # csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
+    # with open(csv_filename, mode="w", newline='', encoding="utf-8-sig") as f:
+    #     writer = csv.writer(f)
+    #     writer.writerow(csv_header)
+    #     for url in profile_urls:
+    #         name, publications_info = scraping(url, driver)
+    #         for pub in publications_info:
+    #             writer.writerow(pub + [name, url])
     
     driver.quit()
     # end_time = time.time()  # End timer
     # elapsed = end_time - start_time
     print("Scraping complete. Data saved to UNSW.csv")
     # print(f"Elapsed time: {elapsed:.2f} seconds")
+    return all_data
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
