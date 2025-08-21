@@ -27,6 +27,7 @@ def match_journals(threshold=95, force=False, university="all"):
     finally:
         db.close()
 
+# # Rapidfuzz Implementation by Frank
 # def rank_lookup(journal: Optional[str], names: List[str], ranks: List[str]) -> Optional[str]:
 #     """Return the ranking string for the given journal, if matched; else None."""
 #     if not journal or not names:
