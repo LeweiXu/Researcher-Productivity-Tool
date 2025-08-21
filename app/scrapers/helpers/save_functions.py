@@ -22,15 +22,15 @@ def write_to_db(all_data, university):
     try:
         for row in all_data:
             title, year, type_val, journal, publication_url, name, profile_url = row
-            # Check if researcher exists
+            # Don't add researcher if same Name and Profile URL
             researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
             if not researcher:
                 researcher = Researchers(name=name, university=university, profile_url=profile_url)
                 db.add(researcher)
                 db.commit()
                 db.refresh(researcher)
-            # Add publication if not exists
-            db_publication = db.query(Publications).filter_by(title=title, publication_url=publication_url).first()
+            # Don't add publication if same Title and Researcher
+            db_publication = db.query(Publications).filter_by(title=title, researcher_id=researcher.id).first()
             if not db_publication:
                 db_publication = Publications(
                     title=title,

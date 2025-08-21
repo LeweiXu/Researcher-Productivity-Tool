@@ -38,7 +38,7 @@ class Publications(Base):
     year = Column(Integer, nullable=True)
     publication_type = Column(String, nullable=True)
     publication_url = Column(String, nullable=True)
-    journal_name = Column(String, nullable=False)
+    journal_name = Column(String, nullable=True)
     researcher_id = Column(Integer, ForeignKey("Researchers.id"), nullable=False)
     journal_id = Column(Integer, ForeignKey("Journals.id"), nullable=True)
     researcher = relationship(
