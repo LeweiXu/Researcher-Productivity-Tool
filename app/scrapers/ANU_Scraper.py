@@ -1,7 +1,5 @@
 import undetected_chromedriver as uc
 from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
-from app.scrapers.helpers.save_functions import write_to_csv, write_to_db
-
 
 def scrape_ANU():
     options = uc.ChromeOptions()
