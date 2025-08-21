@@ -148,16 +148,16 @@ def parse_researcher_profile(html: str, profile_url : str):
             tds = row.find_all("td")
             if len(tds) < 2:
                 continue
-            year = tds[0].get_text(strip=True)
+            year_raw = tds[0].get_text(strip=True)
+            year = year_raw if year_raw and year_raw != "-" else None
             citation_td = tds[1]
-            # Get citation text (span or direct)
             citation_span = citation_td.find("span")
             citation_text = citation_span.get_text(" ", strip=True) if citation_span else citation_td.get_text(" ", strip=True)
-            # Extract title: after the year in parentheses and full stop
+            # Extract title: after the year in parentheses and full stop, support (n.d.) as well
             title = ""
-            m = re.search(r"\(\d{4}\)\.\s*(.*?)(?:\.|<)", citation_text)
+            m = re.search(r"\((\d{4}|n\.d\.)\)\.\s*(.*?)(?:\.|<)", citation_text)
             if m:
-                title = m.group(1).strip()
+                title = m.group(2).strip()
             # Journal Name: first <i> after the title
             journal_name = ""
             i_tags = citation_td.find_all("i")
@@ -168,8 +168,6 @@ def parse_researcher_profile(html: str, profile_url : str):
             a_tag = citation_td.find("a", href=True)
             if a_tag:
                 article_url = a_tag["href"]
-            if article_url == "":
-                article_url = f"https://www.google.com/search?q={title}"
             publications.append([title, year, pub_type, journal_name, article_url, researcher_name, profile_url])
     return publications
 

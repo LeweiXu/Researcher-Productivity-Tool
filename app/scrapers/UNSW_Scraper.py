@@ -80,7 +80,7 @@ def openAlex(title, year, author_id = None, institution_id = None):
             if match:
                 return f"https://openalex.org/{match.group(0)}"
         else:
-            return f"https://www.google.com/search?q={title}"
+            return ""
     except Exception as e:
         print("Error:", e)
         return ""

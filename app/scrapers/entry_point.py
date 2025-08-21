@@ -6,24 +6,30 @@ from app.scrapers.UA_Scraper import scrape_UA
 from app.scrapers.helpers.save_functions import write_to_csv, write_to_db
 from app.scrapers.helpers.journal_matching import match_journals
 import csv
+import re
+
+# NOTE: Scrapers return a list of lists in the format ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL"]
 
 def standardize(data):
     # Data returned from scrapers is raw data, need to standardize format 
     # E.g. (Publication Type --> "Journal Article", "Contribution to Journal" are the same thing)
-    # E.g. (Researcher Name --> Strip Titles Dr, Proffessor etc.)
+    # E.g. (Researcher Name --> Strip Titles Dr, Professor etc.)
+    title_pattern = re.compile(r"^(Dr\.?|Associate Professor|Professor|Ms\.?|Mr\.?|Mrs\.?|Lecturer)\s+", re.IGNORECASE)
     for row in data:
         for i, element in enumerate(row):
             if element == "":
                 row[i] = None
+        if len(row) > 5 and row[5]:
+            row[5] = title_pattern.sub("", row[5]).strip()
 
 def update_all(csv=True, db=True, match=True):
     update_UWA(csv, db, match)
     update_MU(csv, db, match)
     update_ANU(csv, db, match)
     update_UNSW(csv, db, match)
+    update_UA(csv, db, match)
 
 def update_UWA(csv=True, db=True, match=True):
-    # Scrapers return a list of lists ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL"]
     UWA_data = scrape_UWA()
     standardize(UWA_data)
     if csv: write_to_csv(UWA_data, "app/files/UWA_data.csv")
@@ -58,7 +64,7 @@ def update_UA(csv=True, db=True, match=True):
     if db: write_to_db(UA_data, "UA")
     if match: match_journals(university="UA")
 
-def import_from_csv(csv_path="app/files/all_data.csv", university="all"):
+def import_from_csv(university, csv_path="app/files/all_data.csv"):
     all_data = []
     with open(csv_path, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -74,7 +80,7 @@ def import_from_csv(csv_path="app/files/all_data.csv", university="all"):
             ])
 
     standardize(all_data)
-    write_to_db(all_data)
+    write_to_db(all_data, university)
     match_journals(university=university)
 
 if __name__ == "__main__":
