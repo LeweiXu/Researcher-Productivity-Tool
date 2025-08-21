@@ -2,10 +2,10 @@ from app.scrapers.UWA_Scraper import scrape_UWA
 from app.scrapers.MU_Scraper import scrape_MU
 from app.scrapers.ANU_Scraper import scrape_ANU
 from app.scrapers.helpers.save_functions import write_to_csv, write_to_db
-from app.scripts.journal_matching import match_journals
+from app.scrapers.helpers.journal_matching import match_journals
 import csv
 
-def standardize(all_data):
+def standardize(data):
     pass
 
 def update_all(csv=True, db=True):

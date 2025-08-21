@@ -2,7 +2,7 @@ from app.database import SessionLocal
 from app.models import Publications, Journals
 from fuzzywuzzy import process
 
-def match_journals(threshold=95):
+def match_journals(threshold=95, force=False):
     print("Matching Journal Names With ABDC Rankings")
     db = SessionLocal()
     try:
@@ -11,6 +11,8 @@ def match_journals(threshold=95):
         journal_dict = {j.name: j for j in journals}
         publications = db.query(Publications).all()
         for pub in publications:
+            if pub.journal_id and not force:
+                continue
             print(pub.journal_name)
             if not pub.journal_name:
                 continue
