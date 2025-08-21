@@ -27,5 +27,25 @@ def match_journals(threshold=95, force=False, university="all"):
     finally:
         db.close()
 
+# def rank_lookup(journal: Optional[str], names: List[str], ranks: List[str]) -> Optional[str]:
+#     """Return the ranking string for the given journal, if matched; else None."""
+#     if not journal or not names:
+#         return None
+#     j = journal.strip()
+#     if rf_fuzz is not None:
+#         scores = [rf_fuzz.token_set_ratio(j, str(n)) for n in names]
+#         if not scores:
+#             return None
+#         best_i = max(range(len(scores)), key=lambda i: scores[i])
+#         if scores[best_i] >= FUZZ_THRESHOLD:
+#             return ranks[best_i]
+#         return None
+#     jl = j.lower()
+#     for i, n in enumerate(names):
+#         if jl == str(n).lower():
+#             return ranks[i]
+#     return None
+
+
 if __name__ == "__main__":
-    match_journals()
+    match_journals(university="UA")

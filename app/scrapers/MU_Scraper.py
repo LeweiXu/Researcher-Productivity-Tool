@@ -1,7 +1,6 @@
 import undetected_chromedriver as uc
 from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
 
-
 def scrape_MU():
     options = uc.ChromeOptions()
     options.add_argument("--no-sandbox")

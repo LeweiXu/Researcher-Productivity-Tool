@@ -16,7 +16,7 @@ def write_to_csv(all_data, csv_filename):
             csv_write = row
             writer.writerow(csv_write)
 
-def write_to_db(all_data):
+def write_to_db(all_data, university):
     print("Writing scraped data to database")
     db = SessionLocal()
     try:
@@ -25,7 +25,7 @@ def write_to_db(all_data):
             # Check if researcher exists
             researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
             if not researcher:
-                researcher = Researchers(name=name, university="UWA", profile_url=profile_url)
+                researcher = Researchers(name=name, university=university, profile_url=profile_url)
                 db.add(researcher)
                 db.commit()
                 db.refresh(researcher)

@@ -1,11 +1,12 @@
-# app/scripts/Adelaide_Scraper.py
 import time
 import re
 from typing import List, Dict, Optional, Tuple
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from app.database import SessionLocal
-from app.models import Researchers, Publications
+import undetected_chromedriver as uc
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # ========= CONFIG =========
 UNIVERSITY_NAME = "University of Adelaide"
@@ -21,7 +22,6 @@ SCROLL_PAUSE = 0.7
 # =========================
 
 def make_driver(headless: bool = False):
-    import undetected_chromedriver as uc
     opts = uc.ChromeOptions()
     if headless:
         opts.add_argument("--headless=new")
@@ -32,9 +32,6 @@ def make_driver(headless: bool = False):
     return uc.Chrome(options=opts, version_main=138)
 
 def wait_for_body(driver, timeout: int):
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
     WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
 def gentle_scroll(driver, steps: int = SCROLL_STEPS, pause: float = SCROLL_PAUSE):
@@ -43,7 +40,6 @@ def gentle_scroll(driver, steps: int = SCROLL_STEPS, pause: float = SCROLL_PAUSE
         time.sleep(pause)
 
 def collect_entry_links(pages: List[str], driver) -> List[str]:
-    from selenium.webdriver.common.by import By
     found = set()
     for url in pages:
         print("Index:", url)
@@ -67,7 +63,6 @@ def collect_entry_links(pages: List[str], driver) -> List[str]:
     return sorted(found)
 
 def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
-    from selenium.webdriver.common.by import By
     if "researchers.adelaide.edu.au" in entry_url and "/profile/" in entry_url and "?name=" not in entry_url:
         return entry_url.split("#")[0].rstrip("/")
     print(f"Getting {entry_url}")
@@ -83,7 +78,7 @@ def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
     except Exception:
         pass
     locators = [
-        (By.XPATH, "//a[contains(., 'View My Researcher Profile')]") ,
+        (By.XPATH, "//a[contains(., 'View My Researcher Profile')]"),
         (By.PARTIAL_LINK_TEXT, "Researcher Profile")
     ]
     for locator in locators:
@@ -104,7 +99,6 @@ def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
     return None
 
 def open_publications_journals(driver, profile_url: str) -> str:
-    from selenium.webdriver.common.by import By
     driver.get(profile_url)
     wait_for_body(driver, PROFILE_WAIT_SEC)
     time.sleep(0.8)
@@ -135,124 +129,51 @@ def open_publications_journals(driver, profile_url: str) -> str:
     gentle_scroll(driver, steps=3)
     return driver.page_source
 
-def parse_journal_table(html: str) -> Tuple[str, List[Dict[str, Optional[str]]]]:
+def parse_researcher_profile(html: str, profile_url : str):
     soup = BeautifulSoup(html, "lxml")
-    name = ""
-    for sel in ["h1", "h1.name", "header h1", "[data-testid='profile-name']"]:
-        el = soup.select_one(sel)
-        if el and el.get_text(strip=True):
-            name = el.get_text(strip=True)
-            break
-    pubs: List[Dict[str, Optional[str]]] = []
-    rows = soup.select("table tbody tr")
-    if rows:
-        for tr in rows:
-            tds = tr.find_all("td")
+    # Extract Researcher Name
+    name_tag = soup.find("h1")
+    researcher_name = name_tag.get_text(strip=True) if name_tag else ""
+    publications = []
+    # Only process these publication types
+    valid_types = {"Journals", "Book Chapters", "Conference Papers", "Theses"}
+    for acc_item in soup.select("li.c-accordion__item"):
+        # Get publication type from heading
+        heading = acc_item.select_one(".c-accordion__heading")
+        pub_type = heading.get_text(strip=True) if heading else ""
+        if pub_type not in valid_types:
+            continue
+        # Find publication table rows
+        for row in acc_item.select("tbody tr"):
+            tds = row.find_all("td")
             if len(tds) < 2:
                 continue
-            year_txt = (tds[0].get_text(strip=True) or "")
-            year = int(year_txt) if year_txt.isdigit() else None
-            cit = tds[1]
-            jnode = cit.find("em") or cit.find("i")
-            if not jnode:
-                continue
-            journal = jnode.get_text(strip=True)
-            if not journal:
-                continue
-            a = cit.find("a", href=True)
-            url = a["href"] if a else None
-            if not url:
-                doi_a = cit.find("a", href=re.compile(r"doi\\.org", re.I))
-                url = doi_a.get("href") if doi_a else ""
-            title = a.get_text(strip=True) if a else cit.get_text(strip=True)[:200]
-            pubs.append({
-                "title": title or None,
-                "year": year,
-                "publication_type": "Journal article",
-                "journal_name": journal,
-                "publication_url": url or "",
-            })
-        return name, pubs
-    containers = soup.select(
-        "div.publications-list .publication-item, "
-        "li.publication, "
-        "div.rendering_researchoutput_portal-short, "
-        "[class*='publication']"
-    )
-    for c in containers:
-        jnode = c.select_one(".journal, .journal a, span.journal a span, em, i")
-        if not jnode:
-            continue
-        journal = jnode.get_text(strip=True)
-        if not journal:
-            continue
-        title_el = c.select_one("h3 a, .title a, a[href*='/publications/']") or c.select_one("h3, .title")
-        title = title_el.get_text(strip=True) if title_el else None
-        href = title_el.get("href") if title_el and title_el.name == "a" else None
-        if not href:
-            doi_a = c.find("a", href=re.compile(r"doi\\.org", re.I))
-            href = doi_a.get("href") if doi_a else ""
-        year = None
-        yel = c.select_one(".year, .date, time")
-        if yel:
-            m = re.search(r"(19|20)\d{2}", yel.get_text(strip=True))
+            year = tds[0].get_text(strip=True)
+            citation_td = tds[1]
+            # Get citation text (span or direct)
+            citation_span = citation_td.find("span")
+            citation_text = citation_span.get_text(" ", strip=True) if citation_span else citation_td.get_text(" ", strip=True)
+            # Extract title: after the year in parentheses and full stop
+            title = ""
+            m = re.search(r"\(\d{4}\)\.\s*(.*?)(?:\.|<)", citation_text)
             if m:
-                year = int(m.group(0))
-        pubs.append({
-            "title": title,
-            "year": year,
-            "publication_type": "Journal article",
-            "journal_name": journal,
-            "publication_url": href or "",
-        })
-    return name, pubs
+                title = m.group(1).strip()
+            # Journal Name: first <i> after the title
+            journal_name = ""
+            i_tags = citation_td.find_all("i")
+            if i_tags and pub_type == "Journals":
+                journal_name = i_tags[0].get_text(strip=True)
+            # Article URL: first <a href> after the citation
+            article_url = ""
+            a_tag = citation_td.find("a", href=True)
+            if a_tag:
+                article_url = a_tag["href"]
+            if article_url == "":
+                article_url = f"https://www.google.com/search?q={title}"
+            publications.append([title, year, pub_type, journal_name, article_url, researcher_name, profile_url])
+    return publications
 
-def upsert_researcher(db, name: str, profile_url: str) -> Researchers:
-    r = (
-        db.query(Researchers)
-        .filter(Researchers.name == name, Researchers.university == UNIVERSITY_NAME)
-        .one_or_none()
-    )
-    if r:
-        if profile_url and not r.profile_url:
-            r.profile_url = profile_url
-        return r
-    r = Researchers(name=name, university=UNIVERSITY_NAME, profile_url=profile_url)
-    db.add(r)
-    db.flush()
-    return r
-
-def add_publication_if_new(db, researcher_id: int, p: Dict[str, Optional[str]]):
-    title = (p.get("title") or "").strip()
-    journal = (p.get("journal_name") or "").strip()
-    url = (p.get("publication_url") or "").strip()
-    if not title or not journal:
-        return
-    year = p.get("year")
-    existing = (
-        db.query(Publications)
-        .filter(
-            Publications.title == title,
-            Publications.year == year,
-            Publications.researcher_id == researcher_id,
-        )
-        .one_or_none()
-    )
-    if existing:
-        return
-    pub = Publications(
-        title=title,
-        year=year,
-        publication_type=p.get("publication_type"),
-        publication_url=url,
-        journal_name=journal,
-        researcher_id=researcher_id,
-        journal_id=None,
-    )
-    db.add(pub)
-
-def run(headless: bool = False):
-    db = SessionLocal()
+def scrape_UA(headless: bool = False):
     driver = make_driver(headless=headless)
     try:
         entries = collect_entry_links(STAFF_INDEX_PAGES, driver)
@@ -263,34 +184,21 @@ def run(headless: bool = False):
             if prof:
                 profiles.add(prof.rstrip("/"))
             else:
-                print("  ! Could not resolve to profile:", entry)
+                print("  ! No researcher profile found:", entry)
         profiles = sorted(profiles)
         print(f"Resolved {len(profiles)} researcher profile URLs.")
+        all_data = []
         for i, profile_url in enumerate(profiles, 1):
             print(f"[{i}/{len(profiles)}] {profile_url}")
             html = open_publications_journals(driver, profile_url)
-            name, pubs = parse_journal_table(html)
-            name = (name or "").strip()
-            if not name:
-                print("  ! No name; skipping")
-                continue
-            r = upsert_researcher(db, name, profile_url)
-            added = 0
-            for p in pubs:
-                before = len(list(db.new))
-                add_publication_if_new(db, r.id, p)
-                after = len(list(db.new))
-                if after > before:
-                    added += 1
-            db.commit()
-            print(f"  -> {name}: parsed={len(pubs)}, added={added}")
+            publications = parse_researcher_profile(html, profile_url)
+            print(publications)
+            all_data.extend(publications)
             time.sleep(POLITE_DELAY)
     finally:
         try:
             driver.quit()
         except Exception:
             pass
-        db.close()
 
-if __name__ == "__main__":
-    run(headless=False)
+    return all_data
