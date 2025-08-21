@@ -1,9 +1,8 @@
 import undetected_chromedriver as uc
-from app.scripts.big3_functions import scrape_publications, find_profile_urls
-from app.scripts.save_functions import write_to_csv, write_to_db
+from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
 
 
-def update_MU():
+def scrape_MU():
     options = uc.ChromeOptions()
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
@@ -25,14 +24,12 @@ def update_MU():
     profile_urls = list(set(profile_urls))
     print(f"Found {len(profile_urls)} profile URLs")
 
+    all_data = []
     for profile_url in profile_urls:
         print(f"Scraping profile: {profile_url}")
         name, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
+        for line in publications_info:
+            all_data.append(line + [name, profile_url])
 
-        write_to_csv(publications_info, name, profile_url, "app/files/MU.csv")
-        write_to_db(publications_info, name, profile_url)
-
-# Example usage:
-if __name__ == "__main__":
-    update_MU()
+    return all_data

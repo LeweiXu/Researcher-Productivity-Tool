@@ -3,7 +3,7 @@ from app.models import Researchers, Publications
 import csv
 
 
-def write_to_csv(publications_info, name, profile_url, csv_filename):
+def write_to_csv(all_data, csv_filename):
     print("Writing scraped data to CSV")
     csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
     with open(csv_filename, mode="w", newline='', encoding="utf-8") as f:
@@ -12,25 +12,24 @@ def write_to_csv(publications_info, name, profile_url, csv_filename):
 
     with open(csv_filename, mode="a", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
-        for publication in publications_info:
-            csv_write = publication.copy()
-            csv_write.append(name)
-            csv_write.append(profile_url)
+        for row in all_data:
+            csv_write = row
             writer.writerow(csv_write)
 
-def write_to_db(publications_info, name, profile_url):
+def write_to_db(all_data):
     print("Writing scraped data to database")
     db = SessionLocal()
     try:
-        # Check if researcher exists
-        researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
-        if not researcher:
-            researcher = Researchers(name=name, university="UWA", profile_url=profile_url)
-            db.add(researcher)
-            db.commit()
-            db.refresh(researcher)
-        for publication in publications_info:
-            title, year, type_val, journal, publication_url = publication
+        for row in all_data:
+            title, year, type_val, journal, publication_url, name, profile_url = row
+            # Check if researcher exists
+            researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
+            if not researcher:
+                researcher = Researchers(name=name, university="UWA", profile_url=profile_url)
+                db.add(researcher)
+                db.commit()
+                db.refresh(researcher)
+            # Add publication if not exists
             db_publication = db.query(Publications).filter_by(title=title, publication_url=publication_url).first()
             if not db_publication:
                 db_publication = Publications(
