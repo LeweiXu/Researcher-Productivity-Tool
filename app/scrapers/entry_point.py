@@ -1,6 +1,7 @@
 from app.scrapers.UWA_Scraper import scrape_UWA
 from app.scrapers.MU_Scraper import scrape_MU
 from app.scrapers.ANU_Scraper import scrape_ANU
+from app.scrapers.UNSW_Scraper import scrape_UNSW
 from app.scrapers.helpers.save_functions import write_to_csv, write_to_db
 from app.scrapers.helpers.journal_matching import match_journals
 import csv
@@ -13,8 +14,9 @@ def update_all(csv=True, db=True):
     UWA_data = scrape_UWA()
     MU_data = scrape_MU()
     ANU_data = scrape_ANU()
+    UNSW_data = scrape_UNSW()
 
-    all_data = UWA_data + MU_data + ANU_data
+    all_data = UWA_data + MU_data + ANU_data + UNSW_data
     # Data returned from scrapers is raw data, need to standardize format 
     # E.g. (Publication Type --> "Journal Article", "Contribution to Journal" are the same thing)
     # E.g. (Researcher Name --> Strip Titles Dr, Proffessor etc.)
@@ -45,6 +47,13 @@ def update_ANU(csv=True, db=True):
     standardize(ANU_data)
     if csv: write_to_csv(ANU_data, "app/files/ANU_data.csv")
     if db: write_to_db(ANU_data)
+    match_journals()
+
+def update_UNSW(csv=True, db=True):
+    UNSW_data = scrape_UNSW()
+    standardize(UNSW_data)
+    if csv: write_to_csv(UNSW_data, "app/files/UNSW_data.csv")
+    if db: write_to_db(UNSW_data)
     match_journals()
 
 def import_from_csv(csv_path="app/files/all_data.csv"):
