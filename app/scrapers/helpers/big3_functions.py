@@ -75,9 +75,9 @@ def scrape_publications(profile_url, driver):
                     journal_span = div.find_element(By.CSS_SELECTOR, "span.journal a span")
                     journal = journal_span.text.strip()[:-1] # Remove trailing full stop
                 else:
-                    journal = "N/A"
+                    journal = ""
             except Exception:
-                journal = "N/A"
+                journal = ""
             publications_info.append([title, year, type_val, journal, publication_url])
             print(f"Found publication: {title}")
         page += 1
