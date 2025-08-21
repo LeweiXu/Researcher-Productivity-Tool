@@ -1,19 +1,21 @@
 from app.database import SessionLocal
-from app.models import Publications, Journals
+from app.models import Publications, Journals, Researchers
 from fuzzywuzzy import process
 
-def match_journals(threshold=95, force=False):
+def match_journals(threshold=95, force=False, university="all"):
     print("Matching Journal Names With ABDC Rankings")
     db = SessionLocal()
     try:
         journals = db.query(Journals).all()
         journal_names = [j.name for j in journals]
         journal_dict = {j.name: j for j in journals}
-        publications = db.query(Publications).all()
+        query = db.query(Publications)
+        if university != "all":
+            query = query.join(Researchers).filter(Researchers.university == university)
+        publications = query.all()
         for pub in publications:
             if pub.journal_id and not force:
                 continue
-            print(pub.journal_name)
             if not pub.journal_name:
                 continue
             match, score = process.extractOne(pub.journal_name, journal_names)
