@@ -5,7 +5,7 @@ import csv
 
 def write_to_csv(all_data, csv_filename):
     print("Writing scraped data to CSV")
-    csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL"]
     with open(csv_filename, mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
@@ -49,3 +49,4 @@ def write_to_db(all_data):
                 db.commit()
     finally:
         db.close()
+        print("Completed writing to database")

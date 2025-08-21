@@ -33,6 +33,20 @@ def update_UWA(csv=True, db=True):
     if db: write_to_db(UWA_data)
     match_journals()
 
+def update_MU(csv=True, db=True):
+    MU_data = scrape_MU()
+    standardize(MU_data)
+    if csv: write_to_csv(MU_data, "app/files/MU_data.csv")
+    if db: write_to_db(MU_data)
+    match_journals()
+
+def update_ANU(csv=True, db=True):
+    ANU_data = scrape_ANU()
+    standardize(ANU_data)
+    if csv: write_to_csv(ANU_data, "app/files/ANU_data.csv")
+    if db: write_to_db(ANU_data)
+    match_journals()
+
 def import_from_csv(csv_path="app/files/all_data.csv"):
     all_data = []
     with open(csv_path, newline='', encoding='utf-8') as f:
@@ -42,7 +56,7 @@ def import_from_csv(csv_path="app/files/all_data.csv"):
                 row["Title"],
                 row["Year"],
                 row["Type"],
-                row["Journal"],
+                row["Journal Name"],
                 row["Article URL"],
                 row["Researcher Name"],
                 row["Profile URL"]
@@ -51,3 +65,6 @@ def import_from_csv(csv_path="app/files/all_data.csv"):
     standardize(all_data)
     write_to_db(all_data)
     match_journals()
+
+if __name__ == "__main__":
+    import_from_csv("app/files/UWA_data.csv")
