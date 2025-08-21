@@ -8,19 +8,6 @@ import csv
 
 
 def standardize(data):
-<<<<<<< HEAD
-=======
-    pass
-
-def update_all(csv=True, db=True):
-    # Scrapers return a list of lists ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL"]
-    UWA_data = scrape_UWA()
-    MU_data = scrape_MU()
-    ANU_data = scrape_ANU()
-    UNSW_data = scrape_UNSW()
-
-    all_data = UWA_data + MU_data + ANU_data + UNSW_data
->>>>>>> f2d60eaffb9ad3aad1288f3e7c89aa5f4a25f76b
     # Data returned from scrapers is raw data, need to standardize format 
     # E.g. (Publication Type --> "Journal Article", "Contribution to Journal" are the same thing)
     # E.g. (Researcher Name --> Strip Titles Dr, Proffessor etc.)
