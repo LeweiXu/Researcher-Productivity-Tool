@@ -8,6 +8,8 @@ from selenium.common.exceptions import NoSuchElementException
 import time
 import random
 
+links_to_scrape = ["https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951"]
+
 def get_staff(url):
     driver = webdriver.Chrome()
     driver.get(url)
@@ -38,7 +40,7 @@ def clean_staff(staff_list):
             continue
         
         #removes role from their names
-        for title in ["Associate Professor", "Professor", "Senior Lecturer", "Lecturer", "Research Fellow", "Dr"]:
+        for title in ["Associate Professor", "Professor", "Senior Lecturer", "Lecturer", "Research Fellow", "Dr", "Mr", "Ms"]:
             staff["name"] = staff["name"].replace(title, "")
         
         staff["name"] = staff["name"].strip()
@@ -64,7 +66,6 @@ def get_works_openalex(academics):
 
         try:
             auth_id = auths[0]["id"].replace("https://openalex.org/", "")
-            print(f"Selected author with id: {auth_id}")
         except IndexError:
             print("Skipping due to no results")
             skipped_academics.append(academic["name"])
@@ -143,9 +144,17 @@ def get_works_website(academics):
     
     driver.close()
 
-def scrape_UM():
-    staff_list = get_staff("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953")
+def scrape_page(url):
+    staff_list = get_staff(url)
     academic_list = clean_staff(staff_list)
     UniMelb_works = get_works_openalex(academic_list)
     #get_works_website(academic_list)
-    print(UniMelb_works)
+
+    return(UniMelb_works)
+
+def scrape_UM():
+    output = []
+    for link in links_to_scrape:
+        output.extend(scrape_page(link))
+    
+    return(output)
