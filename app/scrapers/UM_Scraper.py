@@ -146,6 +146,6 @@ def get_works_website(academics):
 def scrape_UM():
     staff_list = get_staff("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953")
     academic_list = clean_staff(staff_list)
-    UniMelb_works = get_works_openalex(academic_list[:5])
+    UniMelb_works = get_works_openalex(academic_list)
     #get_works_website(academic_list)
     print(UniMelb_works)
