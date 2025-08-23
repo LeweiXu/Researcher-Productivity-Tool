@@ -22,12 +22,14 @@ def find_researcher(academic):
 
     try:
         WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        time.sleep(2)
+        
     except TimeoutException:
         driver.close()
         raise RuntimeError(f"Unable to load profile page for {academic['name']}")
 
     try:
-        new_name = driver.find_element(By.XPATH, '//div[@id="profileTitleCol"]//h1/text()')
+        new_name = driver.find_element(By.XPATH, '//div[@id="profileTitleCol"]//h1')
     except NoSuchElementException:
         driver.close()
         return(None)
@@ -39,10 +41,18 @@ def find_researcher(academic):
     if new_name == academic["name"]:
         return(None)
     else:
+        print(f"New name found: {new_name}")
+        academic["name"] = new_name
         return(new_name)
 
+def transform_name_firstlast(name):
+    # Remove anything inside parentheses including the parentheses themselves
+    cleaned_name = re.sub(r"\s*\(.*?\)\s*", " ", name)
+    # Collapse multiple spaces into one, and strip leading/trailing spaces
+    return re.sub(r"\s+", " ", cleaned_name).strip()
 
-def transform_name(name):
+#Uses nickname as first name
+def transform_name_nicknamelast(name):
     # Look for "(nickname)" using regex
     match = re.search(r"\((.*?)\)", name)
     parts = name.split()
@@ -187,13 +197,12 @@ def get_works_website(academics):
         else:
             time.sleep(random.uniform(7, 12))
 
-        search_name = transform_name(academic["name"])
-        driver.get(f"https://findanexpert.unimelb.edu.au/searchresults?category=publication&pageNumber=1&pageSize=250&q={search_name}&sorting=mostRecent")
-
         #Some researchers' names are different on the department page and Find and Expert. This only looks up if needed to avoid unnecessary requests
         attempts = 0
         while attempts < 2:
             try:
+                search_name = transform_name_firstlast(academic["name"])
+                driver.get(f"https://findanexpert.unimelb.edu.au/searchresults?category=publication&pageNumber=1&pageSize=250&q={search_name}&sorting=mostRecent")
                 WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]")))
                 break
             except TimeoutException:
@@ -237,7 +246,7 @@ def get_works_website(academics):
             for j in range(len(details)):
                 details[j] = details[j].strip()
             
-            if len(details) < 3:
+            while len(details) < 3:
                 details.append(None)
 
             #details format: [type, year, source]
@@ -246,7 +255,8 @@ def get_works_website(academics):
         for i in range(0, len(pub_titles)):
             all_works.append([pub_titles[i].text, pub_details_text[i][1], pub_details_text[i][0], pub_details_text[i][2], pub_links[i].get_attribute('href'), academic["name"], academic["url"]])
             academic["scraped"] = True
-            count += 1
+        
+        count += 1
     
     driver.quit()
     print(f"Researchers scraped: {count}")
