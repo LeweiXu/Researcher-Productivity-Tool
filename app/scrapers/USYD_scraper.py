@@ -324,10 +324,14 @@ def main() -> List[List[str]]:
 
     header = ["Title","Year","Type","Journal Name","Article URL","Researcher Name","Profile URL"]
     rows = scrape_usyd(URLS, print_names=True)  # set False to silence name prints
+    
+    '''
     with open(CSV_OUT, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(header)
         w.writerows(rows)
+    '''
+    
     print(f"Wrote {len(rows)} rows to {CSV_OUT}")
     return rows
 
