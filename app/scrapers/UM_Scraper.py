@@ -4,17 +4,65 @@ from selenium.webdriver.common.by import By
 from pyalex import Works, Authors, Institutions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
 import random
+import re
 
 links_to_scrape = ["https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951"]
+
+#Only works for newer layout of researcher profile pages
+def find_researcher(academic):
+    options = uc.ChromeOptions()
+    options.add_argument("--log-level=3")
+    
+    driver = uc.Chrome(options=options)
+
+    driver.get(academic["url"])
+
+    try:
+        WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    except TimeoutException:
+        driver.close()
+        raise RuntimeError(f"Unable to load profile page for {academic['name']}")
+
+    try:
+        new_name = driver.find_element(By.XPATH, '//div[@id="profileTitleCol"]//h1/text()')
+    except NoSuchElementException:
+        driver.close()
+        return(None)
+        
+    new_name = new_name.text
+
+    driver.close()
+
+    if new_name == academic["name"]:
+        return(None)
+    else:
+        return(new_name)
+
+
+def transform_name(name):
+    # Look for "(nickname)" using regex
+    match = re.search(r"\((.*?)\)", name)
+    parts = name.split()
+    
+    if match:  
+        # nickname inside parentheses
+        nickname = match.group(1).strip()
+        last_name = parts[-1]  # last word is the surname
+        return(f"{nickname} {last_name}")
+    else:
+        return(name)
 
 def get_staff(url):
     driver = webdriver.Chrome()
     driver.get(url)
     
-    WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    try:
+        WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    except TimeoutException:
+        raise RuntimeError("Unable to load staff profile page")
     
     name_links = driver.find_elements(By.XPATH, "//div[@id='top']//div[@id='main-content']//div[@class='content-block__inner']/table//tr/td[1]/h5/a")
     roles = driver.find_elements(By.XPATH, "//div[@id='top']//div[@id='main-content']//div[@class='content-block__inner']/table//tr/td[1]/p")
@@ -40,7 +88,7 @@ def clean_staff(staff_list):
             continue
         
         #removes role from their names
-        for title in ["Associate Professor", "Professor", "Senior Lecturer", "Lecturer", "Research Fellow", "Dr", "Mr", "Ms"]:
+        for title in ["Associate Professor", "Professor", "Senior Lecturer", "Lecturer", "Research Fellow", "Dr ", "Mr ", "Ms "]:
             staff["name"] = staff["name"].replace(title, "")
         
         staff["name"] = staff["name"].strip()
@@ -53,12 +101,14 @@ def clean_staff(staff_list):
     return(cleaned_staff_list)
 
 def get_works_openalex(academics):
+    
     UniMelb_works = []
 
     insts = Institutions().search("University of Melbourne").get()
     print(f"{len(insts)} search result(s) found for the institution")
     inst_id = insts[0]["id"].replace("https://openalex.org/", "")
 
+    count = 0
     skipped_academics = []
     for academic in (a for a in academics if not a["scraped"]):
         auths = Authors().search(academic["name"]).filter(affiliations={"institution": {"id": inst_id}}).get()
@@ -112,43 +162,101 @@ def get_works_openalex(academics):
             UniMelb_works.append(auth_works[work])
         
         academic["scraped"] = True
+        count += 1
 
+    print(f"Researchers scraped: {count}")
     print(f"Skipped due to no search results: {skipped_academics}")
     return UniMelb_works
 
-
-#Cannot be run due to protections by the UniMelb site ()
 def get_works_website(academics):
-    
+    print("Attempting to scrape from UniMelb website")
+
     options = uc.ChromeOptions()
-    #options.add_argument(r"user-data-dir=C:\Users\jarra\temp\User Data")
-    #options.add_argument(r'--profile-directory=Default')
-    #options.add_argument("--headless=new")
     options.add_argument("--log-level=3")
     
     driver = uc.Chrome(options=options)
 
+    all_works = []
+    First = True
+    count = 0
     for academic in (a for a in academics if not a["scraped"]):
-        time.sleep(random.uniform(5, 10))
+        #Initially give browser time to set up
+        if First:
+            time.sleep(random.uniform(15, 20))
+            First = False
+        else:
+            time.sleep(random.uniform(7, 12))
 
-        driver.get(academic["url"])
-        WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        search_name = transform_name(academic["name"])
+        driver.get(f"https://findanexpert.unimelb.edu.au/searchresults?category=publication&pageNumber=1&pageSize=250&q={search_name}&sorting=mostRecent")
 
-        try:
-            pub_desc = driver.find_element(By.XPATH, "//section[@id='publications']//p[@class='source-sans blue']")
-        except NoSuchElementException:
-            print(f"No publications for {academic['name']} found")
+        #Some researchers' names are different on the department page and Find and Expert. This only looks up if needed to avoid unnecessary requests
+        attempts = 0
+        while attempts < 2:
+            try:
+                WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]")))
+                break
+            except TimeoutException:
+                attempts += 1
+                if attempts == 1:
+                    print(f"Timeout waiting for publications to load for {academic['name']}. Checking name")
+                
+                #Lookup name and if timeout set name to none
+                try:
+                    new_name = find_researcher(academic)
+                except RuntimeError:
+                    new_name = None
+
+                if new_name == None:
+                    attempts = 2 #force exit
+                else:
+                    print(f"Found new name. Retrying publication lookup")
+        else:
+            print(f"Timeout waiting for publications to load for {academic['name']}. Likely no publications")
             continue
         
-        print(pub_desc.text)
+        print(f"Scraping articles for {academic['name']}")
+
+        try:
+            pub_titles = driver.find_elements(By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]//h4[contains(@class, 'font-weight-bold lead') and not(ancestor::div[contains(@class, 'new-feature-card')])]")
+            pub_details_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]//p[contains(@class, 'mb-1 w-100')]")
+            pub_links = driver.find_elements(By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]//a[contains(@href, '/scholarlywork/')]")
+        except NoSuchElementException:
+            print(f"Elements missing for {academic['name']}")
+            continue
+        
+        #Join details from their sub-elements
+        pub_details_text = []
+        for element in pub_details_elements:
+            pub_details_text.append(element.text)
+
+        #Sanitise the details and turn them into a list
+        for i in range(len(pub_details_text)):
+            details = pub_details_text[i].split("|")
+            
+            for j in range(len(details)):
+                details[j] = details[j].strip()
+            
+            if len(details) < 3:
+                details.append(None)
+
+            #details format: [type, year, source]
+            pub_details_text[i] = details
+
+        for i in range(0, len(pub_titles)):
+            all_works.append([pub_titles[i].text, pub_details_text[i][1], pub_details_text[i][0], pub_details_text[i][2], pub_links[i].get_attribute('href'), academic["name"], academic["url"]])
+            academic["scraped"] = True
+            count += 1
     
-    driver.close()
+    driver.quit()
+    print(f"Researchers scraped: {count}")
+    return(all_works)
 
 def scrape_page(url):
     staff_list = get_staff(url)
     academic_list = clean_staff(staff_list)
-    UniMelb_works = get_works_openalex(academic_list)
-    #get_works_website(academic_list)
+    UniMelb_works = get_works_website(academic_list)
+    UniMelb_works.extend(get_works_openalex(academic_list))
 
     return(UniMelb_works)
 
@@ -158,3 +266,5 @@ def scrape_UM():
         output.extend(scrape_page(link))
     
     return(output)
+
+print(scrape_UM())
