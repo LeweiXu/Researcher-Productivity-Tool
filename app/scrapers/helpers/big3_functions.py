@@ -66,7 +66,7 @@ def scrape_publications(profile_url, driver):
             try:
                 type_span = div.find_element(By.CSS_SELECTOR, "span.type_classification_parent")
                 type_val = type_span.text.strip()
-                if type_val[-2:] == ' >':
+                if type_val[-2:] == ' ›':
                     type_val = type_val[:-2]
             except Exception:
                 type_val = ""
