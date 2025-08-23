@@ -124,9 +124,13 @@ def get_works_website(academics):
     #options.add_argument(r"user-data-dir=C:\Users\jarra\temp\User Data")
     #options.add_argument(r'--profile-directory=Default')
     #options.add_argument("--headless=new")
-    options.add_argument("--log-level=3")
-    
-    driver = uc.Chrome(options=options)
+    # options.add_argument("--log-level=3")
+    # options.add_argument("--no-sandbox")
+    # options.add_argument("--disable-gpu")
+    # options.add_argument("--window-size=1280,800")
+    # options.add_argument("--lang=en-US,en")
+    # options.add_argument("--headless")  # Uncomment for headless mode
+    driver = uc.Chrome(version_main=138, options=options)
 
     for academic in (a for a in academics if not a["scraped"]):
         time.sleep(random.uniform(5, 10))
@@ -147,7 +151,7 @@ def get_works_website(academics):
 def scrape_page(url):
     staff_list = get_staff(url)
     academic_list = clean_staff(staff_list)
-    UniMelb_works = get_works_openalex(academic_list)
+    UniMelb_works = get_works_website(academic_list)
     #get_works_website(academic_list)
 
     return(UniMelb_works)
