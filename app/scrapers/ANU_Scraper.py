@@ -8,8 +8,7 @@ def scrape_ANU():
     options.add_argument("--window-size=1280,800")
     options.add_argument("--lang=en-US,en")
     # options.add_argument("--headless")  # Uncomment for headless mode
-    driver = uc.Chrome(version_main=138, options=options) #Lewei note: local machine has issue with chrome installation, have to force use chrome version 138 to work for now
-
+    driver = uc.Chrome(options=options)
     profiles_url = "https://researchportalplus.anu.edu.au/en/organisations/anu-college-of-business-and-economics/persons/"
     base = "https://researchportalplus.anu.edu.au"
     profile_urls = find_profile_urls(profiles_url, base, driver)

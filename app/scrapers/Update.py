@@ -86,3 +86,6 @@ def import_from_csv(university, csv_path):
     standardize(all_data)
     write_to_db(all_data, university)
     match_journals(university=university)
+
+if __name__ == "__main__":
+    update_UWA(csv=True, db=True, match=True)
