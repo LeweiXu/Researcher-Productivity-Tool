@@ -14,17 +14,30 @@ def match_journals(threshold=95, force=False, university="all"):
         if university != "all":
             query = query.join(Researchers).filter(Researchers.university == university)
         publications = query.all()
-        for pub in publications:
+        total = len(publications)
+        print(f"Total publications to process: {total}")
+        progress_bar_len = 40
+
+        def print_progress(count, total):
+            filled_len = int(progress_bar_len * count // total)
+            bar = '=' * filled_len + '-' * (progress_bar_len - filled_len)
+            print(f"\r[{bar}] {count}/{total}", end='', flush=True)
+
+        for idx, pub in enumerate(publications, 1):
             if pub.journal_id and not force:
+                print_progress(idx, total)
                 continue
             if not pub.journal_name:
+                print_progress(idx, total)
                 continue
             match, score = process.extractOne(pub.journal_name, journal_names)
             if score >= threshold:
                 matched_journal = journal_dict.get(match)
                 if matched_journal:
                     pub.journal_id = matched_journal.id
+            print_progress(idx, total)
         db.commit()
+        print()  # Move to next line after progress bar
     finally:
         db.close()
 
@@ -62,7 +75,7 @@ def write_to_csv(all_data, csv_filename):
             writer.writerow(csv_write)
 
 def write_to_db(all_data, university):
-    print("Writing scraped data to database")
+    print("Writing data to database")
     db = SessionLocal()
     try:
         for row in all_data:
