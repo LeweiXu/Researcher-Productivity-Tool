@@ -276,5 +276,3 @@ def scrape_UM():
         output.extend(scrape_page(link))
     
     return(output)
-
-print(scrape_UM())
