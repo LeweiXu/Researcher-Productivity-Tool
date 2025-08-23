@@ -8,8 +8,7 @@ def scrape_UWA():
     options.add_argument("--window-size=1280,800")
     options.add_argument("--lang=en-US,en")
     # options.add_argument("--headless")  # Uncomment for headless mode
-    driver = uc.Chrome(version_main=138, options=options) #Lewei note: local machine has issue with chrome installation, have to force use chrome version 138 to work for now
-
+    driver = uc.Chrome(options=options)
     profiles_url = "https://www.uwa.edu.au/schools/business/accounting-and-finance"
     base = "https://research-repository.uwa.edu.au"
 
