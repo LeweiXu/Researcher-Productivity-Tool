@@ -15,15 +15,16 @@ URLS = [
     # Finance 
     "https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0300&Academic=true",
 ]
-DRIVER_PATH = "/home/imrea1m/.wdm/drivers/chromedriver/linux64/136.0.7103.113/chromedriver-linux64/chromedriver"
+#DRIVER_PATH = "/home/imrea1m/.wdm/drivers/chromedriver/linux64/136.0.7103.113/chromedriver-linux64/chromedriver"
 CSV_OUT = "usyd_publications.csv"
 
 # ---------- driver ----------
-def make_driver():
+def make_driver(headless: bool = False):
     opts = webdriver.ChromeOptions()
-    opts.binary_location = "/usr/bin/google-chrome"
+    if headless:
+        opts.add_argument("--headless=new")
     opts.add_argument("--window-size=1280,1100")
-    return webdriver.Chrome(service=Service(DRIVER_PATH), options=opts)
+    return webdriver.Chrome(options=opts)
 
 def wait_css(driver, css, t=15):
     return WebDriverWait(driver, t).until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
@@ -170,8 +171,9 @@ def clean_spaces(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "")).strip()
 
 def text_after_year(block_text: str) -> str:
-    # remove "authors (YYYY). " at the front if present
-    return clean_spaces(re.sub(r"^.*?\)\.\s*", "", block_text))
+    # remove "authors (YYYY)." OR "authors (YYYY)," at the front if present--> for the 'Other' type of academic production
+    return clean_spaces(re.sub(r"^.*?\)\s*[\.,]\s*", "", block_text))
+
 
 def is_empty_title(s: str) -> bool:
     return not s or s.strip(".—–- ,;:").strip() == ""
