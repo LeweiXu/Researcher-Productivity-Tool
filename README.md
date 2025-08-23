@@ -14,8 +14,8 @@ Nowadays, researchers in top universities are required to complete their researc
     - https://researchportalplus.anu.edu.au/en/organisations/anu-college-of-business-and-economics/persons/ (business & economics)
     - https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics/persons/
 4. The University of Sydney
-    - https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0200&Academic=true (Accounting)
-    - https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0300&Academic=true (Finance)
+    - https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0200&Academic=true (Buinsness School/ Accounting)
+    - https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0300&Academic=true (Buinsness School/ Finance)
 6. The University of Queensland
     - https://business.uq.edu.au/research/research-areas/accounting (Accounting)
     - https://business.uq.edu.au/research/research-areas/finance (Finance)
