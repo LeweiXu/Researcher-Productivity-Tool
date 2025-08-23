@@ -240,6 +240,7 @@ def scrape_UQ(headless: bool = False):
             html = open_publications_journals(driver, profile_url)
             publications = parse_researcher_profile(html, profile_url)
             print(f"  parsed {len(publications)} pubs")
+            print(publications)
             all_data.extend(publications)
             time.sleep(POLITE_DELAY)
     finally:

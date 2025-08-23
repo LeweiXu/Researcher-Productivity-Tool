@@ -3,8 +3,9 @@ from app.scrapers.MU_Scraper import scrape_MU
 from app.scrapers.ANU_Scraper import scrape_ANU
 from app.scrapers.UNSW_Scraper import scrape_UNSW
 from app.scrapers.UA_Scraper import scrape_UA
-from app.scrapers.helpers.save_functions import write_to_csv, write_to_db
-from app.scrapers.helpers.journal_matching import match_journals
+from app.scrapers.UQ_Scraper import scrape_UQ
+from app.scrapers.helpers.shared_functions import write_to_csv, write_to_db
+from app.scrapers.helpers.shared_functions import match_journals
 import csv
 import re
 
@@ -28,6 +29,7 @@ def update_all(csv=True, db=True, match=True):
     update_ANU(csv, db, match)
     update_UNSW(csv, db, match)
     update_UA(csv, db, match)
+    update_UQ(csv, db, match)
 
 def update_UWA(csv=True, db=True, match=True):
     UWA_data = scrape_UWA()
@@ -64,6 +66,13 @@ def update_UA(csv=True, db=True, match=True):
     if db: write_to_db(UA_data, "UA")
     if match: match_journals(university="UA")
 
+def update_UQ(csv=True, db=True, match=True):
+    UQ_data = scrape_UQ()
+    standardize(UQ_data)
+    if csv: write_to_csv(UQ_data, "app/files/UQ_data.csv")
+    if db: write_to_db(UQ_data, "UQ")
+    if match: match_journals(university="UQ")
+
 def import_from_csv(university, csv_path="app/files/all_data.csv"):
     all_data = []
     with open(csv_path, newline='', encoding='utf-8') as f:
@@ -84,4 +93,4 @@ def import_from_csv(university, csv_path="app/files/all_data.csv"):
     match_journals(university=university)
 
 if __name__ == "__main__":
-    update_UA()
+    update_UQ()
