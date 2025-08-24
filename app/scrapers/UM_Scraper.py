@@ -12,11 +12,7 @@ import re
 links_to_scrape = ["https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951"]
 
 #Only works for newer layout of researcher profile pages
-def find_researcher(academic):
-    options = uc.ChromeOptions()
-    options.add_argument("--log-level=3")
-    
-    driver = uc.Chrome(options=options)
+def find_researcher(academic, driver):
 
     driver.get(academic["url"])
 
@@ -25,18 +21,18 @@ def find_researcher(academic):
         time.sleep(2)
         
     except TimeoutException:
-        driver.quit()
+        
         raise RuntimeError(f"Unable to load profile page for {academic['name']}")
 
     try:
         new_name = driver.find_element(By.XPATH, '//div[@id="profileTitleCol"]//h1')
     except NoSuchElementException:
-        driver.quit()
+        
         return(None)
         
     new_name = new_name.text
 
-    driver.quit()
+    
 
     if new_name == academic["name"]:
         return(None)
@@ -64,8 +60,7 @@ def transform_name_nicknamelast(name):
     else:
         return(name)
 
-def get_staff(url):
-    driver = webdriver.Chrome()
+def get_staff(url, driver):
     driver.get(url)
     
     try:
@@ -80,7 +75,6 @@ def get_staff(url):
     for staff_link, role in zip(name_links, roles):
         staff.append({"name": staff_link.text, "url": staff_link.get_attribute("href"), "role": role.text})
     
-    driver.quit()
     return(staff)
 
 def clean_staff(staff_list):
@@ -177,32 +171,22 @@ def get_works_openalex(academics):
     print(f"Skipped due to no search results: {skipped_academics}")
     return UniMelb_works
 
-def get_works_website(academics):
-    print("Attempting to scrape from UniMelb website")
+def get_works_website(academics, driver):
 
-    options = uc.ChromeOptions()
-    options.add_argument("--log-level=3")
-    
-    driver = uc.Chrome(options=options)
+    print("Attempting to scrape from UniMelb website")
 
     all_works = []
     First = True
     count = 0
     for academic in (a for a in academics if not a["scraped"]):
-        #Initially give browser time to set up
-        if First:
-            time.sleep(random.uniform(15, 20))
-            First = False
-        else:
-            time.sleep(random.uniform(7, 12))
-
+        time.sleep(5)
         #Some researchers' names are different on the department page and Find and Expert. This only looks up if needed to avoid unnecessary requests
         search_name = transform_name_firstlast(academic["name"])
         attempts = 0
         while attempts < 2:
             try:
                 driver.get(f"https://findanexpert.unimelb.edu.au/searchresults?category=publication&pageNumber=1&pageSize=250&q={search_name}&sorting=mostRecent")
-                WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]")))
+                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]")))
                 break  # Successfully found publications, exit loop
             except TimeoutException:
                 attempts += 1
@@ -215,7 +199,7 @@ def get_works_website(academics):
                 # If both transformations failed, try to find the researcher's actual name
                 print(f"Both name transformations failed for {academic['name']}. Checking researcher profile")
                 try:
-                    new_name = find_researcher(academic)
+                    new_name = find_researcher(academic, driver)
                     if new_name:
                         print(f"Found new name: {new_name}. Retrying with original transformation")
                         search_name = transform_name_firstlast(new_name)
@@ -266,21 +250,17 @@ def get_works_website(academics):
         
         count += 1
     
-    driver.quit()
     print(f"Researchers scraped: {count}")
     return(all_works)
 
-def scrape_page(url):
-    staff_list = get_staff(url)
-    academic_list = clean_staff(staff_list)
-    UniMelb_works = get_works_website(academic_list)
-    UniMelb_works.extend(get_works_openalex(academic_list))
-
-    return(UniMelb_works)
 
 def scrape_UM():
     output = []
+    driver = uc.Chrome(version_main=138)
     for link in links_to_scrape:
-        output.extend(scrape_page(link))
-    
+        staff_list = get_staff(link, driver)
+        academic_list = clean_staff(staff_list)
+        output.extend(get_works_website(academic_list, driver))
+        output.extend(get_works_openalex(academic_list))
+
     return(output)

@@ -13,21 +13,38 @@ csv_paths = [os.path.join(CSV_DIR, f) for f in os.listdir(CSV_DIR) if f.endswith
 # NOTE: Scrapers return a list of lists in the format ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL"]
 
 def standardize(data):
-    # Data returned from scrapers is raw data, need to standardize format 
-    # E.g. (Publication Type --> "Journal Article", "Contribution to Journal" are the same thing)
-    # E.g. (Researcher Name --> Strip Titles Dr, Professor etc.)
-    title_pattern = re.compile(r"^(Dr\.?|Associate Professor|Professor|Ms\.?|Mr\.?|Mrs\.?|Lecturer|Prof\.?|EmPr|AsPr|Scientia Professor|Emeritus Professor)\s+", re.IGNORECASE)
+    # Enhanced pattern to match titles in any order (e.g., "Professor Emeritus" or "Emeritus Professor")
+    title_pattern = re.compile(
+        r"^(Dr\.?|Associate Professor|Professor|Ms\.?|Mr\.?|Mrs\.?|Lecturer|Prof\.?|EmPr|AsPr"
+        r"|Scientia Professor|Professor Scientia|Emeritus Professor|Professor Emeritus)\s+",
+        re.IGNORECASE
+    )
     for row in data:
-        for i, element in enumerate(row):
-            if element == "":
+        # Check required fields
+        if row[0] == "" or row[2] == "" or row[5] == "" or row[6] == "":
+            raise ValueError(f"Missing required field in row: {row}")
+
+        # Ensure NULL fields are set to None
+        for i in [1, 3, 4]:
+            if row[i] == "":
                 row[i] = None
+
+        # Clean researcher name
         if len(row) > 5 and row[5]:
             row[5] = title_pattern.sub("", row[5]).strip()
+
+        # Remove unwanted characters from publication type for big 3 universities
         if len(row) > 2 and row[2]:
             type_val = row[2]
             if type_val[-2:] == ' ›':
                 type_val = type_val[:-2]
             row[2] = type_val
+
+        # Ensure year is numeric & set to integer
+        if row[1] and row[1].isnumeric():
+            row[1] = int(row[1])
+
+        # TODO: standardize "Type" e.g. journal article, contribution to journal etc. --> journal article
 
 # Run standardize() function on all CSV files, then rewrite to database
 def re_standardize():
@@ -64,3 +81,22 @@ def re_standardize():
         print(f"Successfully wrote standardized data to {csv_path}")
         write_to_db(data, university)
         match_journals(university=university)
+
+def import_from_csv(university, csv_path):
+    all_data = []
+    with open(csv_path, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            all_data.append([
+                row["Title"],
+                row["Year"],
+                row["Type"],
+                row["Journal Name"],
+                row["Article URL"],
+                row["Researcher Name"],
+                row["Profile URL"]
+            ])
+
+    standardize(all_data)
+    write_to_db(all_data, university)
+    match_journals(university=university)
