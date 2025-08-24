@@ -25,23 +25,22 @@ def find_researcher(academic):
         time.sleep(2)
         
     except TimeoutException:
-        driver.close()
+        driver.quit()
         raise RuntimeError(f"Unable to load profile page for {academic['name']}")
 
     try:
         new_name = driver.find_element(By.XPATH, '//div[@id="profileTitleCol"]//h1')
     except NoSuchElementException:
-        driver.close()
+        driver.quit()
         return(None)
         
     new_name = new_name.text
 
-    driver.close()
+    driver.quit()
 
     if new_name == academic["name"]:
         return(None)
     else:
-        print(f"New name found: {new_name}")
         academic["name"] = new_name
         return(new_name)
 
@@ -81,7 +80,7 @@ def get_staff(url):
     for staff_link, role in zip(name_links, roles):
         staff.append({"name": staff_link.text, "url": staff_link.get_attribute("href"), "role": role.text})
     
-    driver.close()
+    driver.quit()
     return(staff)
 
 def clean_staff(staff_list):
@@ -198,30 +197,39 @@ def get_works_website(academics):
             time.sleep(random.uniform(7, 12))
 
         #Some researchers' names are different on the department page and Find and Expert. This only looks up if needed to avoid unnecessary requests
+        search_name = transform_name_firstlast(academic["name"])
         attempts = 0
         while attempts < 2:
             try:
-                search_name = transform_name_firstlast(academic["name"])
                 driver.get(f"https://findanexpert.unimelb.edu.au/searchresults?category=publication&pageNumber=1&pageSize=250&q={search_name}&sorting=mostRecent")
                 WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'container-fluid') and .//a[contains(@href, '/scholarlywork/')]]")))
-                break
+                break  # Successfully found publications, exit loop
             except TimeoutException:
                 attempts += 1
                 if attempts == 1:
-                    print(f"Timeout waiting for publications to load for {academic['name']}. Checking name")
+                    print(f"Timeout waiting for publications to load for {academic['name']}. Trying nickname transformation")
+                    # Try nickname transformation as fallback
+                    search_name = transform_name_nicknamelast(academic["name"])
+                    continue
                 
-                #Lookup name and if timeout set name to none
+                # If both transformations failed, try to find the researcher's actual name
+                print(f"Both name transformations failed for {academic['name']}. Checking researcher profile")
                 try:
                     new_name = find_researcher(academic)
+                    if new_name:
+                        print(f"Found new name: {new_name}. Retrying with original transformation")
+                        search_name = transform_name_firstlast(new_name)
+                        attempts = 0  # Reset attempts to try again
+                        continue
                 except RuntimeError:
-                    new_name = None
-
-                if new_name == None:
-                    attempts = 2 #force exit
-                else:
-                    print(f"Found new name. Retrying publication lookup")
-        else:
-            print(f"Timeout waiting for publications to load for {academic['name']}. Likely no publications")
+                    pass
+                
+                # If we get here, we've exhausted all options
+                print(f"Could not find publications for {academic['name']}")
+                break
+        
+        # If we didn't break out of the loop due to success, skip this academic
+        if attempts >= 2:
             continue
         
         print(f"Scraping articles for {academic['name']}")
