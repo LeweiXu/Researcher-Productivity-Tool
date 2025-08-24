@@ -189,7 +189,13 @@ def parse_profile(driver, researcher_name: str, profile_url: str):
     """
     driver.get(profile_url)
     wait_css(driver, "body")
-    time.sleep(0.6)
+    # wait for publications list to load, fallback to short sleep if slow
+    try:
+        WebDriverWait(driver, 5).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "#home ul.pubType li"))
+    )
+    except TimeoutException:
+        time.sleep(1)  # fallback if pubs never show up
 
     # expand **By Type** only
     click_expand_all_in_pane(driver, "#home")
@@ -325,12 +331,12 @@ def main() -> List[List[str]]:
     header = ["Title","Year","Type","Journal Name","Article URL","Researcher Name","Profile URL"]
     rows = scrape_usyd(URLS, print_names=True)  # set False to silence name prints
     
-    '''
+    
     with open(CSV_OUT, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(header)
         w.writerows(rows)
-    '''
+    
     
     print(f"Wrote {len(rows)} rows to {CSV_OUT}")
     return rows
