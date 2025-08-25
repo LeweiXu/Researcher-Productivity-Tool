@@ -8,7 +8,7 @@ from app.scrapers.UM_Scraper import scrape_UM
 from app.scrapers.USYD_Scraper import scrape_USYD
 from app.scrapers.helpers.shared_functions import write_to_csv, write_to_db
 from app.scrapers.helpers.shared_functions import match_journals
-from app.scrapers.helpers.util import standardize, import_from_csv
+from app.scrapers.helpers.util import standardize
 
 def update_all(csv=True, db=True, match=True):
     update_UWA(csv, db, match)

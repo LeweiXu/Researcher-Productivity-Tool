@@ -19,9 +19,10 @@ class Researchers(Base):
     title = Column(String, nullable=True)
     level = Column(String, nullable=True)
     h_index = Column(Integer, nullable=True)
+    field = Column(String, nullable=True)
     publication = relationship(
         "Publications",
-        secondary="Researcher_publication",
+        secondary="Researcher_Publication",
         back_populates="researcher"
     )
 
@@ -30,7 +31,7 @@ class Journals(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     abdc_rank = Column(String, nullable=True)
-    journal_impact_factor = Column(Integer, nullable=True)
+    clarivate = Column(Integer, nullable=True)
     publisher = Column(String, nullable=True)
     publication = relationship("Publications", back_populates="journal")
 
