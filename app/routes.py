@@ -136,18 +136,19 @@ def researcher(request: Request, researcher_id: str):
     # TEST DATA
     researcher = {"nicole-ang": {
             "name": "Nicole Ang",
-            "level": "Senior Lecturer"
+            "level": "Senior Lecturer",
+            "department": "Department of Finance"
         },
         "lee-smales": {
             "name": "Lee Smales",
-            "level": "Associate Professor"
+            "level": "Associate Professor",
+            "department": "Department of Accounting"
         }
     }
     res = researcher.get(researcher_id, None)
     if not res:
         return HTMLResponse(content="Researcher not found", status_code=404)
     
-    rankings = {"A*": 3, "A": 5, "B": 2, "C": 1}
     publications = [
         {"title": "Finance in Australia", "journal": "Journal of Finance", "year": 2022, "ranking": "A*"},
         {"title": "Economics Today", "journal": "Economic Review", "year": 2021, "ranking": "A"},
