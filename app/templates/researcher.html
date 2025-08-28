@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ researcher.name }} - Researcher Profile</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #ccc; padding: 32px; }
+        .header { display: flex; align-items: center; }
+        .name { font-size: 2em; font-weight: bold; margin-right: 24px; }
+        .level { font-size: 1.2em; color: #555; margin-top: 10px;}
+        .section-title { font-size: 1.2em; font-weight: bold; margin: 32px 0 12px 0; }
+        .rank-table, .pub-table { width: 100%; border-collapse: collapse; }
+        .rank-table th, .rank-table td, .pub-table th, .pub-table td { border: 1px solid #bbb; padding: 10px 16px; text-align: left; }
+        .rank-table th, .pub-table th { background: #e3e3e3; }
+        a { color: #000000; text-decoration: none; }
+        a:hover { color: #0d47a1; text-decoration: underline; }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="name"><a href="">{{ researcher.name }}</a></div>
+        </div>
+        <div class="level">{{ researcher.level }}</div>
+
+        <div class="section-title">Number of articles by ranking</div>
+        <table class="rank-table">
+            <tr>
+                <th>Ranking</th>
+                <th>Number of Journals</th>
+            </tr>
+            {% for rank, count in rankings.items() %}
+            <tr>
+                <td>{{ rank }}</td>
+                <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <div class="section-title" style="margin-top: 64px;">Publications
+            <div style="display: flex; align-items: center; margin-top: 0px; margin-bottom: 4px; float: right;">
+                <label for="sort-select" style="margin-right: 4px; font-weight: lighter; font-size: 0.8em;">Sort by:</label>
+                <select id="sort-select">
+                    <option value="0">Title</option>
+                    <option value="1">Journal</option>
+                    <option value="2">Year</option>
+                    <option value="3">Ranking</option>
+                </select>
+                <label for="order-select" style="margin: 0 4px 0 16px; font-weight: lighter; font-size: 0.8em;">Order by:</label>
+                <select id="order-select">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+            </div>
+        </div>
+        <table class="pub-table" id="pub-table">
+            <tr>
+                <th>Title</th>
+                <th>Journal</th>
+                <th>Year</th>
+                <th>Ranking</th>
+            </tr>
+            {% for pub in publications %}
+            <tr>
+                <td><a href="">{{ pub.title }}</a></td>
+                <td>{{ pub.journal }}</td>
+                <td>{{ pub.year }}</td>
+                <td>{{ pub.ranking }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <script>
+        function sortTable() {
+            var table = document.getElementById('pub-table');
+            var rows = Array.from(table.rows).slice(1); // skip header
+            var idx = parseInt(document.getElementById('sort-select').value);
+            var order = document.getElementById('order-select').value;
+
+            rows.sort(function(a, b) {
+                var valA = a.cells[idx].innerText;
+                var valB = b.cells[idx].innerText;
+                if(idx === 2) { // Year column
+                    valA = parseInt(valA);
+                    valB = parseInt(valB);
+                    return order === "asc" ? valA - valB : valB - valA;
+                }
+                var cmp = valA.localeCompare(valB);
+                return order === "asc" ? cmp : -cmp;
+            });
+
+            rows.forEach(function(row) {
+                table.appendChild(row);
+            });
+        }
+
+        document.getElementById('sort-select').addEventListener('change', sortTable);
+        document.getElementById('order-select').addEventListener('change', sortTable);
+    </script>
+</body>
+</html>
