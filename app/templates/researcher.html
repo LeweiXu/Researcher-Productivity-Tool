@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,6 +10,7 @@
         .header { display: flex; align-items: center; }
         .name { font-size: 2em; font-weight: bold; margin-right: 24px; }
         .level { font-size: 1.2em; color: #555; margin-top: 10px;}
+        .department { font-size: 1.0em; color: #949494; margin-top: 10px;}
         .section-title { font-size: 1.2em; font-weight: bold; margin: 32px 0 12px 0; }
         .rank-table, .pub-table { width: 100%; border-collapse: collapse; }
         .rank-table th, .rank-table td, .pub-table th, .pub-table td { border: 1px solid #bbb; padding: 10px 16px; text-align: left; }
@@ -20,32 +23,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="name"><a href="">{{ researcher.name }}</a></div>
+            <div class="name"><a href="">{{ researcher.name }}</a></div> <!-- Clicking the name can direct to their profile url which will be queried later -->
         </div>
+        <div class="department">{{ researcher.department }}</div>
         <div class="level">{{ researcher.level }}</div>
 
-        <div class="section-title">Number of articles by ranking</div>
-        <table class="rank-table">
-            <tr>
-                <th>Ranking</th>
-                <th>Number of Journals</th>
-            </tr>
-            {% for rank, count in rankings.items() %}
-            <tr>
-                <td>{{ rank }}</td>
-                <td>{{ count }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <div class="section-title" style="margin-top: 64px;">Publications
-            <div style="display: flex; align-items: center; margin-top: 0px; margin-bottom: 4px; float: right;">
+        <div class="section-title" style="margin-top: 16px;">
+            <div style="display: flex; align-items: center; margin-top: 0px; margin-bottom: 16px; float: right;">
                 <label for="sort-select" style="margin-right: 4px; font-weight: lighter; font-size: 0.8em;">Sort by:</label>
                 <select id="sort-select">
-                    <option value="0">Title</option>
-                    <option value="1">Journal</option>
-                    <option value="2">Year</option>
-                    <option value="3">Ranking</option>
+                    <option value="0">Year</option>
+                    <option value="1">ABDC Ranking</option>
                 </select>
                 <label for="order-select" style="margin: 0 4px 0 16px; font-weight: lighter; font-size: 0.8em;">Order by:</label>
                 <select id="order-select">
@@ -56,10 +44,10 @@
         </div>
         <table class="pub-table" id="pub-table">
             <tr>
-                <th>Title</th>
-                <th>Journal</th>
+                <th>Publications</th>
+                <th>Journal Name</th>
                 <th>Year</th>
-                <th>Ranking</th>
+                <th>ABDC Ranking</th>
             </tr>
             {% for pub in publications %}
             <tr>
@@ -100,3 +88,4 @@
     </script>
 </body>
 </html>
+{% endblock %}
