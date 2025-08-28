@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Research Productivity Tool{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
+        .navbar {
+            background: #99dffd;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 120px;
+        }
+        .navbar-left {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-logo {
+            width: 56px;
+            height: 56px;
+            margin: 0 24px;
+        }
+        .navbar-title {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000000;
+            letter-spacing: 1px;
+        }
+        .navbar-links {
+            display: flex;
+            gap: 18px;
+            margin-right: 32px;
+        }
+        .navbar-link {
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 28px;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-decoration: none;
+            transition: background 0.2s;
+            display: inline-block;
+            text-align: center;
+        }
+        .navbar-link:hover {
+            background: #0d47a1;
+        }
+        @media (max-width: 700px) {
+            .navbar-title { font-size: 1.2em; }
+            .navbar-logo { width: 36px; height: 36px; }
+            .navbar-link { padding: 8px 14px; font-size: 1em; }
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <img src="https://www.creativefabrica.com/wp-content/uploads/2020/09/17/Book-Logo-Graphics-5535886-1.jpg" alt="Logo" class="navbar-logo" />
+            <span class="navbar-title">Research Productivity Tool</span>
+        </div>
+        <div class="navbar-links">
+            <a href="/home" class="navbar-link">Home</a>
+            <a href="" class="navbar-link">Researchers</a>
+            <a href="" class="navbar-link">Universities</a>
+        </div>
+    </div>
+    <div style="max-width: 1200px; margin: 0 auto;">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
