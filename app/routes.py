@@ -129,3 +129,28 @@ def university(request: Request, uni_id: str):
         {"name": "Lee Smales"}
     ]
     return templates.TemplateResponse("university.html", {"request": request, "uni": uni, "top_researchers": top_researchers, "all_researchers": all_researchers})
+
+
+@router.get("/university/researcher/{researcher_id}", response_class=HTMLResponse)
+def researcher(request: Request, researcher_id: str):
+    # TEST DATA
+    researcher = {"nicole-ang": {
+            "name": "Nicole Ang",
+            "level": "Senior Lecturer"
+        },
+        "lee-smales": {
+            "name": "Lee Smales",
+            "level": "Associate Professor"
+        }
+    }
+    res = researcher.get(researcher_id, None)
+    if not res:
+        return HTMLResponse(content="Researcher not found", status_code=404)
+    
+    rankings = {"A*": 3, "A": 5, "B": 2, "C": 1}
+    publications = [
+        {"title": "Finance in Australia", "journal": "Journal of Finance", "year": 2022, "ranking": "A*"},
+        {"title": "Economics Today", "journal": "Economic Review", "year": 2021, "ranking": "A"},
+        {"title": "A Comprehensive Study of Market Trends", "journal": "Journal of Economic Perspectives", "year": 2023, "ranking": "C"}
+    ]
+    return templates.TemplateResponse("researcher.html",{"request": request, "researcher": res, "rankings": rankings, "publications": publications})
