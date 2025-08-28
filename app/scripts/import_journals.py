@@ -27,6 +27,7 @@ def import_journals():
                     name=row['name'],
                     abdc_rank=row['abdc_rank'],
                     impact_factor=None,
+                    h_index=None,
                     publisher=row['publisher']
                 )
                 session.add(journal)
