@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, Float
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -16,10 +16,6 @@ class Researchers(Base):
     name = Column(String, nullable=False)
     university = Column(String, nullable=False)
     profile_url = Column(String, nullable=True)
-    title = Column(String, nullable=True)
-    level = Column(String, nullable=True)
-    h_index = Column(Integer, nullable=True)
-    field = Column(String, nullable=True)
     publication = relationship(
         "Publications",
         secondary="Researcher_Publication",
@@ -31,7 +27,8 @@ class Journals(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     abdc_rank = Column(String, nullable=True)
-    clarivate = Column(Integer, nullable=True)
+    h_index = Column(Integer, nullable=True)
+    impact_factor = Column(Float, nullable=True)
     publisher = Column(String, nullable=True)
     publication = relationship("Publications", back_populates="journal")
 
