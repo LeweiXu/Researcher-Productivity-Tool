@@ -9,12 +9,15 @@
         .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #ccc; padding: 32px; }
         .header { display: flex; align-items: center; }
         .name { font-size: 2em; font-weight: bold; margin-right: 24px; }
-        .level { font-size: 1.2em; color: #555; margin-top: 10px;}
+        .level { font-size: 1.2em; color: #555; margin-top: 10px; margin-bottom: 32px;}
         .department { font-size: 1.0em; color: #949494; margin-top: 10px;}
         .section-title { font-size: 1.2em; font-weight: bold; margin: 32px 0 12px 0; }
-        .rank-table, .pub-table { width: 100%; border-collapse: collapse; }
-        .rank-table th, .rank-table td, .pub-table th, .pub-table td { border: 1px solid #bbb; padding: 10px 16px; text-align: left; }
-        .rank-table th, .pub-table th { background: #e3e3e3; }
+        .pub-table { width: 100%; border-collapse: collapse; }
+        .pub-table th, .pub-table td { border: 1px solid #bbb; padding: 10px 16px; text-align: left; }
+        .pub-table th { background: #e3e3e3; cursor: pointer; user-select: none; }
+        .arrow { margin-left: 6px; font-size: 0.8em; opacity: 0.6; }
+        .hidden { display: none; }
+        #searchInput { margin: 10px 0; padding: 6px 8px; width: 240px; }
         a { color: #000000; text-decoration: none; }
         a:hover { color: #0d47a1; text-decoration: underline; }
     </style>
@@ -23,68 +26,101 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="name"><a href="">{{ researcher.name }}</a></div> <!-- Clicking the name can direct to their profile url which will be queried later -->
+            <div class="name">{{ researcher.name }}</div>
         </div>
         <div class="department">{{ researcher.department }}</div>
         <div class="level">{{ researcher.level }}</div>
 
-        <div class="section-title" style="margin-top: 16px;">
-            <div style="display: flex; align-items: center; margin-top: 0px; margin-bottom: 16px; float: right;">
-                <label for="sort-select" style="margin-right: 4px; font-weight: lighter; font-size: 0.8em;">Sort by:</label>
-                <select id="sort-select">
-                    <option value="0">Year</option>
-                    <option value="1">ABDC Ranking</option>
-                </select>
-                <label for="order-select" style="margin: 0 4px 0 16px; font-weight: lighter; font-size: 0.8em;">Order by:</label>
-                <select id="order-select">
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                </select>
-            </div>
-        </div>
+        <input type="text" id="searchInput" placeholder="Filter publications…">
+
         <table class="pub-table" id="pub-table">
+            <thead>
             <tr>
-                <th>Publications</th>
-                <th>Journal Name</th>
-                <th>Year</th>
-                <th>ABDC Ranking</th>
+                <th data-type="text">Publications Title <span class="arrow"></span></th>
+                <th data-type="text">Journal Name <span class="arrow"></span></th>
+                <th data-type="number">Year <span class="arrow"></span></th>
+                <th data-type="text">ABDC Ranking <span class="arrow"></span></th>
+                <th data-type="number">h-index <span class="arrow"></span></th>
             </tr>
+            </thead>
+            <tbody>
             {% for pub in publications %}
             <tr>
-                <td><a href="">{{ pub.title }}</a></td>
+                <td>{{ pub.title }}</td>
                 <td>{{ pub.journal }}</td>
                 <td>{{ pub.year }}</td>
                 <td>{{ pub.ranking }}</td>
+                <td>{{ pub.h_index }}</td>
             </tr>
             {% endfor %}
+            </tbody>
         </table>
     </div>
     <script>
-        function sortTable() {
-            var table = document.getElementById('pub-table');
-            var rows = Array.from(table.rows).slice(1); // skip header
-            var idx = parseInt(document.getElementById('sort-select').value);
-            var order = document.getElementById('order-select').value;
+        const table = document.getElementById('pub-table');
+        const tbody = table.tBodies[0];
+        const headers = table.tHead.rows[0].cells;
+        const sortState = Array.from(headers).map(() => null);
 
-            rows.sort(function(a, b) {
-                var valA = a.cells[idx].innerText;
-                var valB = b.cells[idx].innerText;
-                if(idx === 2) { // Year column
-                    valA = parseInt(valA);
-                    valB = parseInt(valB);
-                    return order === "asc" ? valA - valB : valB - valA;
+        const getCellText = (tr, idx) =>
+            (tr.children[idx]?.textContent || '').trim();
+
+        const asNumber = (v) => {
+            const cleaned = v.replace(/[, ]+/g, '');
+            return parseFloat(cleaned);
+        };
+
+        const compareFactory = (idx, dir, type) => {
+            const mul = dir === 'asc' ? 1 : -1;
+            return (a, b) => {
+                let va = getCellText(a, idx);
+                let vb = getCellText(b, idx);
+                if (type === 'number') {
+                    const na = asNumber(va);
+                    const nb = asNumber(vb);
+                    if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+                        return (na - nb) * mul;
+                    }
                 }
-                var cmp = valA.localeCompare(valB);
-                return order === "asc" ? cmp : -cmp;
-            });
+                return va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' }) * mul;
+            };
+        };
 
-            rows.forEach(function(row) {
-                table.appendChild(row);
+        function renderSortArrows(activeIdx) {
+            Array.from(headers).forEach((th, i) => {
+                const arrow = th.querySelector('.arrow');
+                if (!arrow) return;
+                if (i === activeIdx) {
+                    arrow.textContent = sortState[i] === 'asc' ? '▲' : '▼';
+                } else {
+                    arrow.textContent = '';
+                }
             });
         }
 
-        document.getElementById('sort-select').addEventListener('change', sortTable);
-        document.getElementById('order-select').addEventListener('change', sortTable);
+        Array.from(headers).forEach((th, idx) => {
+            th.addEventListener('click', () => {
+                sortState[idx] = sortState[idx] === 'asc' ? 'desc' : 'asc';
+                sortState.forEach((_, i) => { if (i !== idx) sortState[i] = null; });
+
+                const type = th.dataset.type || 'text';
+                const dir = sortState[idx] || 'asc';
+
+                const rows = Array.from(tbody.querySelectorAll('tr'))
+                    .sort(compareFactory(idx, dir, type));
+
+                rows.forEach(row => tbody.appendChild(row));
+                renderSortArrows(idx);
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                const text = tr.textContent.toLowerCase();
+                tr.classList.toggle('hidden', !text.includes(q));
+            });
+        });
     </script>
 </body>
 </html>

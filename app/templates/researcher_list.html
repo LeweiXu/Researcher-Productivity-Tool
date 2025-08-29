@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Researchers</title>
+    <style>
+        .researcher-list-container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #ccc;
+            padding: 32px;
+        }
+        .researcher-list-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 24px;
+        }
+        .researcher-list {
+            list-style: none;
+            padding: 0;
+        }
+        .researcher-list li {
+            margin-bottom: 16px;
+            font-size: 1.2em;
+        }
+        .researcher-list a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        .researcher-list a:hover {
+            color: #5a01ce;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="researcher-list-container">
+        <div class="researcher-list-title">All Researchers</div>
+        <ul class="researcher-list">
+            {% for researcher in researchers %}
+            <li>
+                <a href="/researcher/{{ researcher.id }}">
+                    {{ researcher.name }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
+{% endblock %}
