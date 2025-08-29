@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Login · Research Productivity Tool{% endblock %}
+
+{% block head %}
+<style>
+  .auth-wrapper {
+    min-height: calc(100vh - 120px);
+    display: grid;
+    place-items: center;
+    padding: 32px 16px;
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    padding: 28px;
+  }
+  .auth-title { font-size: 1.6em; font-weight: 700; margin: 4px 0 18px 0; text-align: center; }
+  .auth-subtitle { text-align: center; color: #666; font-size: .95em; margin-bottom: 18px; }
+  .form-row { margin-bottom: 14px; }
+  .label { display: block; margin-bottom: 6px; font-weight: 600; }
+  .input {
+    width: 100%;
+    border: 1px solid #cfcfcf;
+    border-radius: 8px;
+    padding: 12px 12px;
+    font-size: 1em;
+    outline: none;
+    background: #fafafa;
+  }
+  .input:focus { border-color: #1976d2; background: #fff; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .remember { display: flex; align-items: center; gap: 8px; user-select: none; }
+  .quick-links { display: flex; gap: 12px; }
+  .btn-primary {
+    width: 100%;
+    background: #1976d2; color: #fff; border: 0; border-radius: 8px;
+    padding: 12px; font-size: 1.05em; font-weight: 700; cursor: pointer;
+    transition: background .15s ease-in-out; margin-top: 8px;
+  }
+  .btn-primary:hover { background: #0d47a1; }
+  .error {
+    background: #ffe9e9; color: #b00020; border: 1px solid #ffb3b3;
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;
+  }
+  .success {
+    background: #e7f7ee; color: #0f7a36; border: 1px solid #bfe9d0;
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;
+  }
+  .showpass { position: relative; }
+  .toggle-eye {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    border: 0; background: transparent; cursor: pointer; font-size: .95em;
+    color: #1976d2;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <div class="auth-title">Sign in</div>
+    <div class="auth-subtitle">Access your Research Productivity dashboard</div>
+
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    {% if message %}<div class="success">{{ message }}</div>{% endif %}
+
+    <!-- Posts to FastAPI endpoint: login_post -->
+    <form method="post" action="{{ url_for('login_post') }}">
+      <div class="form-row">
+        <label class="label" for="email">Email</label>
+        <input class="input" type="email" id="email" name="email"
+               placeholder="you@university.edu.au" required>
+      </div>
+
+      <div class="form-row showpass">
+        <label class="label" for="password">Password</label>
+        <input class="input" type="password" id="password" name="password"
+               placeholder="••••••••" minlength="6" required>
+        <button type="button" class="toggle-eye" id="togglePass">Show</button>
+      </div>
+
+      <div class="row-between" style="margin: 8px 0 4px;">
+        <label class="remember">
+          <input type="checkbox" name="remember" value="1">
+          Remember me
+        </label>
+        <div class="quick-links">
+          <a href="{{ url_for('reset_password_get') }}">Forgot password?</a>
+          <a href="{{ url_for('signup_get') }}">Sign Up</a>
+        </div>
+      </div>
+
+      <button class="btn-primary" type="submit">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // simple show/hide password
+  const btn = document.getElementById('togglePass');
+  const pwd = document.getElementById('password');
+  btn.addEventListener('click', () => {
+    const isPwd = pwd.type === 'password';
+    pwd.type = isPwd ? 'text' : 'password';
+    btn.textContent = isPwd ? 'Hide' : 'Show';
+  });
+</script>
+{% endblock %}
