@@ -108,3 +108,6 @@ def write_to_db(all_data, university):
     finally:
         db.close()
         print("Completed writing to database")
+
+if __name__ == "__main__":
+    match_journals()

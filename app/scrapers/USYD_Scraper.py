@@ -294,7 +294,7 @@ def parse_profile(driver, researcher_name: str, profile_url: str):
 
 
 
-def scrape_usyd(urls: List[str], *, print_names: bool = False) -> List[List[str]]:
+def scrape_USYD(urls: List[str], *, print_names: bool = False) -> List[List[str]]:
     """Collect and return CSV rows only (no header, no writing)."""
     d = make_driver()
     out_rows: List[List[str]] = []
@@ -317,31 +317,3 @@ def scrape_usyd(urls: List[str], *, print_names: bool = False) -> List[List[str]
         except Exception:
             pass
     return out_rows
-# ---------- main ----------
-
-def main() -> List[List[str]]:
-    """
-    Entry point for running as a script:
-      - scrapes all URLs,
-      - writes CSV with original header,
-      - prints a summary,
-      - returns the rows (useful if we need to call this programs main function).
-    """
-
-    header = ["Title","Year","Type","Journal Name","Article URL","Researcher Name","Profile URL"]
-    rows = scrape_usyd(URLS, print_names=True)  # set False to silence name prints
-    
-    '''
-    with open(CSV_OUT, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(header)
-        w.writerows(rows)
-    '''
-    
-    print(f"Wrote {len(rows)} rows to {CSV_OUT}")
-    return rows
-
-
-if __name__ == "__main__":
-    main()
-
