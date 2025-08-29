@@ -9,6 +9,7 @@
         .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #ccc; padding: 32px; }
         .header { display: flex; align-items: center; }
         .name { font-size: 2em; font-weight: bold; margin-right: 24px; }
+        .uni { font-size: 1.0em; color: #949494; margin-top: 10px; }
         .level { font-size: 1.2em; color: #555; margin-top: 10px; margin-bottom: 32px;}
         .department { font-size: 1.0em; color: #949494; margin-top: 10px;}
         .section-title { font-size: 1.2em; font-weight: bold; margin: 32px 0 12px 0; }
@@ -26,8 +27,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="name">{{ researcher.name }}</div>
+            <div class="name"><a href="{{ researcher.profile_url }}">{{ researcher.name }}</a></div>
         </div>
+        <div class="uni">{{ researcher.university }}</div>
         <div class="department">{{ researcher.department }}</div>
         <div class="level">{{ researcher.level }}</div>
 
@@ -56,6 +58,7 @@
             </tbody>
         </table>
     </div>
+    <!-- sorting and filtering can still be improved -->
     <script>
         const table = document.getElementById('pub-table');
         const tbody = table.tBodies[0];

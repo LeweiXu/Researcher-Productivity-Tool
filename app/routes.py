@@ -108,35 +108,48 @@ def home(request: Request):
 
 @router.get("/researchers", response_class=HTMLResponse, name="researcher_list")
 def researcher_list(request: Request):
-    # Dummy data for demonstration; replace with DB query later
-    researchers = [
-        {"id": "nicole-ang", "name": "Nicole Ang"},
-        {"id": "lee-smales", "name": "Lee Smales"}
-    ]
-    return templates.TemplateResponse("researcher_list.html", {"request": request, "researchers": researchers})
+    db = SessionLocal()
+    try:
+        researchers = db.query(Researchers).all()
+        researcher_list = [
+            {"id": str(r.id), "name": r.name}
+            for r in researchers
+        ]
+    finally:
+        db.close()
+    return templates.TemplateResponse("researcher_list.html", {"request": request, "researchers": researcher_list})
 
 
 @router.get("/researcher/{researcher_id}", response_class=HTMLResponse, name="researcher_profile")
 def researcher_profile(request: Request, researcher_id: str = Path(...)):
-    # Dummy data for demonstration; replace with DB query later
-    researcher_data = {
-        "nicole-ang": {
-            "name": "Nicole Ang",
-            "level": "Senior Lecturer",
-            "department": "Department of Finance"
-        },
-        "lee-smales": {
-            "name": "Lee Smales",
-            "level": "Associate Professor",
-            "department": "Department of Accounting"
+    db = SessionLocal()
+    try:
+        researcher = db.query(Researchers).filter(Researchers.id == researcher_id).first()
+        if not researcher:
+            return HTMLResponse(content="Researcher not found", status_code=404)
+        
+        publications = (
+            db.query(Publications, Journals)
+            .outerjoin(Journals, Publications.journal_id == Journals.id)
+            .filter(Publications.researcher_id == researcher_id)
+            .all()
+        )
+        pub_list = []
+        for pub, journal in publications:
+            pub_list.append({
+                "title": pub.title,
+                "journal": journal.name if journal else pub.journal_name,
+                "year": pub.year,
+                "ranking": journal.abdc_rank if journal else "",
+                "h_index": journal.h_index if journal else "",
+            })
+        researcher_data = {
+            "name": researcher.name,
+            "level": "",
+            "department": "",
+            "university": researcher.university,
+            "profile_url": researcher.profile_url,
         }
-    }
-    res = researcher_data.get(researcher_id, None)
-    if not res:
-        return HTMLResponse(content="Researcher not found", status_code=404)
-    publications = [
-        {"title": "Finance in Australia", "journal": "Journal of Finance", "year": 2022, "ranking": "A*", "h_index": 12},
-        {"title": "Economics Today", "journal": "Economic Review", "year": 2021, "ranking": "A", "h_index": 10},
-        {"title": "A Comprehensive Study of Market Trends", "journal": "Journal of Economic Perspectives", "year": 2023, "ranking": "C", "h_index": 5}
-    ]
-    return templates.TemplateResponse("researcher.html", {"request": request, "researcher": res, "publications": publications})
+    finally:
+        db.close()
+    return templates.TemplateResponse("researcher.html", {"request": request, "researcher": researcher_data, "publications": pub_list})
