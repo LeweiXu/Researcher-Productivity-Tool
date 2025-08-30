@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Universities • Research Productivity Tool{% endblock %}
+{% block content %}
+
+<style>
+  .page-wrap { max-width: 1100px; margin: 32px auto 64px; }
+  .hint { color:#666; margin: 8px 0 18px; }
+  .filter-card{
+    background:#fff; border-radius:12px; box-shadow:0 2px 8px #ccc;
+    padding:24px; display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap;
+    position:relative;
+  }
+  .filter-field{ display:flex; flex-direction:column; gap:8px; min-width: 240px; }
+  .filter-field label{ font-weight:600; color:#333; }
+  .filter-field input[type="text"],
+  .filter-field select{
+    border:1px solid #cfd8dc; border-radius:8px; padding:10px 12px; font-size:14px; background:#fafafa;
+  }
+  .filter-actions{ display:flex; gap:10px; }
+  .btn{
+    background:#1976d2; color:#fff; border:none; border-radius:8px; padding:10px 18px;
+    font-weight:600; cursor:pointer; text-decoration:none; display:inline-block;
+  }
+  .btn:hover{ background:#0d47a1; }
+  .btn-secondary{ background:#455a64; }
+  .btn-secondary:hover{ background:#263238; }
+
+  .download-badge{
+    position:absolute; right:18px; top:-16px; display:flex; align-items:center; gap:10px;
+  }
+  .download-badge a{ text-decoration:none; }
+  .download-chip{
+    background:#1b5e20; color:#fff; padding:10px 14px; border-radius:10px; font-weight:700;
+  }
+
+  .table-wrap{
+    background:#fff; border-radius:12px; box-shadow:0 2px 8px #ccc; margin-top:22px; overflow:auto;
+  }
+  table{ width:100%; border-collapse:collapse; min-width:900px; }
+  thead th{
+    background:#1565c0; color:#fff; text-align:left; padding:12px 14px; font-weight:700;
+  }
+  tbody td{ padding:12px 14px; border-top:1px solid #eceff1; }
+  tbody tr:nth-child(even){ background:#f7fbff; }
+  .tag{ display:inline-block; padding:4px 8px; border-radius:999px; background:#e3f2fd; color:#0d47a1; font-weight:700; font-size:12px; }
+
+  @media (max-width: 700px){
+    .filter-field{ min-width: 100%; }
+    .download-badge{ position:static; margin-left:auto; }
+  }
+</style>
+
+<div class="page-wrap">
+  <h1 style="margin: 0 0 6px;">Universities</h1>
+  <p class="hint">This page is pre-filtered by the university chosen previously. You can refine by field of research and researcher level.</p>
+
+  <form class="filter-card" method="get" action="{{ url_for('universities') }}">
+    <div class="filter-field" style="flex:1;">
+      <label>University name</label>
+      <input type="text" name="university" value="{{ selected_university or '' }}" placeholder="e.g., University of Melbourne">
+    </div>
+
+    <div class="filter-field">
+      <label>Field of research</label>
+      <select name="field">
+        <option value="">All</option>
+        {% for f in fields %}
+          <option value="{{ f.value }}" {% if f.value == selected_field %}selected{% endif %}>{{ f.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label>Researcher level</label>
+      <select name="level">
+        <option value="">All</option>
+        {% for lvl in levels %}
+          <option value="{{ lvl.value }}" {% if lvl.value == selected_level %}selected{% endif %}>{{ lvl.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn" type="submit">Apply filters</button>
+      <a class="btn btn-secondary" href="{{ url_for('universities') }}">Reset</a>
+    </div>
+
+    <div class="download-badge">
+      <a href="{{ url_for('download_universities_excel',
+                           university=selected_university,
+                           field=selected_field,
+                           level=selected_level) }}">
+        <span class="download-chip">Download Excel</span>
+      </a>
+    </div>
+  </form>
+
+  <div class="table-wrap">
+    <table aria-label="Research output table">
+      <thead>
+        <tr>
+          <th style="width:110px;">Ranking</th>
+          <th>Name</th>
+          <th style="width:120px;">Date</th>
+          <th>Publication</th>
+          <th style="width:140px;">ABDC ranking</th>
+          <th style="width:160px;">Total contributors</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for r in rows %}
+            <tr>
+              <td><span class="tag">{{ r.ranking }}</span></td>
+              <td><a href="{{ url_for('researcher_detail', researcher_id=r.researcher_id) }}">{{ r.name }}</a></td>
+              <td>{{ r.date }}</td>
+              <td>{{ r.publication }}</td>
+              <td>{{ r.abdc or '-' }}</td>
+              <td>{{ r.contributors }}</td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6" style="text-align:center; color:#777; padding:22px;">No data for current filters.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
