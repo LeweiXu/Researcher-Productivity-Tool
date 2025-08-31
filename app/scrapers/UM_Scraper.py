@@ -6,7 +6,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
-import random
 import re
 
 links_to_scrape = ["https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951"]
@@ -78,25 +77,26 @@ def get_staff(url, driver):
     return(staff)
 
 def clean_staff(staff_list):
-    accepted_roles = {"Professor", "Associate Professor", "Lecturer", "Senior Lecturer", "Research Fellow"}
+    accepted_roles = ["Associate Professor", "Professor", "Senior Lecturer", "Lecturer", "Research Fellow"]
     rejected_roles = {"Assistant Lecturer", "Education-Focused", "Education Focused", "Education Focussed"}
     cleaned_staff_list = []
     
     for staff in staff_list:
         #checks name and role as it is inconsistent on the site
-        if not any(accepted_role in staff["role"] for accepted_role in accepted_roles) and not any(accepted_role in staff["name"] for accepted_role in accepted_roles):
-            continue
-        
         if any(rejected_role in staff["role"] for rejected_role in rejected_roles):
             continue
         
+        matched_role = next((role for role in accepted_roles if role in staff["role"] or role in staff["name"]),None)
+        if matched_role is None:
+            continue
+
         #removes role from their names
         for title in ["Associate Professor", "Professor", "Senior Lecturer", "Lecturer", "Research Fellow", "Dr ", "Mr ", "Ms "]:
             staff["name"] = staff["name"].replace(title, "")
         
         staff["name"] = staff["name"].strip()
         staff["role"] = staff["role"].replace("\n", " ")
-        staff["role"] = staff["role"].strip()
+        staff["role"] = matched_role
         staff["scraped"] = False
         
         cleaned_staff_list.append(staff)
@@ -151,6 +151,7 @@ def get_works_openalex(academics):
 
             if work_name not in auth_works:
                 # first time seeing this work name
+# NOTE: Can just add academic["role"] to this append if we are adding roles.
                 auth_works[work_name] = ([work_name, work_date, work_type, work_source, work_link, academic["name"], academic["url"]])
             else:
                 existing_source = auth_works[work_name][3]
@@ -245,6 +246,7 @@ def get_works_website(academics, driver):
             pub_details_text[i] = details
 
         for i in range(0, len(pub_titles)):
+# NOTE: Can just add academic["role"] to this append if we are adding roles.
             all_works.append([pub_titles[i].text, pub_details_text[i][1], pub_details_text[i][0], pub_details_text[i][2], pub_links[i].get_attribute('href'), academic["name"], academic["url"]])
             academic["scraped"] = True
         
