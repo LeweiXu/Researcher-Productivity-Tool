@@ -134,6 +134,22 @@ def parse_researcher_profile(html: str, profile_url : str):
     # Extract Researcher Name
     name_tag = soup.find("h1")
     researcher_name = name_tag.get_text(strip=True) if name_tag else ""
+
+# NOTE: Code for finding role
+    role = None
+    #Check both page formats
+    role_row = soup.find("th", string=lambda text: text and "Position" in text)
+    if role_row:
+        table_row = role_row.find_parent("tr")
+        if table_row:
+            position_cell = table_row.find("td", attrs={"data-th": "Position"})
+            if position_cell:
+                role = position_cell.get_text(strip=True)
+    if role is None:
+        position_tag = soup.find('p', class_='u-lead-text position')
+        if position_tag:
+            role = position_tag.text.strip()
+
     publications = []
     # Only process these publication types
     valid_types = {"Journals", "Book Chapters", "Conference Papers", "Theses"}
@@ -168,6 +184,7 @@ def parse_researcher_profile(html: str, profile_url : str):
             a_tag = citation_td.find("a", href=True)
             if a_tag:
                 article_url = a_tag["href"]
+# NOTE: Append role here if needed
             publications.append([title, year, pub_type, journal_name, article_url, researcher_name, profile_url])
     return publications
 
