@@ -5,69 +5,44 @@ from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
 from app.scrapers.helpers.util import standardize
 
-CSV_DIR = "app/files"
-CSV_SUFFIX = "_data.csv"
-SAMPLE_SIZE = 200
+# Columns to fill with test data: 
+    # Researchers: job_title (Research Fellow, Lecturer, Senior Lecturer, Associate Professor, Professor), level (A, B, C, D, E)
+    # Journals: JIF (Float value between 0-200), JIF_5_year (Float value between 0-200), citation_percentage (Float value between 0-100)
+    # Publications: num_authors (Integer value)
 
-def populate_test_db():
+def fill_test_columns():
     db = SessionLocal()
     try:
-        for filename in os.listdir(CSV_DIR):
-            if filename.endswith(CSV_SUFFIX):
-                filepath = os.path.join(CSV_DIR, filename)
-                with open(filepath, newline='', encoding='utf-8') as f:
-                    reader = list(csv.reader(f))
-                    header, rows = reader[0], reader[1:]
-                    standardize(rows)
-                    if len(rows) == 0:
-                        continue
-                    sample = random.sample(rows, min(SAMPLE_SIZE, len(rows)))
-                    for row in sample:
-                        title, year, type_val, journal, publication_url, name, profile_url = row[:7]
-                        # Get or create researcher
-                        researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
-                        if not researcher:
-                            researcher = Researchers(name=name, university=filename.split('_')[0], profile_url=profile_url)
-                            db.add(researcher)
-                            db.commit()
-                            db.refresh(researcher)
-                        # Add publication if not exists
-                        db_publication = db.query(Publications).filter_by(title=title, publication_url=publication_url).first()
-                        if not db_publication:
-                            db_publication = Publications(
-                                title=title,
-                                year=year,
-                                publication_type=type_val,
-                                journal_name=journal,
-                                publication_url=publication_url,
-                                researcher_id=researcher.id
-                            )
-                            db.add(db_publication)
-                            db.commit()
-                            db.refresh(db_publication)
-                        # Link researcher and publication (if not already linked)
-                        if db_publication not in researcher.publication:
-                            researcher.publication.append(db_publication)
-                            db.commit()
-        print("Test database populated with random samples from each university CSV.")
-    finally:
-        db.close()
-
-def populate_journal_test_metrics():
-    db = SessionLocal()
-    try:
+        # Researchers: job_title and level
+        job_levels = [
+            ("Research Fellow", "A"),
+            ("Lecturer", "B"),
+            ("Senior Lecturer", "C"),
+            ("Associate Professor", "D"),
+            ("Professor", "E"),
+        ]
+        researchers = db.query(Researchers).all()
+        for r in researchers:
+            job_title, level = random.choice(job_levels)
+            r.job_title = job_title
+            r.level = level
+        # Journals: JIF, JIF_5_year, citation_percentage
         journals = db.query(Journals).all()
-        for journal in journals:
-            journal.h_index = random.randint(10, 100)
-            journal.impact_factor = round(random.uniform(0, 10), 2)
+        for j in journals:
+            j.JIF = round(random.uniform(0, 200), 2)
+            j.JIF_5_year = round(random.uniform(0, 200), 2)
+            j.citation_percentage = round(random.uniform(0, 100), 2)
+        # Publications: num_authors
+        publications = db.query(Publications).all()
+        for p in publications:
+            p.num_authors = random.randint(1, 10)
         db.commit()
-        print("Populated h_index and impact_factor with test data for all journals.")
+        print("Filled test columns with random values.")
     finally:
         db.close()
 
 def main():
-    populate_test_db()
-    populate_journal_test_metrics()
+    fill_test_columns()
 
 if __name__ == "__main__":
     main()

@@ -100,3 +100,9 @@ def import_from_csv(university, csv_path):
     standardize(all_data)
     write_to_db(all_data, university)
     match_journals(university=university)
+
+if __name__ == "__main__":
+    for university in ['ANU',  'MU', 'UA', 'UM', 'UNSW', 'UQ', 'USYD', 'UWA']:
+        print(f"Importing CSV for {university}")
+        import_from_csv(university, os.path.join(CSV_DIR, f"{university}_data.csv"))
+        print(f"Completed importing CSV for {university}")
