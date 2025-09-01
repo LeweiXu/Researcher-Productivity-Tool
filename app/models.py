@@ -16,6 +16,8 @@ class Researchers(Base):
     name = Column(String, nullable=False)
     university = Column(String, nullable=False)
     profile_url = Column(String, nullable=True)
+    job_title = Column(String, nullable=True)
+    level = Column(String, nullable=True)
     publication = relationship(
         "Publications",
         secondary="Researcher_Publication",
@@ -27,9 +29,14 @@ class Journals(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
     abdc_rank = Column(String, nullable=True)
-    h_index = Column(Integer, nullable=True)
-    impact_factor = Column(Float, nullable=True)
+    JIF = Column(Float, nullable=True)
+    JIF_5_year = Column(Float, nullable=True)
+    citation_percentage = Column(Float, nullable=True)
+    ISSN = Column(String, nullable=True)
+    eISSN = Column(String, nullable=True)
     publisher = Column(String, nullable=True)
+    FoR = Column(Integer, nullable=True)
+    year_of_inception = Column(Integer, nullable=True)
     publication = relationship("Publications", back_populates="journal")
 
 class Publications(Base):
@@ -40,6 +47,7 @@ class Publications(Base):
     publication_type = Column(String, nullable=True)
     publication_url = Column(String, nullable=True)
     journal_name = Column(String, nullable=True)
+    num_authors = Column(Integer, nullable=True)
     researcher_id = Column(Integer, ForeignKey("Researchers.id"), nullable=False)
     journal_id = Column(Integer, ForeignKey("Journals.id"), nullable=True)
     researcher = relationship(
