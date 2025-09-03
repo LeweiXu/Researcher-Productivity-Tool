@@ -2,7 +2,25 @@ from fastapi import Request
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
 
+# Cache researcher stats as page very slow if requerying DB every time you reload
+# Need to restart server to clear cache (for now)
 RESEARCHER_STATS_CACHE = None
+
+def filter_researchers(request, researcher_list):
+    field = request.query_params.get("field", "")
+    level = request.query_params.get("level", "")
+    university = request.query_params.get("university", "")
+    name = request.query_params.get("name", "").strip().lower()
+    filtered = researcher_list
+    if university:
+        filtered = [r for r in filtered if (r["university"] or "").lower() == university.lower()]
+    if field:
+        filtered = [r for r in filtered if (r["FoR"] or "").lower() == field.lower()]
+    if level:
+        filtered = [r for r in filtered if (r["level"] or "").upper() == level.upper()]
+    if name:
+        filtered = [r for r in filtered if name in (r["name"] or "").lower()]
+    return filtered
 
 def get_researcher_data(request: Request):
     global RESEARCHER_STATS_CACHE
@@ -56,6 +74,8 @@ def get_researcher_data(request: Request):
     else:
         researcher_list = RESEARCHER_STATS_CACHE
 
+    researcher_list = filter_researchers(request, researcher_list)
+
     # Add variable_value and variable_label for the selected stat
     if sort_by == "total_articles":
         variable_label = "Total Articles"
@@ -82,10 +102,5 @@ def get_researcher_data(request: Request):
         for r in researcher_list:
             r["variable_value"] = r["avg_citation"]
         researcher_list.sort(key=lambda x: x["avg_citation"], reverse=True)
-    else:
-        variable_label = "Total Articles"
-        for r in researcher_list:
-            r["variable_value"] = r["total_articles"]
-        researcher_list.sort(key=lambda x: x["total_articles"], reverse=True)
 
     return researcher_list, variable_label, sort_by

@@ -29,7 +29,7 @@ def researchers(request: Request):
     )
 
 # Researcher profile/detail page
-@router.get("/researcher/{researcher_id}", response_class=HTMLResponse, name="researcher_profile")
+@router.get("/researchers/{researcher_id}", response_class=HTMLResponse, name="researcher_profile")
 def researcher_profile(request: Request, researcher_id: int = Path(...)):
     researcher_data, pub_list = get_researcher_profile(researcher_id)
     return templates.TemplateResponse(
