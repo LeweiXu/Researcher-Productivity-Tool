@@ -1,4 +1,8 @@
-def get_researcher_profile(request):    
+from fastapi import Request
+from app.database import SessionLocal
+from app.models import Researchers, Publications, Journals
+
+def get_researcher_profile(researcher_id):    
     db = SessionLocal()
     try:
         researcher = (
@@ -22,16 +26,16 @@ def get_researcher_profile(request):
                     "journal": journal.name if journal else pub.journal_name,
                     "year": pub.year,
                     "ranking": journal.abdc_rank if journal else "",
-                    "h_index": journal.h_index if journal else "",
                 }
             )
 
         researcher_data = {
             "name": researcher.name,
-            "level": "",        # fill if you have this field
-            "department": "",   # fill if you have this field
+            "level": researcher.level,        # fill if you have this field
+            "department": researcher.field,   # fill if you have this field
             "university": researcher.university,
             "profile_url": researcher.profile_url,
         }
+        return researcher_data, pub_list
     finally:
         db.close()
