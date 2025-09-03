@@ -1,18 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2 style="text-align:center; margin-top:30px;">Researcher Rankings</h2>
+<h1 style="text-align:center; margin-top:30px;">Researcher Rankings</h1>
 <div style="width:90%; max-width:900px; margin: 0 auto 24px auto; background:#fff; padding:18px 24px 10px 24px; border-radius:8px; box-shadow:0 2px 8px #ccc;">
-    <form method="get" action="/researchers" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-        <label for="sort_by" style="font-weight:bold;">Sort by:</label>
-        <select name="sort_by" id="sort_by" style="padding:6px 12px; font-size:1em; border-radius:4px; border:1px solid #bbb;">
-            <option value="total_articles" {% if sort_by == "total_articles" %}selected{% endif %}>Total number of articles</option>
-            <option value="abdc_a_star_a" {% if sort_by == "abdc_a_star_a" %}selected{% endif %}>Number of A* and A ranked journals</option>
-            <option value="avg_jif" {% if sort_by == "avg_jif" %}selected{% endif %}>Average JIF of articles</option>
-            <option value="avg_jif_5" {% if sort_by == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of articles</option>
-            <option value="avg_citation" {% if sort_by == "avg_citation" %}selected{% endif %}>Average citation percentage</option>
+    <form method="get" action="/researchers" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
+        <label for="university" style="font-weight:bold;">University:</label>
+        <select name="university" id="university" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
+            <option value="" {% if request.query_params.get('university', '') == '' %}selected{% endif %}>All</option>
+            <option value="ANU" {% if request.query_params.get('university', '') == 'ANU' %}selected{% endif %}>ANU</option>
+            <option value="MU" {% if request.query_params.get('university', '') == 'MU' %}selected{% endif %}>MU</option>
+            <option value="UA" {% if request.query_params.get('university', '') == 'UA' %}selected{% endif %}>UA</option>
+            <option value="UM" {% if request.query_params.get('university', '') == 'UM' %}selected{% endif %}>UM</option>
+            <option value="UNSW" {% if request.query_params.get('university', '') == 'UNSW' %}selected{% endif %}>UNSW</option>
+            <option value="UQ" {% if request.query_params.get('university', '') == 'UQ' %}selected{% endif %}>UQ</option>
+            <option value="USYD" {% if request.query_params.get('university', '') == 'USYD' %}selected{% endif %}>USYD</option>
+            <option value="UWA" {% if request.query_params.get('university', '') == 'UWA' %}selected{% endif %}>UWA</option>
         </select>
-        <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Sort</button>
+        <label for="field" style="font-weight:bold;">Field of Research:</label>
+        <select name="field" id="field" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
+            <option value="" {% if request.query_params.get('field', '') == '' %}selected{% endif %}>All</option>
+            <option value="Accounting" {% if request.query_params.get('field', '') == 'Accounting' %}selected{% endif %}>Accounting</option>
+            <option value="Finance" {% if request.query_params.get('field', '') == 'Finance' %}selected{% endif %}>Finance</option>
+        </select>
+        <label for="level" style="font-weight:bold;">Level:</label>
+        <select name="level" id="level" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
+            <option value="" {% if request.query_params.get('level', '') == '' %}selected{% endif %}>All</option>
+            <option value="A" {% if request.query_params.get('level', '') == 'A' %}selected{% endif %}>A</option>
+            <option value="B" {% if request.query_params.get('level', '') == 'B' %}selected{% endif %}>B</option>
+            <option value="C" {% if request.query_params.get('level', '') == 'C' %}selected{% endif %}>C</option>
+            <option value="D" {% if request.query_params.get('level', '') == 'D' %}selected{% endif %}>D</option>
+            <option value="E" {% if request.query_params.get('level', '') == 'E' %}selected{% endif %}>E</option>
+        </select>
+        <label for="name" style="font-weight:bold;">Name:</label>
+        <input type="text" name="name" id="name" placeholder="Type name..." style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;" value="{{ request.query_params.get('name', '') }}" />
+        <label for="sort_by" style="font-weight:bold;">Rank by:</label>
+        <select name="sort_by" id="sort_by" style="padding:6px 12px; font-size:1em; border-radius:4px; border:1px solid #bbb;">
+            <option value="total_articles" {% if request.query_params.get('sort_by', 'total_articles') == "total_articles" %}selected{% endif %}>Total number of articles</option>
+            <option value="abdc_a_star_a" {% if request.query_params.get('sort_by', 'total_articles') == "abdc_a_star_a" %}selected{% endif %}>Number of A* and A ranked journals</option>
+            <option value="avg_jif" {% if request.query_params.get('sort_by', 'total_articles') == "avg_jif" %}selected{% endif %}>Average JIF of articles</option>
+            <option value="avg_jif_5" {% if request.query_params.get('sort_by', 'total_articles') == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of articles</option>
+            <option value="avg_citation" {% if request.query_params.get('sort_by', 'total_articles') == "avg_citation" %}selected{% endif %}>Average citation percentage</option>
+        </select>
+        <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
     </form>
 </div>
 <table style="margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 900px; background: #fff; box-shadow: 0 2px 8px #ccc;">
@@ -30,7 +59,7 @@
         {% for researcher in researchers %}
         <tr style="text-align:center; border-bottom: 1px solid #eee;">
             <td style="padding: 10px 6px;">{{ loop.index }}</td>
-            <td style="padding: 10px 6px;">{{ researcher.name }}</td>
+            <td style="padding: 10px 6px;"><a href="/researchers/{{ researcher.id }}" style="color:#1976d2; text-decoration:underline;">{{ researcher.name }}</a></td>
             <td style="padding: 10px 6px;">{{ researcher.FoR or researcher.for or researcher.field or '' }}</td>
             <td style="padding: 10px 6px;">{{ researcher.level }}</td>
             <td style="padding: 10px 6px;">{{ researcher.university }}</td>
