@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>{% block title %}Research Productivity Tool{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
         .navbar {
@@ -10,7 +11,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 80px;
+            height: 110px;
         }
         .navbar-left {
             display: flex;
@@ -66,10 +67,18 @@
             <a href="/" class="navbar-link">Home</a>
             <a href="/researchers" class="navbar-link">Researchers</a>
             <a href="/universities" class="navbar-link">Universities</a>
+            {% if request.session.get("user") %}
+                <a href="/admin" class="navbar-link">Admin</a>
+                <a href="/logout" class="navbar-link">Logout</a>
+            {% else %}
+            <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" class="navbar-link">Login</a>
+            {% endif%}
         </div>
     </div>
     <div style="max-width: 1200px; margin: 0 auto;">
         {% block content %}{% endblock %}
     </div>
+    {% include 'components/login_modal.html' %}
 </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </html>

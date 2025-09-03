@@ -29,7 +29,7 @@ def researchers(request: Request):
     )
 
 # Researcher profile/detail page
-@router.get("/researchers/{researcher_id}", response_class=HTMLResponse, name="researcher_profile")
+@router.get("/researchers/{researcher_id}", response_class=HTMLResponse)
 def researcher_profile(request: Request, researcher_id: int = Path(...)):
     researcher_data, pub_list = get_researcher_profile(researcher_id)
     return templates.TemplateResponse(
@@ -37,25 +37,34 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
         {"request": request, "researcher": researcher_data, "publications": pub_list},
     )
 
-# @router.get("/login", response_class=HTMLResponse)
-# async def login_get(request: Request, error: Optional[str] = None, message: Optional[str] = None):
-#     return templates.TemplateResponse("Login.html", {"request": request, "error": error, "message": message})
+@router.get("/universities", response_class=HTMLResponse)
+def universities(request: Request):
+    return templates.TemplateResponse(
+        "universities.html",
+        {"request": request}
+    )
 
-# @router.post("/login")
-# async def login_post(
-#     request: Request,
-#     email: str = Form(...),
-#     password: str = Form(...),
-#     remember: bool = Form(False),
-# ):
-#     # TODO: replace with real auth
-#     if email == "admin@example.com" and password == "admin123":
-#         return RedirectResponse(url=router.url_path_for("home"), status_code=status.HTTP_303_SEE_OTHER)
-#     return templates.TemplateResponse(
-#         "Login.html",
-#         {"request": request, "error": "Invalid email or password."},
-#         status_code=status.HTTP_400_BAD_REQUEST,
-#     )
+@router.get("/admin", response_class=HTMLResponse)
+async def admin(request: Request):
+    user = request.session.get("user")
+    if not user:
+        # Not logged in, redirect to login or show error
+        return RedirectResponse(url="/", status_code=303)
+    return templates.TemplateResponse("admin.html", {"request": request, "user": user})
+
+@router.post("/login")
+def login_post(request: Request):
+    # TODO: replace with real auth
+    request.session["user"] = "yuanji.wen"
+    return templates.TemplateResponse(
+        "admin.html",
+        {"request": request}
+    )
+
+@router.get("/logout")
+def logout_get(request: Request):
+    request.session.pop("user", None)
+    return RedirectResponse(url="/", status_code=303)
 
 # # ------------------------
 # # Signup
