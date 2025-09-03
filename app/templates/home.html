@@ -79,26 +79,102 @@
         This portal provides a quick overview of researchers productivity across the G8 universities in Australia.<br>
         Below are the researchers and their publications from the G8 universities.
     </p>
-    {% for uni in universities %}
+    <!-- Hardcoded university sections -->
     <div class="uni-section">
-        <div class="uni-bg" style="background-image: url('{{ uni.img }}');">
+        <div class="uni-bg" style="background-image: url('https://about.unimelb.edu.au/__data/assets/image/0021/408504/230428_UOM_Campus-0130-copy.jpg');">
             <div class="uni-info">
                 <span class="uni-name">
-                    <img src="{{ uni.logo }}" class="uni-logo" alt="Logo" />
-                    {{ uni.name }}
+                    <img src="https://universitiesaustralia.edu.au/wp-content/uploads/2019/05/UoM_Logo_Vert_Housed_RGB-1.jpg" class="uni-logo" alt="Logo" />
+                    The University of Melbourne
                 </span>
-                <div class="uni-desc">{{ uni.desc }}</div>
-                <a class="learn-btn" href="">Learn more about our researchers</a> <!-- Link to be updated later -->
+                <div class="uni-desc">A leading research university in Melbourne, Victoria.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
             </div>
         </div>
     </div>
-    {% endfor %}
-    
-    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; margin: 48px 0;">
-        <p style="margin-bottom: 18px;">Click the button below to see all of the researchers</p>
-        <a class="researcher-btn" href="/researchers">
-            All Researchers
-        </a>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.uvic.ca/international-experiences/_assets/images/content-main/australian-national-university.jpg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/07/Logo-ANU.jpg" class="uni-logo" alt="Logo" />
+                    The Australian National University
+                </span>
+                <div class="uni-desc">A leading research university in Canberra, Australia.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://offloadmedia.feverup.com/secretsydney.com/wp-content/uploads/2024/03/14121456/University-of-Sydney-Eriksson-Luo-Unsplash-1.jpg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/09/USydLogo-1.jpg" class="uni-logo" alt="Logo" />
+                    The University of Sydney
+                </span>
+                <div class="uni-desc">A leading research university in Sydney, New South Wales.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.uq.edu.au/sites/default/files/styles/uqds_card/public/2023-12/st-lucia-campus.jpg?itok=39nkzdMY');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://cdn.prod.website-files.com/678e6d991abe09b73901f4e2/67b84906e9d57bd0aa0d7373_uqlogo.webp" class="uni-logo" alt="Logo" />
+                    The University of Queensland
+                </span>
+                <div class="uni-desc">A leading research university in Brisbane, Queensland.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.ncuk.ac.uk/wp-content/uploads/2020/11/University-of-New-South-Wales-UNSW-Sydney-Image-Gallery-3.jpg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://www.mollerinstitute.com/wp-content/uploads/2024/04/University-of-New-South-Wales-Logo-565x565.png" class="uni-logo" alt="Logo" />
+                    The University of New South Wales
+                </span>
+                <div class="uni-desc">A leading research university in Sydney, New South Wales.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.usnews.com/object/image/00000153-ec2c-d802-ab7f-feacb9230000/160406-monashu-submitted.jpg?update-time=1459956316556&size=responsiveFlow970');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/09/MonashLogo.jpg" class="uni-logo" alt="Logo" />
+                    Monash University
+                </span>
+                <div class="uni-desc">A leading research university in Melbourne, Victoria.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.uwa.edu.au/seek-wisdom/-/media/project/uwa/uwa/winthrop-hall---seekers-space-banner.jpg?w=1440&hash=AEF28B0F77A0D2F84887B24A48875055');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://coursera-university-assets.s3.amazonaws.com/fa/e5fc20724e11e5bf36bff635f1f3bb/UWA-Full-Ver-CMYK3.png" class="uni-logo" alt="Logo" />
+                    The University of Western Australia
+                </span>
+                <div class="uni-desc">A leading research university in Perth, Western Australia.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.adelaide.edu.au/about/_jcr_content/root/container/container/container/column_0/teaser.coreimg.jpeg/1707460811850/08077-uoa.jpeg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://courseseeker.edu.au/assets/images/institutions/3010.png" class="uni-logo" alt="Logo" />
+                    The University of Adelaide
+                </span>
+                <div class="uni-desc">A leading research university in Adelaide, South Australia.</div>
+                <a class="learn-btn" href="">Learn more about our researchers</a>
+            </div>
+        </div>
     </div>
 </body>
 </html>
