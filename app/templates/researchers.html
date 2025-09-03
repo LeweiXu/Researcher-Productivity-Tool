@@ -6,11 +6,11 @@
     <form method="get" action="/researchers" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
         <label for="sort_by" style="font-weight:bold;">Sort by:</label>
         <select name="sort_by" id="sort_by" style="padding:6px 12px; font-size:1em; border-radius:4px; border:1px solid #bbb;">
-            <option value="total_articles">Total number of articles</option>
-            <option value="abdc_a_star_a">Number of A* and A ranked journals</option>
-            <option value="avg_jif">Average JIF of articles</option>
-            <option value="avg_jif_5">Average 5-year JIF of articles</option>
-            <option value="avg_citation">Average citation percentage</option>
+            <option value="total_articles" {% if sort_by == "total_articles" %}selected{% endif %}>Total number of articles</option>
+            <option value="abdc_a_star_a" {% if sort_by == "abdc_a_star_a" %}selected{% endif %}>Number of A* and A ranked journals</option>
+            <option value="avg_jif" {% if sort_by == "avg_jif" %}selected{% endif %}>Average JIF of articles</option>
+            <option value="avg_jif_5" {% if sort_by == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of articles</option>
+            <option value="avg_citation" {% if sort_by == "avg_citation" %}selected{% endif %}>Average citation percentage</option>
         </select>
         <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Sort</button>
     </form>

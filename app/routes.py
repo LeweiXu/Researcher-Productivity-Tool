@@ -5,7 +5,8 @@ from sqlalchemy import func
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
 from typing import Optional
-from app.helpers.researchers_functions import get_researcher_data
+from app.helpers.researchers_funcs import get_researcher_data
+from app.helpers.researcher_profile_funcs import get_researcher_profile
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -21,59 +22,18 @@ def home(request: Request):
 # Researcher level ranking page
 @router.get("/researchers", response_class=HTMLResponse)
 def researchers(request: Request):
-    researcher_list, variable_label = get_researcher_data(request)
+    researcher_list, variable_label, sort_by = get_researcher_data(request)
     return templates.TemplateResponse(
         "researchers.html",
-        {"request": request, "researchers": researcher_list, "variable_label": variable_label}
+        {"request": request, "researchers": researcher_list, "variable_label": variable_label, "sort_by": sort_by}
     )
 
 # Researcher profile/detail page
-@router.get(
-    "/researcher/{researcher_id}",
-    response_class=HTMLResponse,
-    name="researcher_profile",
-)
+@router.get("/researcher/{researcher_id}", response_class=HTMLResponse, name="researcher_profile")
 def researcher_profile(request: Request, researcher_id: int = Path(...)):
-    db = SessionLocal()
-    try:
-        researcher = (
-            db.query(Researchers).filter(Researchers.id == researcher_id).first()
-        )
-        if not researcher:
-            return HTMLResponse(content="Researcher not found", status_code=404)
-
-        publications = (
-            db.query(Publications, Journals)
-            .outerjoin(Journals, Publications.journal_id == Journals.id)
-            .filter(Publications.researcher_id == researcher_id)
-            .all()
-        )
-
-        pub_list = []
-        for pub, journal in publications:
-            pub_list.append(
-                {
-                    "title": pub.title,
-                    "journal": journal.name if journal else pub.journal_name,
-                    "year": pub.year,
-                    "ranking": journal.abdc_rank if journal else "",
-                    "h_index": journal.h_index if journal else "",
-                }
-            )
-
-        researcher_data = {
-            "name": researcher.name,
-            "level": "",        # fill if you have this field
-            "department": "",   # fill if you have this field
-            "university": researcher.university,
-            "profile_url": researcher.profile_url,
-        }
-    finally:
-        db.close()
-
-    # Reuse researcher.html; ensure the template handles both list & detail modes
+    researcher_data, pub_list = get_researcher_profile(researcher_id)
     return templates.TemplateResponse(
-        "researcher.html",
+        "researcher_profile.html",
         {"request": request, "researcher": researcher_data, "publications": pub_list},
     )
 
