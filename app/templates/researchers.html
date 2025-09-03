@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 style="text-align:center; margin-top:30px;">Researcher Rankings</h2>
+<div style="width:90%; max-width:900px; margin: 0 auto 24px auto; background:#fff; padding:18px 24px 10px 24px; border-radius:8px; box-shadow:0 2px 8px #ccc;">
+    <form method="get" action="/researchers" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <label for="sort_by" style="font-weight:bold;">Sort by:</label>
+        <select name="sort_by" id="sort_by" style="padding:6px 12px; font-size:1em; border-radius:4px; border:1px solid #bbb;">
+            <option value="total_articles">Total number of articles</option>
+            <option value="abdc_a_star_a">Number of A* and A ranked journals</option>
+            <option value="avg_jif">Average JIF of articles</option>
+            <option value="avg_jif_5">Average 5-year JIF of articles</option>
+            <option value="avg_citation">Average citation percentage</option>
+        </select>
+        <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Sort</button>
+    </form>
+</div>
+<table style="margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 900px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+    <thead>
+        <tr style="background: #1976d2; color: #fff;">
+            <th style="padding: 12px 8px;">Rank</th>
+            <th style="padding: 12px 8px;">Name</th>
+            <th style="padding: 12px 8px;">FoR</th>
+            <th style="padding: 12px 8px;">Level</th>
+            <th style="padding: 12px 8px;">University</th>
+            <th style="padding: 12px 8px;">{{ variable_label }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for researcher in researchers %}
+        <tr style="text-align:center; border-bottom: 1px solid #eee;">
+            <td style="padding: 10px 6px;">{{ loop.index }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.name }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.FoR or researcher.for or researcher.field or '' }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.level }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.university }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.variable_value }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
