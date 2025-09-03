@@ -41,18 +41,45 @@
             <option value="avg_jif_5" {% if request.query_params.get('sort_by', 'total_articles') == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of articles</option>
             <option value="avg_citation" {% if request.query_params.get('sort_by', 'total_articles') == "avg_citation" %}selected{% endif %}>Average citation percentage</option>
         </select>
+        <label for="per_page" style="font-weight:bold;">Results per page:</label>
+        <select name="per_page" id="per_page" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
+            <option value="10" {% if request.query_params.get('per_page', '20') == '10' %}selected{% endif %}>10</option>
+            <option value="20" {% if request.query_params.get('per_page', '20') == '20' %}selected{% endif %}>20</option>
+            <option value="50" {% if request.query_params.get('per_page', '20') == '50' %}selected{% endif %}>50</option>
+            <option value="100" {% if request.query_params.get('per_page', '20') == '100' %}selected{% endif %}>100</option>
+        </select>
         <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
     </form>
 </div>
-<table style="margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 900px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+<table style="text-align:center; margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 900px; background: #fff; box-shadow: 0 2px 8px #ccc;">
     <thead>
         <tr style="background: #1976d2; color: #fff;">
-            <th style="padding: 12px 8px;">Rank</th>
-            <th style="padding: 12px 8px;">Name</th>
-            <th style="padding: 12px 8px;">FoR</th>
-            <th style="padding: 12px 8px;">Level</th>
-            <th style="padding: 12px 8px;">University</th>
-            <th style="padding: 12px 8px;">{{ variable_label }}</th>
+            {% set current_sort = request.query_params.get('sort_by', 'total_articles') %}
+            {% set current_order = request.query_params.get('sort_order', 'desc') %}
+            {% macro sort_link(label, sort_key) -%}
+                {# Build new query parameters #}
+                {% set new_order = 'asc' if current_sort != sort_key or current_order == 'desc' else 'desc' %}
+                {% set params = [] %}
+                {% for k, v in request.query_params.items() %}
+                    {% if k != 'sort_by' and k != 'sort_order' %}
+                        {% set _ = params.append(k ~ '=' ~ v) %}
+                    {% endif %}
+                {% endfor %}
+                {% set _ = params.append('sort_by=' ~ sort_key) %}
+                {% set _ = params.append('sort_order=' ~ new_order) %}
+                <a href="?{{ params|join('&') }}" style="color: #fff; text-decoration: underline;">
+                    {{ label }}
+                    {% if current_sort == sort_key %}
+                        {% if current_order == 'asc' %}▲{% else %}▼{% endif %}
+                    {% endif %}
+                </a>
+            {%- endmacro %}
+            <th style="padding: 12px 8px;">{{ sort_link('Rank', 'rank') }}</th>
+            <th style="padding: 12px 8px;">{{ sort_link('Name', 'name') }}</th>
+            <th style="padding: 12px 8px;">{{ sort_link('FoR', 'FoR') }}</th>
+            <th style="padding: 12px 8px;">{{ sort_link('Level', 'level') }}</th>
+            <th style="padding: 12px 8px;">{{ sort_link('University', 'university') }}</th>
+            <th style="padding: 12px 8px;">{{ sort_link(variable_label, current_sort) }}</th>
         </tr>
     </thead>
     <tbody>
@@ -68,4 +95,13 @@
         {% endfor %}
     </tbody>
 </table>
+<div style="text-align:center; margin:20px 0;">
+    {% if request.query_params.get('page', '1')|int > 1 %}
+        <a href="?page={{ request.query_params.get('page', '1')|int - 1 }}&per_page={{ request.query_params.get('per_page', '20') }}{% for key, value in request.query_params.items() if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endfor %}" style="margin-right:10px;">Previous</a>
+    {% endif %}
+    <span>Page {{ request.query_params.get('page', '1')|int }} of {{ total_pages }}</span>
+    {% if request.query_params.get('page', '1')|int < total_pages %}
+        <a href="?page={{ request.query_params.get('page', '1')|int + 1 }}&per_page={{ request.query_params.get('per_page', '20') }}{% for key, value in request.query_params.items() if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endfor %}" style="margin-left:10px;">Next</a>
+    {% endif %}
+</div>
 {% endblock %}

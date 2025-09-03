@@ -1,6 +1,7 @@
 from fastapi import Request
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
+import math
 
 # Cache researcher stats as page very slow if requerying DB every time you reload
 # Need to restart server to clear cache (for now)
@@ -25,6 +26,20 @@ def filter_researchers(request, researcher_list):
 def get_researcher_data(request: Request):
     global RESEARCHER_STATS_CACHE
     sort_by = request.query_params.get("sort_by", "total_articles")
+    # Pagination params
+    try:
+        page = int(request.query_params.get("page", 1))
+        if page < 1:
+            page = 1
+    except ValueError:
+        page = 1
+    try:
+        per_page = int(request.query_params.get("per_page", 20))
+        if per_page not in [10, 20, 50, 100]:
+            per_page = 20
+    except ValueError:
+        per_page = 20
+
     if RESEARCHER_STATS_CACHE is None:
         db = SessionLocal()
         try:
@@ -102,5 +117,16 @@ def get_researcher_data(request: Request):
         for r in researcher_list:
             r["variable_value"] = r["avg_citation"]
         researcher_list.sort(key=lambda x: x["avg_citation"], reverse=True)
+    else:
+        variable_label = "Total Articles"
+        for r in researcher_list:
+            r["variable_value"] = r["total_articles"]
+        researcher_list.sort(key=lambda x: x["total_articles"], reverse=True)
 
-    return researcher_list, variable_label, sort_by
+    total_count = len(researcher_list)
+    total_pages = max(1, math.ceil(total_count / per_page))
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_list = researcher_list[start:end]
+
+    return paginated_list, variable_label, total_pages

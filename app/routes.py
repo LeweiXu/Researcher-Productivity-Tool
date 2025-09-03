@@ -7,6 +7,7 @@ from app.models import Researchers, Publications, Journals
 from typing import Optional
 from app.helpers.researchers_funcs import get_researcher_data
 from app.helpers.researcher_profile_funcs import get_researcher_profile
+from app.helpers.universities_funcs import get_university_data
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -22,10 +23,15 @@ def home(request: Request):
 # Researcher level ranking page
 @router.get("/researchers", response_class=HTMLResponse)
 def researchers(request: Request):
-    researcher_list, variable_label, sort_by = get_researcher_data(request)
+    researcher_list, variable_label, total_pages = get_researcher_data(request)
     return templates.TemplateResponse(
         "researchers.html",
-        {"request": request, "researchers": researcher_list, "variable_label": variable_label, "sort_by": sort_by}
+        {
+            "request": request,
+            "researchers": researcher_list,
+            "variable_label": variable_label,
+            "total_pages": total_pages,
+        }
     )
 
 # Researcher profile/detail page
@@ -37,13 +43,16 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
         {"request": request, "researcher": researcher_data, "publications": pub_list},
     )
 
+# Researcher level ranking page
 @router.get("/universities", response_class=HTMLResponse)
 def universities(request: Request):
+    university_list, variable_label = get_university_data(request)
     return templates.TemplateResponse(
         "universities.html",
-        {"request": request}
+        {"request": request, "universities": university_list, "variable_label": variable_label}
     )
 
+# Admin page
 @router.get("/admin", response_class=HTMLResponse)
 async def admin(request: Request):
     user = request.session.get("user")
@@ -61,8 +70,8 @@ def login_post(request: Request):
         {"request": request}
     )
 
-@router.get("/logout")
-def logout_get(request: Request):
+@router.post("/logout")
+def logout_post(request: Request):
     request.session.pop("user", None)
     return RedirectResponse(url="/", status_code=303)
 
