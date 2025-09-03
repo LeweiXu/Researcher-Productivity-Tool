@@ -1,198 +1,225 @@
-from fastapi import APIRouter, Request, Path
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request, Form, status, Path
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
-
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
+from typing import Optional
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-
-# ----------------------------
-# Root: simple ranking summary
-# ----------------------------
 @router.get("/", response_class=HTMLResponse)
-def read_root():
-    db = SessionLocal()
-    db_ranking = []
-    no_output = []
-    try:
-        # Main ranking: researchers with at least one matched journal article
-        results = (
-            db.query(
-                Researchers.name,
-                Researchers.university,
-                Researchers.profile_url,
-                func.count(Publications.id).label("abdc_count"),
-            )
-            .join(Publications, Researchers.id == Publications.researcher_id)
-            .join(Journals, Publications.journal_id == Journals.id)
-            .filter(Publications.journal_id.isnot(None))
-            .group_by(Researchers.id)
-            .order_by(func.count(Publications.id).desc())
-            .all()
-        )
-        db_ranking = results
-
-        # Researchers with no journal article output (no Publications with journal_id)
-        subq = (
-            db.query(Publications.researcher_id)
-            .filter(Publications.journal_id.isnot(None))
-            .distinct()
-        )
-        no_output = (
-            db.query(Researchers.name, Researchers.university, Researchers.profile_url)
-            .filter(~Researchers.id.in_(subq))
-            .all()
-        )
-    finally:
-        db.close()
-
-    html = "<h1>Welcome to the G8 Research Portal</h1>"
-    html += "<h2>Researcher ABDC Journal Article Ranking:</h2><ol>"
-    for row in db_ranking:
-        html += f"<li>{row.name} ({row.university}) - {row.abdc_count} ABDC journal articles</li>"
-    for row in no_output:
-        html += f"<li>{row.name} ({row.university}) - 0 ABDC journal articles</li>"
-    html += "</ol>"
-    return html
-
-
-# ----------------------------
-# Home page
-# ----------------------------
-@router.get("/home", response_class=HTMLResponse)
 def home(request: Request):
-    universities = [
-        {
-            "name": "The University of Melbourne",
-            "desc": "A leading research university in Melbourne, Victoria.",
-            "img": "https://about.unimelb.edu.au/__data/assets/image/0021/408504/230428_UOM_Campus-0130-copy.jpg",
-            "logo": "https://universitiesaustralia.edu.au/wp-content/uploads/2019/05/UoM_Logo_Vert_Housed_RGB-1.jpg",
-        },
-        {
-            "name": "The Australian National University",
-            "desc": "A leading research university in Canberra, Australia.",
-            "img": "https://www.uvic.ca/international-experiences/_assets/images/content-main/australian-national-university.jpg",
-            "logo": "https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/07/Logo-ANU.jpg",
-        },
-        {
-            "name": "The University of Sydney",
-            "desc": "A leading research university in Sydney, New South Wales.",
-            "img": "https://offloadmedia.feverup.com/secretsydney.com/wp-content/uploads/2024/03/14121456/University-of-Sydney-Eriksson-Luo-Unsplash-1.jpg",
-            "logo": "https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/09/USydLogo-1.jpg",
-        },
-        {
-            "name": "The University of Queensland",
-            "desc": "A leading research university in Brisbane, Queensland.",
-            "img": "https://www.uq.edu.au/sites/default/files/styles/uqds_card/public/2023-12/st-lucia-campus.jpg?itok=39nkzdMY",
-            "logo": "https://cdn.prod.website-files.com/678e6d991abe09b73901f4e2/67b84906e9d57bd0aa0d7373_uqlogo.webp",
-        },
-        {
-            "name": "The University of New South Wales",
-            "desc": "A leading research university in Sydney, New South Wales.",
-            "img": "https://www.ncuk.ac.uk/wp-content/uploads/2020/11/University-of-New-South-Wales-UNSW-Sydney-Image-Gallery-3.jpg",
-            "logo": "https://www.mollerinstitute.com/wp-content/uploads/2024/04/University-of-New-South-Wales-Logo-565x565.png",
-        },
-        {
-            "name": "Monash University",
-            "desc": "A leading research university in Melbourne, Victoria.",
-            "img": "https://www.usnews.com/object/image/00000153-ec2c-d802-ab7f-feacb9230000/160406-monashu-submitted.jpg?update-time=1459956316556&size=responsiveFlow970",
-            "logo": "https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/09/MonashLogo.jpg",
-        },
-        {
-            "name": "The University of Western Australia",
-            "desc": "A leading research university in Perth, Western Australia.",
-            "img": "https://www.uwa.edu.au/seek-wisdom/-/media/project/uwa/uwa/winthrop-hall---seekers-space-banner.jpg?w=1440&hash=AEF28B0F77A0D2F84887B24A48875055",
-            "logo": "https://coursera-university-assets.s3.amazonaws.com/fa/e5fc20724e11e5bf36bff635f1f3bb/UWA-Full-Ver-CMYK3.png",
-        },
-        {
-            "name": "The University of Adelaide",
-            "desc": "A leading research university in Adelaide, South Australia.",
-            "img": "https://www.adelaide.edu.au/about/_jcr_content/root/container/container/container/column_0/teaser.coreimg.jpeg/1707460811850/08077-uoa.jpeg",
-            "logo": "https://courseseeker.edu.au/assets/images/institutions/3010.png",
-        },
-    ]
     return templates.TemplateResponse(
-        "home.html",
-        {"request": request, "universities": universities},
+        "home.html", {"request": request},
     )
 
+# # -------------------------------------------------------
+# # Researchers list page (navbar points here: /researcher)
+# # -------------------------------------------------------
+# @router.get("/researcher", response_class=HTMLResponse, name="researcher")
+# def researcher_list(request: Request):
+#     db = SessionLocal()
+#     try:
+#         researchers = db.query(Researchers).all()
+#         researcher_list = [{"id": str(r.id), "name": r.name} for r in researchers]
+#     finally:
+#         db.close()
 
-# -------------------------------------------------------
-# Researchers list page (navbar points here: /researcher)
-# -------------------------------------------------------
-@router.get("/researcher", response_class=HTMLResponse, name="researcher")
-def researcher_list(request: Request):
-    db = SessionLocal()
-    try:
-        researchers = db.query(Researchers).all()
-        researcher_list = [{"id": str(r.id), "name": r.name} for r in researchers]
-    finally:
-        db.close()
-
-    return templates.TemplateResponse(
-        "researcher.html",
-        {"request": request, "researchers": researcher_list},
-    )
-
-
-# Optional alias so /researchers still works (hidden from docs)
-@router.get("/researchers", include_in_schema=False)
-def researchers_alias(request: Request):
-    return researcher_list(request)
+#     return templates.TemplateResponse(
+#         "researcher.html",
+#         {"request": request, "researchers": researcher_list},
+#     )
 
 
-# -----------------------------------
-# Researcher profile/detail page
-# -----------------------------------
-@router.get(
-    "/researcher/{researcher_id}",
-    response_class=HTMLResponse,
-    name="researcher_profile",
-)
-def researcher_profile(request: Request, researcher_id: int = Path(...)):
-    db = SessionLocal()
-    try:
-        researcher = (
-            db.query(Researchers).filter(Researchers.id == researcher_id).first()
-        )
-        if not researcher:
-            return HTMLResponse(content="Researcher not found", status_code=404)
+# # Optional alias so /researchers still works (hidden from docs)
+# @router.get("/researchers", include_in_schema=False)
+# def researchers_alias(request: Request):
+#     return researcher_list(request)
 
-        publications = (
-            db.query(Publications, Journals)
-            .outerjoin(Journals, Publications.journal_id == Journals.id)
-            .filter(Publications.researcher_id == researcher_id)
-            .all()
-        )
 
-        pub_list = []
-        for pub, journal in publications:
-            pub_list.append(
-                {
-                    "title": pub.title,
-                    "journal": journal.name if journal else pub.journal_name,
-                    "year": pub.year,
-                    "ranking": journal.abdc_rank if journal else "",
-                    "h_index": journal.h_index if journal else "",
-                }
-            )
+# # -----------------------------------
+# # Researcher profile/detail page
+# # -----------------------------------
+# @router.get(
+#     "/researcher/{researcher_id}",
+#     response_class=HTMLResponse,
+#     name="researcher_profile",
+# )
+# def researcher_profile(request: Request, researcher_id: int = Path(...)):
+#     db = SessionLocal()
+#     try:
+#         researcher = (
+#             db.query(Researchers).filter(Researchers.id == researcher_id).first()
+#         )
+#         if not researcher:
+#             return HTMLResponse(content="Researcher not found", status_code=404)
 
-        researcher_data = {
-            "name": researcher.name,
-            "level": "",        # fill if you have this field
-            "department": "",   # fill if you have this field
-            "university": researcher.university,
-            "profile_url": researcher.profile_url,
-        }
-    finally:
-        db.close()
+#         publications = (
+#             db.query(Publications, Journals)
+#             .outerjoin(Journals, Publications.journal_id == Journals.id)
+#             .filter(Publications.researcher_id == researcher_id)
+#             .all()
+#         )
 
-    # Reuse researcher.html; ensure the template handles both list & detail modes
-    return templates.TemplateResponse(
-        "researcher.html",
-        {"request": request, "researcher": researcher_data, "publications": pub_list},
-    )
+#         pub_list = []
+#         for pub, journal in publications:
+#             pub_list.append(
+#                 {
+#                     "title": pub.title,
+#                     "journal": journal.name if journal else pub.journal_name,
+#                     "year": pub.year,
+#                     "ranking": journal.abdc_rank if journal else "",
+#                     "h_index": journal.h_index if journal else "",
+#                 }
+#             )
+
+#         researcher_data = {
+#             "name": researcher.name,
+#             "level": "",        # fill if you have this field
+#             "department": "",   # fill if you have this field
+#             "university": researcher.university,
+#             "profile_url": researcher.profile_url,
+#         }
+#     finally:
+#         db.close()
+
+#     # Reuse researcher.html; ensure the template handles both list & detail modes
+#     return templates.TemplateResponse(
+#         "researcher.html",
+#         {"request": request, "researcher": researcher_data, "publications": pub_list},
+#     )
+
+
+# # Redirect root -> /login
+# @router.get("/", include_in_schema=False)
+# async def root():
+#     return RedirectResponse(url=router.url_path_for("login_get"), status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+# # Keep your existing API routes (if any) from router.routes
+# router.include_router(router)
+
+# # ------------------------
+# # Pages / Auth flows
+# # ------------------------
+
+# # Home page (example data)
+# @router.get("/home", response_class=HTMLResponse)
+# async def home(request: Request):
+#     universities = [
+#         {
+#             "name": "The University of Melbourne",
+#             "desc": "Melbourne, VIC.",
+#             "img": "https://images.unsplash.com/photo-1504805572947-34fad45aed93",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/8/81/University_of_Melbourne_coat_of_arms.svg",
+#         },
+#         {
+#             "name": "The Australian National University",
+#             "desc": "Canberra, ACT.",
+#             "img": "https://images.unsplash.com/photo-1580789346132-30a2b497bb7a",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/7/7b/Australian_National_University_coat_of_arms.svg",
+#         },
+#         {
+#             "name": "The University of Sydney",
+#             "desc": "Sydney, NSW.",
+#             "img": "https://images.unsplash.com/photo-1543248939-a60ef9c6c413",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/1/12/University_of_Sydney_coat_of_arms.svg",
+#         },
+#         {
+#             "name": "The University of Queensland",
+#             "desc": "Brisbane, QLD.",
+#             "img": "https://images.unsplash.com/photo-1586401100295-7a809a2a2b9b",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/8/88/University_of_Queensland_coat_of_arms.svg",
+#         },
+#         {
+#             "name": "UNSW Sydney",
+#             "desc": "Sydney, NSW.",
+#             "img": "https://images.unsplash.com/photo-1507842217343-583bb7270b66",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/2/2b/UNSW_Coat_of_Arms.svg",
+#         },
+#         {
+#             "name": "Monash University",
+#             "desc": "Melbourne, VIC.",
+#             "img": "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/d/d1/Monash_University_Coat_of_Arms.svg",
+#         },
+#         {
+#             "name": "The University of Adelaide",
+#             "desc": "Adelaide, SA.",
+#             "img": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/1/10/University_of_Adelaide_coat_of_arms.svg",
+#         },
+#         {
+#             "name": "The University of Western Australia",
+#             "desc": "Perth, WA.",
+#             "img": "https://images.unsplash.com/photo-1580128637393-47b5f3bbce6d",
+#             "logo": "https://upload.wikimedia.org/wikipedia/en/0/02/University_of_Western_Australia_coat_of_arms.svg",
+#         },
+#     ]
+#     return templates.TemplateResponse("home.html", {"request": request, "universities": universities})
+
+# # ------------------------
+# # Login
+# # ------------------------
+# @router.get("/login", response_class=HTMLResponse)
+# async def login_get(request: Request, error: Optional[str] = None, message: Optional[str] = None):
+#     return templates.TemplateResponse("Login.html", {"request": request, "error": error, "message": message})
+
+# @router.post("/login")
+# async def login_post(
+#     request: Request,
+#     email: str = Form(...),
+#     password: str = Form(...),
+#     remember: bool = Form(False),
+# ):
+#     # TODO: replace with real auth
+#     if email == "admin@example.com" and password == "admin123":
+#         return RedirectResponse(url=router.url_path_for("home"), status_code=status.HTTP_303_SEE_OTHER)
+#     return templates.TemplateResponse(
+#         "Login.html",
+#         {"request": request, "error": "Invalid email or password."},
+#         status_code=status.HTTP_400_BAD_REQUEST,
+#     )
+
+# # ------------------------
+# # Signup
+# # ------------------------
+# @router.get("/signup", response_class=HTMLResponse)
+# async def signup_get(request: Request, error: Optional[str] = None, message: Optional[str] = None):
+#     return templates.TemplateResponse("sign_up.html", {"request": request, "error": error, "message": message})
+
+# @router.post("/signup")
+# async def signup_post(
+#     request: Request,
+#     name: str = Form(...),
+#     email: str = Form(...),
+#     password: str = Form(...),
+#     confirm_password: str = Form(...),
+# ):
+#     if password != confirm_password:
+#         return templates.TemplateResponse(
+#             "sign_up.html",
+#             {"request": request, "error": "Passwords do not match."},
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#         )
+#     # TODO: create user in DB here
+#     return templates.TemplateResponse(
+#         "Login.html",
+#         {"request": request, "message": "Signup successful. Please log in."},
+#     )
+
+# # ------------------------
+# # Reset password
+# # ------------------------
+# @router.get("/reset_password", response_class=HTMLResponse)
+# async def reset_password_get(request: Request, error: Optional[str] = None, message: Optional[str] = None):
+#     return templates.TemplateResponse("reset_password.html", {"request": request, "error": error, "message": message})
+
+# @router.post("/reset_password")
+# async def reset_password_post(request: Request, email: str = Form(...)):
+#     # TODO: send real email with token
+#     return templates.TemplateResponse(
+#         "reset_password.html",
+#         {"request": request, "message": f"If {email} exists, a reset link has been sent."},
+#     )
