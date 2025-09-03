@@ -18,6 +18,7 @@ class Researchers(Base):
     profile_url = Column(String, nullable=True)
     job_title = Column(String, nullable=True)
     level = Column(String, nullable=True)
+    field = Column(String, nullable=True)
     publication = relationship(
         "Publications",
         secondary="Researcher_Publication",
@@ -56,3 +57,10 @@ class Publications(Base):
         back_populates="publication"
     )
     journal = relationship("Journals", back_populates="publication")
+
+class Users(Base):
+    __tablename__ = "Users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)

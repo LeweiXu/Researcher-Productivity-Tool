@@ -6,7 +6,7 @@ from app.models import Researchers, Publications, Journals
 from app.scrapers.helpers.util import standardize
 
 # Columns to fill with test data: 
-    # Researchers: job_title (Research Fellow, Lecturer, Senior Lecturer, Associate Professor, Professor), level (A, B, C, D, E)
+    # Researchers: job_title (Research Fellow, Lecturer, Senior Lecturer, Associate Professor, Professor), level (A, B, C, D, E), field (Accounting, Finance)
     # Journals: JIF (Float value between 0-200), JIF_5_year (Float value between 0-200), citation_percentage (Float value between 0-100)
     # Publications: num_authors (Integer value)
 
@@ -26,6 +26,7 @@ def fill_test_columns():
             job_title, level = random.choice(job_levels)
             r.job_title = job_title
             r.level = level
+            r.field = random.choice(["Accounting", "Finance"])
         # Journals: JIF, JIF_5_year, citation_percentage
         journals = db.query(Journals).all()
         for j in journals:
