@@ -1,54 +1,174 @@
 {% extends "base.html" %}
 {% block content %}
-<!DOCTYPE html>
-<html>
 <head>
-    <title>All Researchers</title>
+    <title>{{ researcher.name }} - Researcher Profile</title>
     <style>
-        .researcher-list-container {
-            max-width: 700px;
-            margin: 40px auto;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px #ccc;
-            padding: 32px;
-        }
-        .researcher-list-title {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 24px;
-        }
-        .researcher-list {
-            list-style: none;
-            padding: 0;
-        }
-        .researcher-list li {
-            margin-bottom: 16px;
-            font-size: 1.2em;
-        }
-        .researcher-list a {
-            color: #1976d2;
-            text-decoration: none;
-        }
-        .researcher-list a:hover {
-            color: #5a01ce;
-            text-decoration: underline;
-        }
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #ccc; padding: 32px; }
+        .header { display: flex; align-items: center; }
+        .name { font-size: 2em; font-weight: bold; margin-right: 24px; }
+        .uni { font-size: 1.0em; color: #949494; margin-top: 10px; }
+        .level { font-size: 1.2em; color: #555; margin-top: 10px; margin-bottom: 32px;}
+        .department { font-size: 1.0em; color: #949494; margin-top: 10px;}
+        .section-title { font-size: 1.2em; font-weight: bold; margin: 32px 0 12px 0; }
+        .pub-table { width: 100%; border-collapse: collapse; }
+        .pub-table th, .pub-table td { border: 1px solid #bbb; padding: 10px 16px; text-align: left; }
+        .pub-table th { background: #1976d2; color: #fff; cursor: pointer; user-select: none; }
+        .arrow { margin-left: 6px; font-size: 0.8em; opacity: 0.6; }
+        .hidden { display: none; }
+        #searchInput { margin: 10px 0; padding: 6px 8px; width: 240px; }
+        a { color: #000000; text-decoration: none; }
+        a:hover { color: #0d47a1; text-decoration: underline; }
     </style>
 </head>
+
 <body>
-    <div class="researcher-list-container">
-        <div class="researcher-list-title">All Researchers</div>
-        <ul class="researcher-list">
-            {% for researcher in researchers %}
-            <li>
-                <a href="/researcher/{{ researcher.id }}">
-                    {{ researcher.name }}
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
+    <div class="container">
+        <div class="header">
+            <div class="name"><a href="{{ researcher.profile_url }}">{{ researcher.name }}</a></div>
+        </div>
+        <div class="uni">{{ researcher.university }}</div>
+        <div class="department">{{ researcher.department }}</div>
+        <div class="level">{{ researcher.level }}</div>
+
+        <input type="text" id="searchInput" placeholder="Search publications…">
+
+        <div style="display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 12px; float: right;">
+            <label for="rowsPerPage" style="margin-bottom: 5px;">Rows per page:</label>
+            <select id="rowsPerPage" style="width: 110px;">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+            </select>
+        </div>
+
+        <table class="pub-table" id="pub-table">
+            <thead>
+                <tr>
+                    <th data-type="text">Publications Title <span class="arrow"></span></th>
+                    <th data-type="text">Journal Name <span class="arrow"></span></th>
+                    <th data-type="number">Year <span class="arrow"></span></th>
+                    <th data-type="text">ABDC Ranking <span class="arrow"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pub in publications %}
+                <tr>
+                    <td>{{ pub.title }}</td>
+                    <td>{{ pub.journal }}</td>
+                    <td>{{ pub.year }}</td>
+                    <td>{{ pub.ranking }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="pagination" style="margin-top:18px; text-align:center;">
+            <button id="prevPage" disabled>Previous</button>
+            <span id="pageInfo"></span>
+            <button id="nextPage" disabled>Next</button>
+        </div>
     </div>
+    
+    <script>
+        const table = document.getElementById('pub-table');
+        const tbody = table.tBodies[0];
+        const headers = table.tHead.rows[0].cells;
+        const sortState = Array.from(headers).map(() => null);
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let rowsPerPage = 10;
+        let currentPage = 1;
+        let filteredRows = [...rows];
+
+        function getRowsPerPage() {
+            const val = document.getElementById('rowsPerPage').value;
+            return val === 'all' ? filteredRows.length : parseInt(val, 10);
+        }
+
+        function showPage(page) {
+            rowsPerPage = getRowsPerPage();
+            const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+            currentPage = Math.max(1, Math.min(page, totalPages));
+            filteredRows.forEach((row, idx) => {
+                row.style.display = (rowsPerPage === filteredRows.length) ||
+                    (idx >= (currentPage - 1) * rowsPerPage && idx < currentPage * rowsPerPage)
+                    ? '' : 'none';
+            });
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+        }
+
+        document.getElementById('prevPage').onclick = () => showPage(currentPage - 1);
+        document.getElementById('nextPage').onclick = () => showPage(currentPage + 1);
+
+        document.getElementById('rowsPerPage').addEventListener('change', function () {
+            showPage(1);
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            filteredRows = rows.filter(tr => tr.textContent.toLowerCase().includes(q));
+            rows.forEach(tr => tr.style.display = 'none');
+            showPage(1);
+        });
+
+        function renderSortArrows(activeIdx) {
+            Array.from(headers).forEach((th, i) => {
+                const arrow = th.querySelector('.arrow');
+                if (!arrow) return;
+                if (i === activeIdx) {
+                    arrow.textContent = sortState[i] === 'asc' ? '▲' : '▼';
+                } else {
+                    arrow.textContent = '';
+                }
+            });
+        }
+
+        const getCellText = (tr, idx) =>
+            (tr.children[idx]?.textContent || '').trim();
+
+        const asNumber = (v) => {
+            const cleaned = v.replace(/[, ]+/g, '');
+            return parseFloat(cleaned);
+        };
+
+        const compareFactory = (idx, dir, type) => {
+            const mul = dir === 'asc' ? 1 : -1;
+            return (a, b) => {
+                let va = getCellText(a, idx);
+                let vb = getCellText(b, idx);
+                if (type === 'number') {
+                    const na = asNumber(va);
+                    const nb = asNumber(vb);
+                    if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+                        return (na - nb) * mul;
+                    }
+                }
+                return va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' }) * mul;
+            };
+        };
+
+        Array.from(headers).forEach((th, idx) => {
+            th.addEventListener('click', () => {
+                sortState[idx] = sortState[idx] === 'asc' ? 'desc' : 'asc';
+                sortState.forEach((_, i) => { if (i !== idx) sortState[i] = null; });
+
+                const type = th.dataset.type || 'text';
+                const dir = sortState[idx] || 'asc';
+
+                filteredRows.sort(compareFactory(idx, dir, type));
+                // Re-append sorted rows to tbody
+                filteredRows.forEach(row => tbody.appendChild(row));
+                renderSortArrows(idx);
+                showPage(1);
+            });
+        });
+
+        renderSortArrows(0);
+        showPage(1);
+    </script>
 </body>
-</html>
 {% endblock %}
