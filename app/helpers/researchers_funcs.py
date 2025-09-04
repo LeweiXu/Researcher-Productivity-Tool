@@ -26,19 +26,6 @@ def filter_researchers(request, researcher_list):
 def get_researcher_data(request: Request):
     global RESEARCHER_STATS_CACHE
     sort_by = request.query_params.get("sort_by", "total_articles")
-    # Pagination params
-    try:
-        page = int(request.query_params.get("page", 1))
-        if page < 1:
-            page = 1
-    except ValueError:
-        page = 1
-    try:
-        per_page = int(request.query_params.get("per_page", 20))
-        if per_page not in [10, 20, 50, 100]:
-            per_page = 20
-    except ValueError:
-        per_page = 20
 
     if RESEARCHER_STATS_CACHE is None:
         db = SessionLocal()
@@ -123,10 +110,4 @@ def get_researcher_data(request: Request):
             r["variable_value"] = r["total_articles"]
         researcher_list.sort(key=lambda x: x["total_articles"], reverse=True)
 
-    total_count = len(researcher_list)
-    total_pages = max(1, math.ceil(total_count / per_page))
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated_list = researcher_list[start:end]
-
-    return paginated_list, variable_label, total_pages
+    return researcher_list, variable_label

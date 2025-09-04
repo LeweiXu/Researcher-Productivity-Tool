@@ -23,14 +23,13 @@ def home(request: Request):
 # Researcher level ranking page
 @router.get("/researchers", response_class=HTMLResponse)
 def researchers(request: Request):
-    researcher_list, variable_label, total_pages = get_researcher_data(request)
+    researcher_list, variable_label = get_researcher_data(request)
     return templates.TemplateResponse(
         "researchers.html",
         {
             "request": request,
             "researchers": researcher_list,
-            "variable_label": variable_label,
-            "total_pages": total_pages,
+            "variable_label": variable_label
         }
     )
 

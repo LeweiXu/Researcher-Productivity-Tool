@@ -2,7 +2,7 @@
 
 {% block content %}
 <h1 style="text-align:center; margin-top:30px;">Researcher Rankings</h1>
-<div style="width:90%; max-width:900px; margin: 0 auto 24px auto; background:#fff; padding:18px 24px 10px 24px; border-radius:8px; box-shadow:0 2px 8px #ccc;">
+<div style="width:90%; max-width:1200px; margin: 0 auto 24px auto; background:#fff; padding:18px 24px 10px 24px; border-radius:8px; box-shadow:0 2px 8px #ccc;">
     <form method="get" action="/researchers" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
         <label for="university" style="font-weight:bold;">University:</label>
         <select name="university" id="university" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
@@ -41,45 +41,27 @@
             <option value="avg_jif_5" {% if request.query_params.get('sort_by', 'total_articles') == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of articles</option>
             <option value="avg_citation" {% if request.query_params.get('sort_by', 'total_articles') == "avg_citation" %}selected{% endif %}>Average citation percentage</option>
         </select>
-        <label for="per_page" style="font-weight:bold;">Results per page:</label>
-        <select name="per_page" id="per_page" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
-            <option value="10" {% if request.query_params.get('per_page', '20') == '10' %}selected{% endif %}>10</option>
-            <option value="20" {% if request.query_params.get('per_page', '20') == '20' %}selected{% endif %}>20</option>
-            <option value="50" {% if request.query_params.get('per_page', '20') == '50' %}selected{% endif %}>50</option>
-            <option value="100" {% if request.query_params.get('per_page', '20') == '100' %}selected{% endif %}>100</option>
-        </select>
         <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
     </form>
+    <label for="rowsPerPage" style="margin-bottom: 5px;">Rows per page:</label>
+    <select id="rowsPerPage" style="width: 110px;">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="all">All</option>
+    </select>
+
 </div>
-<table style="text-align:center; margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 900px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+<table class="pub-table" id="researchers-table" style="text-align:center; margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 1200px; background: #fff; box-shadow: 0 2px 8px #ccc;">
     <thead>
         <tr style="background: #1976d2; color: #fff;">
-            {% set current_sort = request.query_params.get('sort_by', 'total_articles') %}
-            {% set current_order = request.query_params.get('sort_order', 'desc') %}
-            {% macro sort_link(label, sort_key) -%}
-                {# Build new query parameters #}
-                {% set new_order = 'asc' if current_sort != sort_key or current_order == 'desc' else 'desc' %}
-                {% set params = [] %}
-                {% for k, v in request.query_params.items() %}
-                    {% if k != 'sort_by' and k != 'sort_order' %}
-                        {% set _ = params.append(k ~ '=' ~ v) %}
-                    {% endif %}
-                {% endfor %}
-                {% set _ = params.append('sort_by=' ~ sort_key) %}
-                {% set _ = params.append('sort_order=' ~ new_order) %}
-                <a href="?{{ params|join('&') }}" style="color: #fff; text-decoration: underline;">
-                    {{ label }}
-                    {% if current_sort == sort_key %}
-                        {% if current_order == 'asc' %}▲{% else %}▼{% endif %}
-                    {% endif %}
-                </a>
-            {%- endmacro %}
-            <th style="padding: 12px 8px;">{{ sort_link('Rank', 'rank') }}</th>
-            <th style="padding: 12px 8px;">{{ sort_link('Name', 'name') }}</th>
-            <th style="padding: 12px 8px;">{{ sort_link('FoR', 'FoR') }}</th>
-            <th style="padding: 12px 8px;">{{ sort_link('Level', 'level') }}</th>
-            <th style="padding: 12px 8px;">{{ sort_link('University', 'university') }}</th>
-            <th style="padding: 12px 8px;">{{ sort_link(variable_label, current_sort) }}</th>
+            <th style="padding: 12px 8px;" data-type="number">Rank <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">Name <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">FoR <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">Level <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">University <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="number">{{ variable_label }} <span class="arrow"></span></th>
         </tr>
     </thead>
     <tbody>
@@ -95,13 +77,101 @@
         {% endfor %}
     </tbody>
 </table>
-<div style="text-align:center; margin:20px 0;">
-    {% if request.query_params.get('page', '1')|int > 1 %}
-        <a href="?page={{ request.query_params.get('page', '1')|int - 1 }}&per_page={{ request.query_params.get('per_page', '20') }}{% for key, value in request.query_params.items() if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endfor %}" style="margin-right:10px;">Previous</a>
-    {% endif %}
-    <span>Page {{ request.query_params.get('page', '1')|int }} of {{ total_pages }}</span>
-    {% if request.query_params.get('page', '1')|int < total_pages %}
-        <a href="?page={{ request.query_params.get('page', '1')|int + 1 }}&per_page={{ request.query_params.get('per_page', '20') }}{% for key, value in request.query_params.items() if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endfor %}" style="margin-left:10px;">Next</a>
-    {% endif %}
+<div id="pagination" style="margin-top:18px; text-align:center;">
+    <button id="prevPage" disabled>Previous</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage" disabled>Next</button>
 </div>
+<script>
+    const table = document.getElementById('researchers-table');
+    const tbody = table.tBodies[0];
+    const headers = table.tHead.rows[0].cells;
+    const sortState = Array.from(headers).map(() => null);
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    let rowsPerPage = 10;
+    let currentPage = 1;
+    let filteredRows = [...rows];
+
+    function getRowsPerPage() {
+        const val = document.getElementById('rowsPerPage').value;
+        return val === 'all' ? filteredRows.length : parseInt(val, 10);
+    }
+
+    function showPage(page) {
+        rowsPerPage = getRowsPerPage();
+        const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+        currentPage = Math.max(1, Math.min(page, totalPages));
+        filteredRows.forEach((row, idx) => {
+            row.style.display = (rowsPerPage === filteredRows.length) ||
+                (idx >= (currentPage - 1) * rowsPerPage && idx < currentPage * rowsPerPage)
+                ? '' : 'none';
+        });
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+
+    document.getElementById('prevPage').onclick = () => showPage(currentPage - 1);
+    document.getElementById('nextPage').onclick = () => showPage(currentPage + 1);
+
+    document.getElementById('rowsPerPage').addEventListener('change', function () {
+        showPage(1);
+    });
+
+    function renderSortArrows(activeIdx) {
+        Array.from(headers).forEach((th, i) => {
+            const arrow = th.querySelector('.arrow');
+            if (!arrow) return;
+            if (i === activeIdx) {
+                arrow.textContent = sortState[i] === 'asc' ? '▲' : '▼';
+            } else {
+                arrow.textContent = '';
+            }
+        });
+    }
+
+    const getCellText = (tr, idx) =>
+        (tr.children[idx]?.textContent || '').trim();
+
+    const asNumber = (v) => {
+        const cleaned = v.replace(/[, ]+/g, '');
+        return parseFloat(cleaned);
+    };
+
+    const compareFactory = (idx, dir, type) => {
+        const mul = dir === 'asc' ? 1 : -1;
+        return (a, b) => {
+            let va = getCellText(a, idx);
+            let vb = getCellText(b, idx);
+            if (type === 'number') {
+                const na = asNumber(va);
+                const nb = asNumber(vb);
+                if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+                    return (na - nb) * mul;
+                }
+            }
+            return va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' }) * mul;
+        };
+    };
+
+    Array.from(headers).forEach((th, idx) => {
+        th.addEventListener('click', () => {
+            sortState[idx] = sortState[idx] === 'asc' ? 'desc' : 'asc';
+            sortState.forEach((_, i) => { if (i !== idx) sortState[i] = null; });
+
+            const type = th.dataset.type || 'text';
+            const dir = sortState[idx] || 'asc';
+
+            filteredRows.sort(compareFactory(idx, dir, type));
+            // Re-append sorted rows to tbody
+            filteredRows.forEach(row => tbody.appendChild(row));
+            renderSortArrows(idx);
+            showPage(1);
+        });
+    });
+
+    renderSortArrows(0);
+    showPage(1);
+</script>
 {% endblock %}
