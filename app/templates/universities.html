@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="text-align:center; margin-top:30px;">University Rankings</h1>
+<div style="width:90%; max-width:900px; margin: 0 auto 24px auto; background:#fff; padding:18px 24px 10px 24px; border-radius:8px; box-shadow:0 2px 8px #ccc;">
+    <form method="get" action="/universities" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
+        <label for="sort_by" style="font-weight:bold;">Rank by:</label>
+        <select name="sort_by" id="sort_by" style="padding:6px 12px; font-size:1em; border-radius:4px; border:1px solid #bbb;">
+            <option value="total_researchers" {% if request.query_params.get('sort_by', 'total_researchers') == "total_researchers" %}selected{% endif %}>Total number of researchers</option>
+            <option value="total_articles" {% if request.query_params.get('sort_by', 'total_researchers') == "total_articles" %}selected{% endif %}>Total number of articles produced</option>
+            <option value="abdc_a_star_a" {% if request.query_params.get('sort_by', 'total_researchers') == "abdc_a_star_a" %}selected{% endif %}>Total number of articles with A* or A rank journal</option>
+            <option value="avg_jif" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_jif" %}selected{% endif %}>Average JIF of all articles</option>
+            <option value="avg_jif_5" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of all articles</option>
+        </select>
+        <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
+    </form>
+</div>
+<table style="margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 900px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+    <thead>
+        <tr style="background: #1976d2; color: #fff; text-align: center;">
+            <th style="padding: 12px 8px;">Rank</th>
+            <th style="padding: 12px 8px;">Name</th>
+            <th style="padding: 12px 8px;">{{ variable_label }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for university in universities %}
+        <tr style="text-align:center; border-bottom: 1px solid #eee;">
+            <td style="padding: 10px 6px;">{{ loop.index }}</td>
+            <td style="padding: 10px 6px;">{{ university.name }}</td>
+            <td style="padding: 10px 6px;">{{ university.variable_value }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+

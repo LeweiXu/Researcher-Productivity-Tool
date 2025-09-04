@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 style="text-align:center; margin-top:30px;">Researcher Rankings</h1>
+<div style="width:90%; max-width:1200px; margin: 0 auto 24px auto; background:#fff; padding:18px 24px 10px 24px; border-radius:8px; box-shadow:0 2px 8px #ccc;">
+    <form method="get" action="/researchers" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
+        <label for="university" style="font-weight:bold;">University:</label>
+        <select name="university" id="university" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
+            <option value="" {% if request.query_params.get('university', '') == '' %}selected{% endif %}>All</option>
+            <option value="ANU" {% if request.query_params.get('university', '') == 'ANU' %}selected{% endif %}>ANU</option>
+            <option value="MU" {% if request.query_params.get('university', '') == 'MU' %}selected{% endif %}>MU</option>
+            <option value="UA" {% if request.query_params.get('university', '') == 'UA' %}selected{% endif %}>UA</option>
+            <option value="UM" {% if request.query_params.get('university', '') == 'UM' %}selected{% endif %}>UM</option>
+            <option value="UNSW" {% if request.query_params.get('university', '') == 'UNSW' %}selected{% endif %}>UNSW</option>
+            <option value="UQ" {% if request.query_params.get('university', '') == 'UQ' %}selected{% endif %}>UQ</option>
+            <option value="USYD" {% if request.query_params.get('university', '') == 'USYD' %}selected{% endif %}>USYD</option>
+            <option value="UWA" {% if request.query_params.get('university', '') == 'UWA' %}selected{% endif %}>UWA</option>
+        </select>
+        <label for="field" style="font-weight:bold;">Field of Research:</label>
+        <select name="field" id="field" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
+            <option value="" {% if request.query_params.get('field', '') == '' %}selected{% endif %}>All</option>
+            <option value="Accounting" {% if request.query_params.get('field', '') == 'Accounting' %}selected{% endif %}>Accounting</option>
+            <option value="Finance" {% if request.query_params.get('field', '') == 'Finance' %}selected{% endif %}>Finance</option>
+        </select>
+        <label for="level" style="font-weight:bold;">Level:</label>
+        <select name="level" id="level" style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;">
+            <option value="" {% if request.query_params.get('level', '') == '' %}selected{% endif %}>All</option>
+            <option value="A" {% if request.query_params.get('level', '') == 'A' %}selected{% endif %}>A</option>
+            <option value="B" {% if request.query_params.get('level', '') == 'B' %}selected{% endif %}>B</option>
+            <option value="C" {% if request.query_params.get('level', '') == 'C' %}selected{% endif %}>C</option>
+            <option value="D" {% if request.query_params.get('level', '') == 'D' %}selected{% endif %}>D</option>
+            <option value="E" {% if request.query_params.get('level', '') == 'E' %}selected{% endif %}>E</option>
+        </select>
+        <label for="name" style="font-weight:bold;">Name:</label>
+        <input type="text" name="name" id="name" placeholder="Type name..." style="padding:6px 12px; border-radius:4px; border:1px solid #bbb;" value="{{ request.query_params.get('name', '') }}" />
+        <label for="sort_by" style="font-weight:bold;">Rank by:</label>
+        <select name="sort_by" id="sort_by" style="padding:6px 12px; font-size:1em; border-radius:4px; border:1px solid #bbb;">
+            <option value="total_articles" {% if request.query_params.get('sort_by', 'total_articles') == "total_articles" %}selected{% endif %}>Total number of articles</option>
+            <option value="abdc_a_star_a" {% if request.query_params.get('sort_by', 'total_articles') == "abdc_a_star_a" %}selected{% endif %}>Number of A* and A ranked journals</option>
+            <option value="avg_jif" {% if request.query_params.get('sort_by', 'total_articles') == "avg_jif" %}selected{% endif %}>Average JIF of articles</option>
+            <option value="avg_jif_5" {% if request.query_params.get('sort_by', 'total_articles') == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of articles</option>
+            <option value="avg_citation" {% if request.query_params.get('sort_by', 'total_articles') == "avg_citation" %}selected{% endif %}>Average citation percentage</option>
+        </select>
+        <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
+    </form>
+    <label for="rowsPerPage" style="margin-bottom: 5px;">Rows per page:</label>
+    <select id="rowsPerPage" style="width: 110px;">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="all">All</option>
+    </select>
+
+</div>
+<table class="pub-table" id="researchers-table" style="text-align:center; margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 1200px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+    <thead>
+        <tr style="background: #1976d2; color: #fff;">
+            <th style="padding: 12px 8px;" data-type="number">Rank <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">Name <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">FoR <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">Level <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">University <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="number">{{ variable_label }} <span class="arrow"></span></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for researcher in researchers %}
+        <tr style="text-align:center; border-bottom: 1px solid #eee;">
+            <td style="padding: 10px 6px;">{{ loop.index }}</td>
+            <td style="padding: 10px 6px;"><a href="/researchers/{{ researcher.id }}" style="color:#1976d2; text-decoration:underline;">{{ researcher.name }}</a></td>
+            <td style="padding: 10px 6px;">{{ researcher.FoR or researcher.for or researcher.field or '' }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.level }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.university }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.variable_value }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div id="pagination" style="margin-top:18px; text-align:center;">
+    <button id="prevPage" disabled>Previous</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage" disabled>Next</button>
+</div>
+<script>
+    const table = document.getElementById('researchers-table');
+    const tbody = table.tBodies[0];
+    const headers = table.tHead.rows[0].cells;
+    const sortState = Array.from(headers).map(() => null);
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    let rowsPerPage = 10;
+    let currentPage = 1;
+    let filteredRows = [...rows];
+
+    function getRowsPerPage() {
+        const val = document.getElementById('rowsPerPage').value;
+        return val === 'all' ? filteredRows.length : parseInt(val, 10);
+    }
+
+    function showPage(page) {
+        rowsPerPage = getRowsPerPage();
+        const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+        currentPage = Math.max(1, Math.min(page, totalPages));
+        filteredRows.forEach((row, idx) => {
+            row.style.display = (rowsPerPage === filteredRows.length) ||
+                (idx >= (currentPage - 1) * rowsPerPage && idx < currentPage * rowsPerPage)
+                ? '' : 'none';
+        });
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+
+    document.getElementById('prevPage').onclick = () => showPage(currentPage - 1);
+    document.getElementById('nextPage').onclick = () => showPage(currentPage + 1);
+
+    document.getElementById('rowsPerPage').addEventListener('change', function () {
+        showPage(1);
+    });
+
+    function renderSortArrows(activeIdx) {
+        Array.from(headers).forEach((th, i) => {
+            const arrow = th.querySelector('.arrow');
+            if (!arrow) return;
+            if (i === activeIdx) {
+                arrow.textContent = sortState[i] === 'asc' ? '▲' : '▼';
+            } else {
+                arrow.textContent = '';
+            }
+        });
+    }
+
+    const getCellText = (tr, idx) =>
+        (tr.children[idx]?.textContent || '').trim();
+
+    const asNumber = (v) => {
+        const cleaned = v.replace(/[, ]+/g, '');
+        return parseFloat(cleaned);
+    };
+
+    const compareFactory = (idx, dir, type) => {
+        const mul = dir === 'asc' ? 1 : -1;
+        return (a, b) => {
+            let va = getCellText(a, idx);
+            let vb = getCellText(b, idx);
+            if (type === 'number') {
+                const na = asNumber(va);
+                const nb = asNumber(vb);
+                if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+                    return (na - nb) * mul;
+                }
+            }
+            return va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' }) * mul;
+        };
+    };
+
+    Array.from(headers).forEach((th, idx) => {
+        th.addEventListener('click', () => {
+            sortState[idx] = sortState[idx] === 'asc' ? 'desc' : 'asc';
+            sortState.forEach((_, i) => { if (i !== idx) sortState[i] = null; });
+
+            const type = th.dataset.type || 'text';
+            const dir = sortState[idx] || 'asc';
+
+            filteredRows.sort(compareFactory(idx, dir, type));
+            // Re-append sorted rows to tbody
+            filteredRows.forEach(row => tbody.appendChild(row));
+            renderSortArrows(idx);
+            showPage(1);
+        });
+    });
+
+    renderSortArrows(0);
+    showPage(1);
+</script>
+{% endblock %}

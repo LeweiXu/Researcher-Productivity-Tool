@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>G8 Research Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
+        .title { text-align: center; margin-top: 40px; font-size: 2.5em; font-weight: bold; }
+        .uni-section {
+            background: #fff;
+            margin: 30px auto;
+            max-width: 1000px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #ccc;
+            display: flex;
+            align-items: stretch;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+            min-height: 80px;
+        }
+        .uni-bg {
+            flex: 1.2;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .uni-bg::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.35); /* semi-transparent overlay */
+        }
+        .uni-info {
+            flex: 2;
+            position: relative;
+            z-index: 1;
+            padding: 32px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .uni-name { font-size: 2.2em; font-weight: bold; color: #fff; margin-top: 1px; margin-bottom: 16px;}
+        .uni-desc { margin: 12px 0 24px 0; color: #f0f0f0; }
+        .learn-btn { display: inline-block; padding: 10px 24px; background: #1976d2; color: #fff; border: none; border-radius: 6px; text-decoration: none; font-size: 1em; margin-top: 32px; align-self: flex-start;}
+        .learn-btn:hover { background: #0d47a1; }
+        .uni-logo { max-width: 60px; max-height: 60px; vertical-align: middle; margin-right: 10px; }
+        @media (max-width: 700px) {
+            .uni-section { flex-direction: column; }
+            .uni-bg, .uni-info { flex: unset; width: 100%; }
+            .uni-info { padding: 16px; }
+        }
+        .researcher-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: #388e3c;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .download-btn:hover {
+            background: #256029;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title">Welcome to G8 Researchers Productivity Tool</div>
+    <p style="text-align: left; margin-left: 102px; font-size: 1.15em; color: #717070;">
+        This portal provides a quick overview of researchers productivity across the G8 universities in Australia.<br>
+        Below are the researchers and their publications from the G8 universities.
+    </p>
+    <!-- Hardcoded university sections -->
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://about.unimelb.edu.au/__data/assets/image/0021/408504/230428_UOM_Campus-0130-copy.jpg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://universitiesaustralia.edu.au/wp-content/uploads/2019/05/UoM_Logo_Vert_Housed_RGB-1.jpg" class="uni-logo" alt="Logo" />
+                    The University of Melbourne
+                </span>
+                <div class="uni-desc">A leading research university in Melbourne, Victoria.</div>
+                <a class="learn-btn" href="/researchers?university=UM">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.uvic.ca/international-experiences/_assets/images/content-main/australian-national-university.jpg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/07/Logo-ANU.jpg" class="uni-logo" alt="Logo" />
+                    The Australian National University
+                </span>
+                <div class="uni-desc">A leading research university in Canberra, Australia.</div>
+                <a class="learn-btn" href="/researchers?university=ANU">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://offloadmedia.feverup.com/secretsydney.com/wp-content/uploads/2024/03/14121456/University-of-Sydney-Eriksson-Luo-Unsplash-1.jpg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/09/USydLogo-1.jpg" class="uni-logo" alt="Logo" />
+                    The University of Sydney
+                </span>
+                <div class="uni-desc">A leading research university in Sydney, New South Wales.</div>
+                <a class="learn-btn" href="/researchers?university=USYD">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.uq.edu.au/sites/default/files/styles/uqds_card/public/2023-12/st-lucia-campus.jpg?itok=39nkzdMY');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://cdn.prod.website-files.com/678e6d991abe09b73901f4e2/67b84906e9d57bd0aa0d7373_uqlogo.webp" class="uni-logo" alt="Logo" />
+                    The University of Queensland
+                </span>
+                <div class="uni-desc">A leading research university in Brisbane, Queensland.</div>
+                <a class="learn-btn" href="/researchers?university=UQ">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.ncuk.ac.uk/wp-content/uploads/2020/11/University-of-New-South-Wales-UNSW-Sydney-Image-Gallery-3.jpg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://www.mollerinstitute.com/wp-content/uploads/2024/04/University-of-New-South-Wales-Logo-565x565.png" class="uni-logo" alt="Logo" />
+                    The University of New South Wales
+                </span>
+                <div class="uni-desc">A leading research university in Sydney, New South Wales.</div>
+                <a class="learn-btn" href="/researchers?university=UNSW">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.usnews.com/object/image/00000153-ec2c-d802-ab7f-feacb9230000/160406-monashu-submitted.jpg?update-time=1459956316556&size=responsiveFlow970');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://usercontent.one/wp/studyoptions.com/wp-content/uploads/2021/09/MonashLogo.jpg" class="uni-logo" alt="Logo" />
+                    Monash University
+                </span>
+                <div class="uni-desc">A leading research university in Melbourne, Victoria.</div>
+                <a class="learn-btn" href="/researchers?university=MU">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.uwa.edu.au/seek-wisdom/-/media/project/uwa/uwa/winthrop-hall---seekers-space-banner.jpg?w=1440&hash=AEF28B0F77A0D2F84887B24A48875055');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://coursera-university-assets.s3.amazonaws.com/fa/e5fc20724e11e5bf36bff635f1f3bb/UWA-Full-Ver-CMYK3.png" class="uni-logo" alt="Logo" />
+                    The University of Western Australia
+                </span>
+                <div class="uni-desc">A leading research university in Perth, Western Australia.</div>
+                <a class="learn-btn" href="/researchers?university=UWA">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+    <div class="uni-section">
+        <div class="uni-bg" style="background-image: url('https://www.adelaide.edu.au/about/_jcr_content/root/container/container/container/column_0/teaser.coreimg.jpeg/1707460811850/08077-uoa.jpeg');">
+            <div class="uni-info">
+                <span class="uni-name">
+                    <img src="https://courseseeker.edu.au/assets/images/institutions/3010.png" class="uni-logo" alt="Logo" />
+                    The University of Adelaide
+                </span>
+                <div class="uni-desc">A leading research university in Adelaide, South Australia.</div>
+                <a class="learn-btn" href="/researchers?university=UA">Learn more about our researchers</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}
