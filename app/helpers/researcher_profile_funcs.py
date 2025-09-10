@@ -26,6 +26,7 @@ def get_researcher_profile(researcher_id):
                     "journal": journal.name if journal else pub.journal_name,
                     "year": pub.year,
                     "ranking": journal.abdc_rank if journal else "",
+                    "num_authors": pub.num_authors,
                 }
             )
 
