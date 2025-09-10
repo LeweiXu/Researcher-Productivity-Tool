@@ -77,4 +77,4 @@ def update_USYD(csv=True, db=True, match=True):
 
 if __name__ == "__main__":
     # update_UM(csv=True, db=True, match=True)
-    update_UM(csv=True, db=True, match=True)
+    update_ANU(csv=True, db=True, match=True)
