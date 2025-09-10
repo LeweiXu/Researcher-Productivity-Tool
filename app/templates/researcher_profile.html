@@ -4,7 +4,7 @@
     <title>{{ researcher.name }} - Researcher Profile</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
-        .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #ccc; padding: 32px; }
+        .container { max-width: 1100px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #ccc; padding: 32px; }
         .header { display: flex; align-items: center; }
         .name { font-size: 2em; font-weight: bold; margin-right: 24px; }
         .uni { font-size: 1.0em; color: #949494; margin-top: 10px; }
@@ -50,6 +50,7 @@
                     <th data-type="text">Journal Name <span class="arrow"></span></th>
                     <th data-type="number">Year <span class="arrow"></span></th>
                     <th data-type="text">ABDC Ranking <span class="arrow"></span></th>
+                    <th data-type="number">No. of Co-authors <span class="arrow"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -59,6 +60,7 @@
                     <td>{{ pub.journal }}</td>
                     <td>{{ pub.year }}</td>
                     <td>{{ pub.ranking }}</td>
+                    <td>{{ pub.num_authors }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
