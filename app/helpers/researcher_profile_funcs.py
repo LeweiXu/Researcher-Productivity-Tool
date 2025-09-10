@@ -23,6 +23,7 @@ def get_researcher_profile(researcher_id):
             pub_list.append(
                 {
                     "title": pub.title,
+                    "publication_url": pub.publication_url,
                     "journal": journal.name if journal else pub.journal_name,
                     "year": pub.year,
                     "ranking": journal.abdc_rank if journal else "",

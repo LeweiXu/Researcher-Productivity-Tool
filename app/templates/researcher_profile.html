@@ -57,7 +57,7 @@
             <tbody>
                 {% for pub in publications %}
                 <tr>
-                    <td>{{ pub.title }}</td>
+                    <td><a href="{{ pub.publication_url }}">{{ pub.title }}</a></td>
                     <td>{{ pub.journal }}</td>
                     <td>{{ pub.year }}</td>
                     <td>{{ pub.ranking }}</td>
