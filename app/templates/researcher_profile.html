@@ -37,7 +37,8 @@
             <label for="rowsPerPage" style="margin-bottom: 5px;">Rows per page:</label>
             <select id="rowsPerPage" style="width: 110px;">
                 <option value="10">10</option>
-                <option value="50">50</option>
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
                 <option value="100">100</option>
                 <option value="all">All</option>
             </select>
@@ -80,7 +81,7 @@
         const sortState = Array.from(headers).map(() => null);
 
         const rows = Array.from(tbody.querySelectorAll('tr'));
-        let rowsPerPage = 10;
+        let rowsPerPage = 50;
         let currentPage = 1;
         let filteredRows = [...rows];
 
