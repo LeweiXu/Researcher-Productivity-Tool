@@ -8,7 +8,7 @@ def scrape_MU():
     options.add_argument("--window-size=1280,800")
     options.add_argument("--lang=en-US,en")
     # options.add_argument("--headless")  # Uncomment for headless mode
-    driver = uc.Chrome(version_main=138, options=options) #Lewei note: local machine has issue with chrome installation, have to force use chrome version 138 to work for now
+    driver = uc.Chrome(options=options)
 
     profiles_urls = [
         "https://research.monash.edu/en/organisations/department-of-accounting/persons/",
@@ -26,9 +26,9 @@ def scrape_MU():
     all_data = []
     for profile_url in profile_urls:
         print(f"Scraping profile: {profile_url}")
-        name, publications_info = scrape_publications(profile_url, driver)
+        name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
-            all_data.append(line + [name, profile_url])
+            all_data.append(line + [name, job_title, profile_url])
 
     return all_data

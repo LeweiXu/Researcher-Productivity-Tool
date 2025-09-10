@@ -12,6 +12,9 @@ csv_paths = [os.path.join(CSV_DIR, f) for f in os.listdir(CSV_DIR) if f.endswith
 
 # NOTE: Scrapers return a list of lists in the format ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL"]
 
+# Scientia Professor = normal professor
+# Emiritus = retired
+# 
 def standardize(data):
     # Enhanced pattern to match titles in any order (e.g., "Professor Emeritus" or "Emeritus Professor")
     title_pattern = re.compile(
