@@ -26,7 +26,7 @@ def find_profile_urls(page_url, base, driver):
 def scrape_publications(profile_url, driver):
     """
     Finds publication info for a given researcher
-    Returns: (name, publications_info) where publications_info is a list of [Title, Date, Type, Journal, Article URL]
+    Returns: (name, job_title, publications_info) where publications_info is a list of [Title, Date, Type, Journal, Article URL]
     """
     driver.get(profile_url)
     time.sleep(2)
@@ -38,6 +38,12 @@ def scrape_publications(profile_url, driver):
             name = driver.find_element(By.CSS_SELECTOR, "h1").text.strip()
         except Exception:
             name = ""
+    # Try to get job title
+    try:
+        job_title = driver.find_element(By.CSS_SELECTOR, "span.job-title").text.strip()
+    except Exception:
+        job_title = ""
+    print(name, job_title)
     publications_info = []
     page = 0
     while True:
@@ -48,13 +54,13 @@ def scrape_publications(profile_url, driver):
         if not publication_divs:
             break
         for div in publication_divs:
-            # Title and URL
+            # Title and URL (new structure)
             try:
                 a_tag = div.find_element(By.CSS_SELECTOR, "h3.title a")
-                title = a_tag.text.strip()
+                pub_title = a_tag.find_element(By.CSS_SELECTOR, "span").text.strip()
                 publication_url = a_tag.get_attribute("href")
             except Exception:
-                title = ""
+                pub_title = ""
                 publication_url = ""
             # Year
             try:
@@ -79,7 +85,7 @@ def scrape_publications(profile_url, driver):
                     journal = ""
             except Exception:
                 journal = ""
-            publications_info.append([title, year, type_val, journal, publication_url])
-            print(f"Found publication: {title}")
+            publications_info.append([pub_title, year, type_val, journal, publication_url])
+            print(f"Found publication: {pub_title}")
         page += 1
-    return name, publications_info
+    return name, job_title, publications_info

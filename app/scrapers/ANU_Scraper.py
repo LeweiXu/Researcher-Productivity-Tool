@@ -9,15 +9,23 @@ def scrape_ANU():
     options.add_argument("--lang=en-US,en")
     # options.add_argument("--headless")  # Uncomment for headless mode
     driver = uc.Chrome(options=options)
-    profiles_url = "https://researchportalplus.anu.edu.au/en/organisations/anu-college-of-business-and-economics/persons/"
+
+    profiles_urls = [
+        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-accounting", #Accounting
+        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics" #finance
+    ]
     base = "https://researchportalplus.anu.edu.au"
-    profile_urls = find_profile_urls(profiles_url, base, driver)
+    profile_urls = []
+    for url in profiles_urls:
+        print(f"Finding profile URLs on: {url}")
+        profile_urls.extend(find_profile_urls(url, base, driver))
+    profile_urls = list(set(profile_urls))
     print(f"Found {len(profile_urls)} profile URLs")
 
     all_data = []
     for profile_url in profile_urls:
         print(f"Scraping profile: {profile_url}")
-        name, publications_info = scrape_publications(profile_url, driver)
+        name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
             all_data.append(line + [name, profile_url])
