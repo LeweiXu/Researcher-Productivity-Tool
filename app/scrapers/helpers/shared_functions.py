@@ -88,7 +88,6 @@ def write_to_db(all_data, university):
                 db.commit()
                 db.refresh(researcher)
             else:
-                print(f"Name: {researcher.name} | Current Title: {researcher.job_title} | Potential Title: {job_title}")
                 # Update existing researcher with job title if it's not empty
                 if researcher.job_title != job_title:
                     researcher.job_title = job_title
