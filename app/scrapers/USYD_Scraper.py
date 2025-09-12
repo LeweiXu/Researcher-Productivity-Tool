@@ -73,13 +73,17 @@ def _get_scoped_page_researchers(driver):
     # Only collect profiles from within the results area
     wrapper = driver.find_element(By.CSS_SELECTOR, RESULTS_WRAPPER_CSS)
     cards = wrapper.find_elements(By.CSS_SELECTOR, f"{PROFILE_WRAPPER_CSS} {NAME_LINK_CSS}")
+    outer_cards = wrapper.find_elements(By.CSS_SELECTOR, PROFILE_WRAPPER_CSS)
     out = []
-    for a in cards:
+    for a, b in zip(cards, outer_cards):
         name_el = a.find_element(By.CSS_SELECTOR, "h3.m-title")
         name = (name_el.text or "").strip()
         href = (a.get_attribute("href") or "").split("#")[0]
-        if name and href:
-            out.append((name, href))
+        print(name)
+        role_el = b.find_element(By.CSS_SELECTOR, "div.m-find-a-researcher__profile-wrapper--profile-title p")
+        role = (role_el.text or "").strip()
+        if name and href and role:
+            out.append((name, href, role))
     return out
 
 def _scroll_to_results_top(driver):
@@ -138,10 +142,10 @@ def get_researchers(driver, url: str) -> List[Tuple[str, str]]:
 
         # collect current page (scoped)
         page_rows = _get_scoped_page_researchers(driver)
-        for name, href in page_rows:
+        for name, href, role in page_rows:
             if href not in seen:
                 seen.add(href)
-                all_rows.append((name, href))
+                all_rows.append((name, href)) # Add role here
 
         # stop if next isn’t available
         if not _has_next_enabled(driver):
@@ -179,7 +183,7 @@ def is_empty_title(s: str) -> bool:
     return not s or s.strip(".—–- ,;:").strip() == ""
 
 # ---------- parse a profile ----------
-def parse_profile(driver, researcher_name: str, profile_url: str):
+def parse_profile(driver, researcher_name: str, profile_url: str, researcher_role: str):
     """
     Parse a single profile:
       - open page,
@@ -286,7 +290,18 @@ def parse_profile(driver, researcher_name: str, profile_url: str):
             journal_name,
             article_url,
             researcher_name,
-            profile_url
+            profile_url,
+            researcher_role
+        ])
+        print([
+            title,
+            year,
+            pub_type,
+            journal_name,
+            article_url,
+            researcher_name,
+            profile_url,
+            researcher_role
         ])
 
     return results
@@ -305,9 +320,9 @@ def scrape_USYD(urls: List[str], *, print_names: bool = False) -> List[List[str]
                 print(len(researchers), "researchers found on", url, "\n")
                 for name, _ in researchers:
                     print(name)
-            for r_name, r_url in researchers:
+            for r_name, r_url, r_role in researchers:
                 try:
-                    out_rows.extend(parse_profile(d, r_name, r_url))
+                    out_rows.extend(parse_profile(d, r_name, r_url, r_role))
                 except Exception as e:
                     print(f"Failed on {r_name}: {e}")
                 time.sleep(0.25)
