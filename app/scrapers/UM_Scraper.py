@@ -151,8 +151,7 @@ def get_works_openalex(academics):
 
             if work_name not in auth_works:
                 # first time seeing this work name
-# NOTE: Can just add academic["role"] to this append if we are adding roles.
-                auth_works[work_name] = ([work_name, work_date, work_type, work_source, work_link, academic["name"], academic["url"]])
+                auth_works[work_name] = ([work_name, work_date, work_type, work_source, work_link, academic["name"], academic["url"], academic["role"]])
             else:
                 existing_source = auth_works[work_name][3]
 

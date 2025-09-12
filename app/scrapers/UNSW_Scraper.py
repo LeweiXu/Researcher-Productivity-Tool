@@ -228,7 +228,7 @@ def scrape_UNSW():
     for url in profile_urls:
         name, publications_info, role = scraping(url, driver)
         for pub in publications_info:
-            all_data.append(pub + [name, url]) #Add role here to do roles
+            all_data.append(pub + [name, url, role])
 
     # csv_filename = "UNSW.csv"
     # csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
