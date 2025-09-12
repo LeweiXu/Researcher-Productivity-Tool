@@ -220,8 +220,8 @@ def parse_researcher_profile(html: str, profile_url: str):
                         journal_name or "",
                         article_url or "",
                         researcher_name or "",
-                        profile_url
-                        # Add role here
+                        profile_url,
+                        researcher_role
                     ])
 
     return publications

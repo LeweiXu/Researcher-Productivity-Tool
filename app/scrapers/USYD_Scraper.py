@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # URLS 
 URLS = [
     # Accounting
-    "https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0200&Academic=true",
+    #"https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0200&Academic=true",
     # Finance 
     "https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0300&Academic=true",
 ]
@@ -145,7 +145,7 @@ def get_researchers(driver, url: str) -> List[Tuple[str, str]]:
         for name, href, role in page_rows:
             if href not in seen:
                 seen.add(href)
-                all_rows.append((name, href)) # Add role here
+                all_rows.append((name, href, role))
 
         # stop if next isn’t available
         if not _has_next_enabled(driver):
@@ -293,23 +293,13 @@ def parse_profile(driver, researcher_name: str, profile_url: str, researcher_rol
             profile_url,
             researcher_role
         ])
-        print([
-            title,
-            year,
-            pub_type,
-            journal_name,
-            article_url,
-            researcher_name,
-            profile_url,
-            researcher_role
-        ])
 
     return results
 
 
 
 
-def scrape_USYD(urls: List[str], *, print_names: bool = False) -> List[List[str]]:
+def scrape_USYD(urls: List[str] = URLS, *, print_names: bool = False) -> List[List[str]]:
     """Collect and return CSV rows only (no header, no writing)."""
     d = make_driver()
     out_rows: List[List[str]] = []
