@@ -11,24 +11,27 @@ def scrape_MU():
     driver = uc.Chrome(options=options)
 
     profiles_urls = [
-        "https://research.monash.edu/en/organisations/department-of-accounting/persons/",
-        "https://research.monash.edu/en/organisations/banking-finance/persons/",
-        "https://research.monash.edu/en/organisations/centre-for-quantitative-finance-and-investment-strategies/persons/"
+        ("https://research.monash.edu/en/organisations/department-of-accounting/persons/", "Accounting"),
+        ("https://research.monash.edu/en/organisations/banking-finance/persons/", "Finance"),
+        ("https://research.monash.edu/en/organisations/centre-for-quantitative-finance-and-investment-strategies/persons/", "Finance")
     ]
     base = "https://research.monash.edu"
-    profile_urls = []
-    for url in profiles_urls:
+    pairs = []
+    for url, field in profiles_urls:
         print(f"Finding profile URLs on: {url}")
-        profile_urls.extend(find_profile_urls(url, base, driver))
-    profile_urls = list(set(profile_urls))
+        found = find_profile_urls(url, base, driver)  # returns list[str]
+        pairs.extend((u, field) for u in found)
+    profile_urls = list(set(pairs))
     print(f"Found {len(profile_urls)} profile URLs")
 
     all_data = []
-    for profile_url in profile_urls:
-        print(f"Scraping profile: {profile_url}")
+    for profile_url, field in profile_urls:
+        print(f"Scraping profile: {profile_url} ({field})")
         name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
-            all_data.append(line + [name, profile_url, job_title])
+
+            all_data.append(line + [name, profile_url, job_title, field])
+
 
     return all_data

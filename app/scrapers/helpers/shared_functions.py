@@ -63,7 +63,8 @@ def match_journals(threshold=95, force=False, university="all"):
 
 def write_to_csv(all_data, csv_filename):
     print("Writing scraped data to CSV")
-    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title"]
+
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title","Field"]
     with open(csv_filename, mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
@@ -79,11 +80,13 @@ def write_to_db(all_data, university):
     db = SessionLocal()
     try:
         for row in all_data:
-            pub_title, year, type_val, journal, publication_url, name, profile_url, job_title, job_level = row
+
+            pub_title, year, type_val, journal, publication_url, name, profile_url, job_title, job_level , field = row
             # Don't add researcher if same Name and Profile URL
             researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
             if not researcher:
-                researcher = Researchers(name=name, university=university, job_title=job_title, profile_url=profile_url, level=job_level)
+                researcher = Researchers(name=name, university=university, job_title=job_title, profile_url=profile_url, level=job_level, field=field)
+
                 db.add(researcher)
                 db.commit()
                 db.refresh(researcher)

@@ -8,7 +8,7 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
 import re
 
-links_to_scrape = ["https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951"]
+links_to_scrape = [("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "Finance"),("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951", "Accounting"),]
 
 #Only works for newer layout of researcher profile pages
 def find_researcher(academic, driver):
@@ -59,7 +59,7 @@ def transform_name_nicknamelast(name):
     else:
         return(name)
 
-def get_staff(url, driver):
+def get_staff(url, driver, field):
     driver.get(url)
     
     try:
@@ -72,7 +72,13 @@ def get_staff(url, driver):
 
     staff = []
     for staff_link, role in zip(name_links, roles):
-        staff.append({"name": staff_link.text, "url": staff_link.get_attribute("href"), "role": role.text})
+        staff.append({
+            "name": staff_link.text,
+            "url": staff_link.get_attribute("href"),
+            "role": role.text,
+            "field": field,                 # <-- keep field with each academic
+            "scraped": False,               # (moved here so every dict has it)
+        })
     
     return(staff)
 
@@ -151,7 +157,10 @@ def get_works_openalex(academics):
 
             if work_name not in auth_works:
                 # first time seeing this work name
-                auth_works[work_name] = ([work_name, work_date, work_type, work_source, work_link, academic["name"], academic["url"], academic["role"]])
+ 
+
+                auth_works[work_name] = ( [ work_name, work_date, work_type, work_source, work_link, academic["name"], academic["url"], academic["role"] , academic["field"] ] )
+
             else:
                 existing_source = auth_works[work_name][3]
 
@@ -245,7 +254,20 @@ def get_works_website(academics, driver):
             pub_details_text[i] = details
 
         for i in range(0, len(pub_titles)):
-            all_works.append([pub_titles[i].text, pub_details_text[i][1], pub_details_text[i][0], pub_details_text[i][2], pub_links[i].get_attribute('href'), academic["name"], academic["url"], academic["role"]])
+
+
+            all_works.append([
+                pub_titles[i].text,
+                pub_details_text[i][1],
+                pub_details_text[i][0],
+                pub_details_text[i][2],
+                pub_links[i].get_attribute('href'),
+                academic["name"],
+                academic["url"],
+                academic["role"]
+                academic["field"] 
+            ])
+
             academic["scraped"] = True
         
         count += 1
@@ -256,9 +278,11 @@ def get_works_website(academics, driver):
 
 def scrape_UM():
     output = []
+
     driver = uc.Chrome() #removed version_main=138
-    for link in links_to_scrape:
-        staff_list = get_staff(link, driver)
+    for url, field in links_to_scrape:
+        staff_list = get_staff(url, driver, field)
+
         academic_list = clean_staff(staff_list)
         output.extend(get_works_website(academic_list, driver))
         output.extend(get_works_openalex(academic_list))
