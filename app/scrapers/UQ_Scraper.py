@@ -1,6 +1,6 @@
 import time
 import re
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
@@ -12,8 +12,8 @@ from selenium.webdriver.support import expected_conditions as EC
 # ========= CONFIG =========
 UNIVERSITY_NAME = "The University of Queensland"
 STAFF_INDEX_PAGES = [
-    "https://business.uq.edu.au/team/accounting-discipline",
-    "https://business.uq.edu.au/team/finance-discipline",
+    ("https://business.uq.edu.au/team/accounting-discipline", "Accounting"),
+    ("https://business.uq.edu.au/team/finance-discipline", "Finance"),
 ]
 POLITE_DELAY = 0.6
 INDEX_WAIT_SEC = 12
@@ -69,10 +69,10 @@ def _is_uq_profile_url(href: str) -> bool:
 
 
 # ---------- 抓入口 ----------
-def collect_entry_links(pages: List[str], driver) -> List[str]:
+def collect_entry_links(pages: List[Tuple[str, str]], driver) -> List[Tuple[str, str]]:
     found = set()
-    for url in pages:
-        print("Index:", url)
+    for url, dept in pages:
+        print("Index:", url, "| Department:", dept)
         driver.get(url)
         wait_for_body(driver, INDEX_WAIT_SEC)
         time.sleep(1.2)
@@ -94,15 +94,16 @@ def collect_entry_links(pages: List[str], driver) -> List[str]:
                 continue
             href = href.split("#")[0].rstrip("/")
             if _is_uq_profile_url(href):
-                found.add(href)
+                found.add((href, dept))
 
     print(f"Collected {len(found)} entry links.")
     return sorted(found)
 
 
-def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
+def resolve_to_profile(driver, entry_with_dept: Tuple[str, str]) -> Optional[Tuple[str, str]]:
+    entry_url, dept = entry_with_dept
     if _is_uq_profile_url(entry_url):
-        return entry_url.split("#")[0].rstrip("/")
+        return (entry_url.split("#")[0].rstrip("/"), dept)
 
     driver.get(entry_url)
     wait_for_body(driver, PROFILE_WAIT_SEC)
@@ -112,7 +113,7 @@ def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
         for a in driver.find_elements(By.CSS_SELECTOR, "a[href*='/profile/']"):
             href = (a.get_attribute("href") or "").split("#")[0].rstrip("/")
             if _is_uq_profile_url(href):
-                return href
+                return (href, dept)
     except Exception:
         pass
     return None
@@ -234,23 +235,25 @@ def scrape_UQ(headless: bool = False):
         print("Entry URLs:", len(entries))
         profiles = set()
         for entry in entries:
-            prof = resolve_to_profile(driver, entry)
-            if prof:
-                profiles.add(prof.rstrip("/"))
+            res= resolve_to_profile(driver, entry)
+            if res:
+                prof_url, dept = res
+                profiles.add((prof_url.rstrip("/"), dept))
             else:
                 print("  ! No researcher profile found:", entry)
 
-        profiles = sorted(profiles)
-        print(f"Resolved {len(profiles)} researcher profile URLs.")
+        profiles_sorted = sorted(profiles, key=lambda x: x[0])
+        print(f"Resolved {len(profiles_sorted)} researcher profile URLs.")
 
         all_data = []
-        for i, profile_url in enumerate(profiles, 1):
-            print(f"[{i}/{len(profiles)}] {profile_url}")
+        for i, (profile_url, dept) in enumerate(profiles_sorted, 1):
+            print(f"[{i}/{len(profiles_sorted)}] {profile_url} | Dept: {dept}")
             html = open_publications_journals(driver, profile_url)
             publications = parse_researcher_profile(html, profile_url)
             print(f"  parsed {len(publications)} pubs")
-            print(publications)
-            all_data.extend(publications)
+            for row in publications:
+                all_data.append(row + [dept])  # append department as a separate field
+
             time.sleep(POLITE_DELAY)
     finally:
         try:
