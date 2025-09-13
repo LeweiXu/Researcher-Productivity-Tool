@@ -81,7 +81,7 @@ def write_to_db(all_data, university):
     try:
         for row in all_data:
 
-            pub_title, year, type_val, journal, publication_url, name, profile_url, job_title, job_level , field = row
+            pub_title, year, type_val, journal, publication_url, name, profile_url, job_title, field, job_level = row
             # Don't add researcher if same Name and Profile URL
             researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
             if not researcher:
@@ -92,7 +92,7 @@ def write_to_db(all_data, university):
                 db.refresh(researcher)
             else:
                 # Update existing researcher with job title if it's not empty
-                if researcher.job_title != job_title:
+                if researcher.job_title != job_title or researcher.field != field:
                     researcher.job_title = job_title
                     researcher.level = job_level
                     db.commit()
