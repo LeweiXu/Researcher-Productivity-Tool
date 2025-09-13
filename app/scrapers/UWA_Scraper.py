@@ -21,6 +21,6 @@ def scrape_UWA():
         name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
-            all_data.append(line + [name, profile_url])
+            all_data.append(line + [name, profile_url, job_title])
 
     return all_data
