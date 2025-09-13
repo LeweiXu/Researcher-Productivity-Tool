@@ -245,8 +245,7 @@ def get_works_website(academics, driver):
             pub_details_text[i] = details
 
         for i in range(0, len(pub_titles)):
-# NOTE: Can just add academic["role"] to this append if we are adding roles.
-            all_works.append([pub_titles[i].text, pub_details_text[i][1], pub_details_text[i][0], pub_details_text[i][2], pub_links[i].get_attribute('href'), academic["name"], academic["url"]])
+            all_works.append([pub_titles[i].text, pub_details_text[i][1], pub_details_text[i][0], pub_details_text[i][2], pub_links[i].get_attribute('href'), academic["name"], academic["url"], academic["role"]])
             academic["scraped"] = True
         
         count += 1
