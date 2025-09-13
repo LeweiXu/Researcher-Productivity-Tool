@@ -16,7 +16,7 @@ def filter_researchers(request, researcher_list):
     if university:
         filtered = [r for r in filtered if (r["university"] or "").lower() == university.lower()]
     if field:
-        filtered = [r for r in filtered if (r["FoR"] or "").lower() == field.lower()]
+        filtered = [r for r in filtered if (r["field"] or "").lower() == field.lower()]
     if level:
         filtered = [r for r in filtered if (r["level"] or "").upper() == level.upper()]
     if name:
@@ -61,7 +61,7 @@ def get_researcher_data(request: Request):
                 researcher_list.append({
                     "id": str(r.id),
                     "name": r.name,
-                    "FoR": r.field,
+                    "field": r.field,
                     "level": r.level,
                     "university": r.university,
                     "total_articles": total_articles,
