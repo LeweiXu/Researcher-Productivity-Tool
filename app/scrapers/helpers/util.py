@@ -57,6 +57,7 @@ def standardize(data):
             "Senior Lecturer": "Senior Lecturer",
             "Senior Fellow": "Senior Fellow",
             "Associate Professor": "Associate Professor",
+            "Professor": "Professor",
             "Professorial Fellow": "Professorial Fellow",
             "Professor Emeritus": "Professor Emeritus",
             "Emeritus Professor": "Professor Emeritus"
@@ -70,6 +71,24 @@ def standardize(data):
             row[7] = title_map.get(raw, raw)  # map to canonical form
         else:
             row[7] = None
+        
+        # Add role levels
+        role_level_map = {
+            "Associate Lecturer": "A",
+            "Lecturer": "B",
+            "Fellow": "B",
+            "Senior Lecturer": "C",
+            "Senior Fellow": "C",
+            "Associate Professor": "D",
+            "Professor": "E",
+            "Professorial Fellow": "E",
+            "Professor Emeritus": "E"
+        }
+        if row[7] is None:
+            role_level = None
+        else:
+            role_level = role_level_map[row[7]]
+        row.append(role_level)
 
         # TODO: standardize "Type" e.g. journal article, contribution to journal etc. --> journal article
 
