@@ -95,6 +95,7 @@ def write_to_db(all_data, university):
                 if researcher.job_title != job_title or researcher.field != field:
                     researcher.job_title = job_title
                     researcher.level = job_level
+                    researcher.field = field
                     db.commit()
             # Don't add publication if same Title and Researcher
             db_publication = db.query(Publications).filter_by(title=pub_title, researcher_id=researcher.id).first()
