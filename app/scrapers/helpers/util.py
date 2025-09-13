@@ -97,7 +97,8 @@ def import_from_csv(university, csv_path):
                 row["Journal Name"],
                 row["Article URL"],
                 row["Researcher Name"],
-                row["Profile URL"]
+                row["Profile URL"],
+                row["Field"]
             ])
 
     standardize(all_data)
