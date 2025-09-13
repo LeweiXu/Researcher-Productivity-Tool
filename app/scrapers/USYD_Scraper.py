@@ -11,9 +11,9 @@ from selenium.webdriver.support import expected_conditions as EC
 # URLS 
 URLS = [
     # Accounting
-    "https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0200&Academic=true",
-    # Finance 
-    "https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0300&Academic=true",
+    ("https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0200&Academic=true", "Accounting"),
+    # Finance
+    ("https://www.sydney.edu.au/research/our-research/find-a-researcher.html?+facultyCode=5000053050F0000&+schoolCode=5000053050F0000F2050&+departmentCode=5000053050F0000F2050F0300&Academic=true", "Finance")
 ]
 #DRIVER_PATH = "/home/imrea1m/.wdm/drivers/chromedriver/linux64/136.0.7103.113/chromedriver-linux64/chromedriver"
 CSV_OUT = "usyd_publications.csv"
@@ -179,7 +179,7 @@ def is_empty_title(s: str) -> bool:
     return not s or s.strip(".—–- ,;:").strip() == ""
 
 # ---------- parse a profile ----------
-def parse_profile(driver, researcher_name: str, profile_url: str):
+def parse_profile(driver, researcher_name: str, profile_url: str, field: str ) -> List[List[str]]:
     """
     Parse a single profile:
       - open page,
@@ -286,7 +286,8 @@ def parse_profile(driver, researcher_name: str, profile_url: str):
             journal_name,
             article_url,
             researcher_name,
-            profile_url
+            profile_url,
+            field
         ])
 
     return results
@@ -299,7 +300,7 @@ def scrape_USYD(urls: List[str], *, print_names: bool = False) -> List[List[str]
     d = make_driver()
     out_rows: List[List[str]] = []
     try:
-        for url in urls:
+        for url, fields in urls:
             researchers = get_researchers(d, url)
             if print_names:
                 print(len(researchers), "researchers found on", url, "\n")
@@ -307,7 +308,7 @@ def scrape_USYD(urls: List[str], *, print_names: bool = False) -> List[List[str]
                     print(name)
             for r_name, r_url in researchers:
                 try:
-                    out_rows.extend(parse_profile(d, r_name, r_url))
+                    out_rows.extend(parse_profile(d, r_name, r_url, fields))
                 except Exception as e:
                     print(f"Failed on {r_name}: {e}")
                 time.sleep(0.25)

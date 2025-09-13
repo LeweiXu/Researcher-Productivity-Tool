@@ -11,23 +11,24 @@ def scrape_ANU():
     driver = uc.Chrome(options=options)
 
     profiles_urls = [
-        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-accounting", #Accounting
-        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics" #finance
+        ("https://researchportalplus.anu.edu.au/en/organisations/research-school-of-accounting", "Accounting" ), #accounting
+        ("https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics", "Finance" ) #finance
     ]
     base = "https://researchportalplus.anu.edu.au"
-    profile_urls = []
-    for url in profiles_urls:
+    pairs = []
+    for url, field in profiles_urls:
         print(f"Finding profile URLs on: {url}")
-        profile_urls.extend(find_profile_urls(url, base, driver))
-    profile_urls = list(set(profile_urls))
+        found = find_profile_urls(url, base, driver)  # returns list[str]
+        pairs.extend((u, field) for u in found)
+    profile_urls = list(set(pairs))
     print(f"Found {len(profile_urls)} profile URLs")
 
-    all_data = []
-    for profile_url in profile_urls:
-        print(f"Scraping profile: {profile_url}")
+    all_data = []   
+    for profile_url, field in profile_urls:
+        print(f"Scraping profile: {profile_url} ({field})")
         name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
-            all_data.append(line + [name, profile_url])
+            all_data.append(line + [name, profile_url, field])
 
     return all_data
