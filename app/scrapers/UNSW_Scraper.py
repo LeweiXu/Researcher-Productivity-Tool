@@ -111,6 +111,12 @@ def scraping(profile_url, driver):
     except Exception:
         name = ""
 
+    # Researcher role
+    try:
+        role = driver.find_element(By.CSS_SELECTOR, "h1.profile-heading + div").text.strip()
+    except Exception:
+        role = ""
+
     # Author ID & Institution ID for OpenAlex to look up
     author_id = get_author_id(clean_name(name))
     institution_id = get_ins_id("UNSW Sydney")
@@ -174,7 +180,7 @@ def scraping(profile_url, driver):
                     publications_info.append([title, year, article_type, journal, pub_url])
                     print(f"Found publication: {title} ({article_type})")
                 break
-    return name, publications_info
+    return name, publications_info, role
 
 
 # ---------------- Profile Scraping ----------------
@@ -220,14 +226,32 @@ def scrape_UNSW():
 
     all_data = []
     for url in profile_urls:
-        name, publications_info = scraping(url, driver)
+        name, publications_info, role = scraping(url, driver)
         for pub in publications_info:
-            all_data.append(pub + [name, url, fields])  # Append fields
 
+            all_data.append(pub + [name, url, role, fields])  # Append fields
+
+
+
+
+    # csv_filename = "UNSW.csv"
+    # csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
+    # with open(csv_filename, mode="w", newline='', encoding="utf-8-sig") as f:
+    #     writer = csv.writer(f)
+    #     writer.writerow(csv_header)
+    #     for url in profile_urls:
+    #         name, publications_info = scraping(url, driver)
+    #         for pub in publications_info:
+    #             writer.writerow(pub + [name, url])
+    
 
     driver.quit()
 
     print("Scraping complete. Data saved to UNSW.csv")
 
     return all_data
+
+
+# if __name__ == "__main__":
+#     main()
 

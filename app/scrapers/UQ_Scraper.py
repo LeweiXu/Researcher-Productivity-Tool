@@ -157,6 +157,14 @@ def parse_researcher_profile(html: str, profile_url: str):
     if not researcher_name and soup.title:
         researcher_name = re.sub(r"\s*[-|–].*$", "", soup.title.get_text(strip=True)).strip()
 
+    researcher_role = ""
+    titles = soup.find_all(class_="position__title")
+    for tag in titles:
+        text = tag.get_text(strip=True)
+        if text:  # non-empty
+            researcher_role = text
+            break
+
     publications = []
 
     main = soup.select_one("div.medium-9.columns") or soup
@@ -213,7 +221,8 @@ def parse_researcher_profile(html: str, profile_url: str):
                         journal_name or "",
                         article_url or "",
                         researcher_name or "",
-                        profile_url
+                        profile_url,
+                        researcher_role
                     ])
 
     return publications
