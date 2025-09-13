@@ -264,7 +264,7 @@ def get_works_website(academics, driver):
                 pub_links[i].get_attribute('href'),
                 academic["name"],
                 academic["url"],
-                academic["role"]
+                academic["role"],
                 academic["field"] 
             ])
 
