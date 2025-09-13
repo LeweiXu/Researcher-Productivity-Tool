@@ -79,11 +79,11 @@ def write_to_db(all_data, university):
     db = SessionLocal()
     try:
         for row in all_data:
-            pub_title, year, type_val, journal, publication_url, name, profile_url, job_title = row
+            pub_title, year, type_val, journal, publication_url, name, profile_url, job_title, job_level = row
             # Don't add researcher if same Name and Profile URL
             researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
             if not researcher:
-                researcher = Researchers(name=name, university=university, job_title=job_title, profile_url=profile_url)
+                researcher = Researchers(name=name, university=university, job_title=job_title, profile_url=profile_url, level=job_level)
                 db.add(researcher)
                 db.commit()
                 db.refresh(researcher)
@@ -91,6 +91,7 @@ def write_to_db(all_data, university):
                 # Update existing researcher with job title if it's not empty
                 if researcher.job_title != job_title:
                     researcher.job_title = job_title
+                    researcher.level = job_level
                     db.commit()
             # Don't add publication if same Title and Researcher
             db_publication = db.query(Publications).filter_by(title=pub_title, researcher_id=researcher.id).first()
