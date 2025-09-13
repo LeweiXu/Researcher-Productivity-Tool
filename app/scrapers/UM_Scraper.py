@@ -256,7 +256,7 @@ def get_works_website(academics, driver):
 
 def scrape_UM():
     output = []
-    driver = uc.Chrome(version_main=138)
+    driver = uc.Chrome() #removed version_main=138
     for link in links_to_scrape:
         staff_list = get_staff(link, driver)
         academic_list = clean_staff(staff_list)
