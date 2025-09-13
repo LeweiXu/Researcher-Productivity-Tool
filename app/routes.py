@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Request, Form, status, Path
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import func
+from sqlalchemy import func, case  # <- added case
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
 from typing import Optional
 from app.helpers.researchers_funcs import get_researcher_data
 from app.helpers.researcher_profile_funcs import get_researcher_profile
-from app.helpers.universities_funcs import get_university_data
+from app.helpers.universities_funcs import get_university_data  # (unused now, but you can remove if you want)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -42,13 +42,44 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
         {"request": request, "researcher": researcher_data, "publications": pub_list},
     )
 
-# Researcher level ranking page
+# University ranking page (split researchers into Accounting vs Finance)
 @router.get("/universities", response_class=HTMLResponse)
 def universities(request: Request):
-    university_list, variable_label = get_university_data(request)
+    db = SessionLocal()
+
+    # Optional sorting: allow ?sort_by=accounting_count|finance_count|total_researchers (default total_researchers)
+    sort_by = request.query_params.get("sort_by", "total_researchers")
+    sort_col_map = {
+        "accounting_count": "accounting_count",
+        "finance_count": "finance_count",
+        "total_researchers": "total_researchers",
+    }
+
+    # Build aggregated query
+    qry = (
+        db.query(
+            Researchers.university.label("name"),
+            func.count(Researchers.id).label("total_researchers"),
+            func.sum(case((Researchers.field == "Accounting", 1), else_=0)).label("accounting_count"),
+            func.sum(case((Researchers.field == "Finance", 1), else_=0)).label("finance_count"),
+        )
+        .group_by(Researchers.university)
+    )
+
+    rows = qry.all()
+
+    # Sort in Python based on the chosen column (descending)
+    key_name = sort_col_map.get(sort_by, "total_researchers")
+    universities_data = sorted(rows, key=lambda r: getattr(r, key_name) or 0, reverse=True)
+
     return templates.TemplateResponse(
         "universities.html",
-        {"request": request, "universities": university_list, "variable_label": variable_label}
+        {
+            "request": request,
+            "universities": universities_data,
+            # variable_label is no longer used in your new template, but can be left or removed.
+            "variable_label": "Researchers by Field"
+        }
     )
 
 # Admin page
