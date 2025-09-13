@@ -88,7 +88,7 @@ def standardize(data):
             role_level = None
         else:
             role_level = role_level_map[row[7]]
-        row.append(role_level)
+        row.insert(8, role_level)
 
         # TODO: standardize "Type" e.g. journal article, contribution to journal etc. --> journal article
 
