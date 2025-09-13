@@ -2,6 +2,19 @@
 
 {% block content %}
 <h1 style="text-align:center; margin-top:30px;">University Rankings</h1>
+
+<!-- Map codes to display names -->
+{% set uni_map = {
+    "MU": "MONASH",
+    "ANU": "ANU",
+    "UA": "UA",
+    "UM": "UM",
+    "UNSW": "UNSW",
+    "UQ": "UQ",
+    "USYD": "USYD",
+    "UWA": "UWA"
+} %}
+
 <div style="width:90%; max-width:900px; margin: 0 auto 24px auto; background:#fff; padding:18px 24px 10px 24px; border-radius:8px; box-shadow:0 2px 8px #ccc;">
     <form method="get" action="/universities" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
         <label for="sort_by" style="font-weight:bold;">Rank by:</label>
@@ -15,24 +28,25 @@
         <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
     </form>
 </div>
-<table style="margin: 30px auto; border-collapse: collapse; width: 90%; max-width: 900px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+
+<table style="margin: 30px auto; border-collapse: collapse; width: 95%; max-width: 1000px; background: #fff; box-shadow: 0 2px 8px #ccc;">
     <thead>
         <tr style="background: #1976d2; color: #fff; text-align: center;">
             <th style="padding: 12px 8px;">Rank</th>
-            <th style="padding: 12px 8px;">Name</th>
-            <th style="padding: 12px 8px;">{{ variable_label }}</th>
+            <th style="padding: 12px 8px;">University</th>
+            <th style="padding: 12px 8px;">Total Researchers (Accounting)</th>
+            <th style="padding: 12px 8px;">Total Researchers (Finance)</th>
         </tr>
     </thead>
     <tbody>
         {% for university in universities %}
         <tr style="text-align:center; border-bottom: 1px solid #eee;">
             <td style="padding: 10px 6px;">{{ loop.index }}</td>
-            <td style="padding: 10px 6px;">{{ university.name }}</td>
-            <td style="padding: 10px 6px;">{{ university.variable_value }}</td>
+            <td style="padding: 10px 6px;">{{ uni_map.get(university.name, university.name) }}</td>
+            <td style="padding: 10px 6px;">{{ university.accounting_count }}</td>
+            <td style="padding: 10px 6px;">{{ university.finance_count }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% endblock %}
-
-
