@@ -157,8 +157,10 @@ def get_works_openalex(academics):
 
             if work_name not in auth_works:
                 # first time seeing this work name
-# NOTE: Can just add academic["role"] to this append if we are adding roles.
-                auth_works[work_name] = ([work_name, work_date, work_type, work_source, work_link,academic["name"], academic["url"], academic.get("field")])  # <-- append field
+ 
+
+                auth_works[work_name] = ( [ work_name, work_date, work_type, work_source, work_link, academic["name"], academic["url"], academic["role"] , academic["field"] ] )
+
             else:
                 existing_source = auth_works[work_name][3]
 
@@ -252,7 +254,8 @@ def get_works_website(academics, driver):
             pub_details_text[i] = details
 
         for i in range(0, len(pub_titles)):
-# NOTE: Can just add academic["role"] to this append if we are adding roles.
+
+
             all_works.append([
                 pub_titles[i].text,
                 pub_details_text[i][1],
@@ -261,8 +264,10 @@ def get_works_website(academics, driver):
                 pub_links[i].get_attribute('href'),
                 academic["name"],
                 academic["url"],
-                academic.get("field")  # <-- append field
+                academic["role"]
+                academic["field"] 
             ])
+
             academic["scraped"] = True
         
         count += 1
@@ -273,9 +278,11 @@ def get_works_website(academics, driver):
 
 def scrape_UM():
     output = []
-    driver = uc.Chrome(version_main=138)
-    for url, field in links_to_scrape:         # <-- unpack url + field
-        staff_list = get_staff(url, driver, field) 
+
+    driver = uc.Chrome() #removed version_main=138
+    for url, field in links_to_scrape:
+        staff_list = get_staff(url, driver, field)
+
         academic_list = clean_staff(staff_list)
         output.extend(get_works_website(academic_list, driver))
         output.extend(get_works_openalex(academic_list))

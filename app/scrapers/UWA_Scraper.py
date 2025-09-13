@@ -28,6 +28,8 @@ def scrape_UWA():
         # Look up their field, defaulting to None
         field = field_lookup.get(name, None)
         for line in publications_info:
-            all_data.append(line + [name, profile_url, field])
+
+            all_data.append(line + [name, profile_url, job_title, field])
+
 
     return all_data
