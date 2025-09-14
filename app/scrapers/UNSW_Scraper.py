@@ -220,12 +220,13 @@ def scrape_UNSW():
             urls = profile(page_url, driver)
             if not urls:
                 break
-            profile_urls.extend(urls)
+            profile_urls.extend((u, fields) for u in urls)
+
             start_rank += num_ranks
             time.sleep(1)
 
     all_data = []
-    for url in profile_urls:
+    for url,fields in profile_urls:
         name, publications_info, role = scraping(url, driver)
         for pub in publications_info:
 
