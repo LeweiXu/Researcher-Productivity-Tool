@@ -1,5 +1,6 @@
 import undetected_chromedriver as uc
 import pandas as pd
+import csv
 from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
 
 # Load classification CSV
@@ -21,16 +22,16 @@ def scrape_UWA():
     profile_urls = find_profile_urls(profiles_url, base, driver)
     print(f"Found {len(profile_urls)} profile URLs")
 
-    all_data = []
-    for profile_url in profile_urls:
-        print(f"Scraping profile: {profile_url}")
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+    with open("app/files/UWA_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
+
+    for profile_url, field in profile_urls:
+        print(f"Scraping profile: {profile_url} ({field})")
         name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
-        # Look up their field, defaulting to None
-        field = field_lookup.get(name, None)
         for line in publications_info:
-
-            all_data.append(line + [name, profile_url, job_title, field])
-
-
-    return all_data
+            with open("app/files/UWA_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(line + [name, profile_url, job_title, field])  # Append fields

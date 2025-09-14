@@ -1,5 +1,6 @@
 import undetected_chromedriver as uc
 from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
+import csv
 
 def scrape_MU():
     options = uc.ChromeOptions()
@@ -24,14 +25,16 @@ def scrape_MU():
     profile_urls = list(set(pairs))
     print(f"Found {len(profile_urls)} profile URLs")
 
-    all_data = []
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+    with open("app/files/MU_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
+
     for profile_url, field in profile_urls:
         print(f"Scraping profile: {profile_url} ({field})")
         name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
-
-            all_data.append(line + [name, profile_url, job_title, field])
-
-
-    return all_data
+            with open("app/files/MU_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(line + [name, profile_url, job_title, field])  # Append fields

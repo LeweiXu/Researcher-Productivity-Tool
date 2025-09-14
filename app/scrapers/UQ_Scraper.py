@@ -1,5 +1,6 @@
 import time
 import re
+import csv
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
@@ -245,14 +246,19 @@ def scrape_UQ(headless: bool = False):
         profiles_sorted = sorted(profiles, key=lambda x: x[0])
         print(f"Resolved {len(profiles_sorted)} researcher profile URLs.")
 
-        all_data = []
+        csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+        with open("app/files/UQ_data.csv", mode="w", newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(csv_header)
         for i, (profile_url, dept) in enumerate(profiles_sorted, 1):
             print(f"[{i}/{len(profiles_sorted)}] {profile_url} | Dept: {dept}")
             html = open_publications_journals(driver, profile_url)
             publications = parse_researcher_profile(html, profile_url)
             print(f"  parsed {len(publications)} pubs")
             for row in publications:
-                all_data.append(row + [dept])  # append department as a separate field
+                with open("app/files/UQ_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(row + [dept])  # append department as a separate field
 
             time.sleep(POLITE_DELAY)
     finally:
@@ -260,22 +266,3 @@ def scrape_UQ(headless: bool = False):
             driver.quit()
         except Exception:
             pass
-
-    return all_data
-
-
-if __name__ == "__main__":
-    test_profiles = [
-        "https://business.uq.edu.au/profile/1433/ankit-jain",
-        "https://business.uq.edu.au/profile/17730/chris-bell",
-    ]
-    driver = make_driver(headless=False)
-    try:
-        for url in test_profiles:
-            html = open_publications_journals(driver, url)
-            rows = parse_researcher_profile(html, url)
-            print(url, "parsed:", len(rows))
-            for r in rows[:3]:
-                print(" -", r)
-    finally:
-        driver.quit()

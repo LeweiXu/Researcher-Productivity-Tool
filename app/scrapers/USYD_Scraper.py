@@ -300,13 +300,14 @@ def parse_profile(driver, researcher_name: str, profile_url: str, researcher_rol
 
     return results
 
-
-
-
 def scrape_USYD(urls: List[str] = URLS, *, print_names: bool = False) -> List[List[str]]:
     """Collect and return CSV rows only (no header, no writing)."""
     d = make_driver()
-    out_rows: List[List[str]] = []
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+    with open("app/files/USYD_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
+
     try:
         for url, fields in urls:
             researchers = get_researchers(d, url)
@@ -316,9 +317,14 @@ def scrape_USYD(urls: List[str] = URLS, *, print_names: bool = False) -> List[Li
                     print(name)
             for r_name, r_url, r_role in researchers:
                 try:
-
-                    out_rows.extend(parse_profile(d, r_name, r_url, r_role, fields))
-
+                    lines = parse_profile(d, r_name, r_url, r_role, fields)
+                    for i in range(len(lines)):
+                        job_title_split = lines[i][-2].split('\n')
+                        if len(job_title_split) > 1:
+                            lines[i][-2] = job_title_split[0].strip()
+                    with open("app/files/USYD_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                        writer = csv.writer(f)
+                        writer.writerows(lines)  # write all rows for this researcher
                 except Exception as e:
                     print(f"Failed on {r_name}: {e}")
                 time.sleep(0.25)
@@ -327,4 +333,3 @@ def scrape_USYD(urls: List[str] = URLS, *, print_names: bool = False) -> List[Li
             d.quit()
         except Exception:
             pass
-    return out_rows
