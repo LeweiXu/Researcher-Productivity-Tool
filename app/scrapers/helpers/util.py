@@ -10,7 +10,7 @@ import os
 CSV_DIR = "app/files"
 csv_paths = [os.path.join(CSV_DIR, f) for f in os.listdir(CSV_DIR) if f.endswith("_data.csv")]
 
-# NOTE: Scrapers return a list of lists in the format ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL"]
+# NOTE: Scrapers return a list of lists in the format ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Role"]
 
 # Scientia Professor = normal professor
 # Emiritus = retired
@@ -46,6 +46,49 @@ def standardize(data):
         # Ensure year is numeric & set to integer
         if row[1] and row[1].isnumeric():
             row[1] = int(row[1])
+
+        # Ensure role names are expected
+        # Define all possible forms and their canonical mapping
+        title_map = {
+            "Associate Lecturer": "Associate Lecturer",
+            "Lecturer (A)": "Associate Lecturer",
+            "Lecturer": "Lecturer",
+            "Fellow": "Fellow",
+            "Senior Lecturer": "Senior Lecturer",
+            "Senior Fellow": "Senior Fellow",
+            "Associate Professor": "Associate Professor",
+            "Professor": "Professor",
+            "Professorial Fellow": "Professorial Fellow",
+            "Professor Emeritus": "Professor Emeritus",
+            "Emeritus Professor": "Professor Emeritus"
+        }
+        # Sort by length so longer matches take priority
+        titles = sorted(title_map.keys(), key=len, reverse=True)
+        pattern = r"\b(" + "|".join(re.escape(t) for t in titles) + r")\b"
+        match = re.search(pattern, row[7], flags=re.IGNORECASE)
+        if match:
+            raw = match.group()
+            row[7] = title_map.get(raw, raw)  # map to canonical form
+        else:
+            row[7] = None
+        
+        # Add role levels
+        role_level_map = {
+            "Associate Lecturer": "A",
+            "Lecturer": "B",
+            "Fellow": "B",
+            "Senior Lecturer": "C",
+            "Senior Fellow": "C",
+            "Associate Professor": "D",
+            "Professor": "E",
+            "Professorial Fellow": "E",
+            "Professor Emeritus": "E"
+        }
+        if row[7] is None:
+            role_level = None
+        else:
+            role_level = role_level_map[row[7]]
+        row.insert(8, role_level)
 
         # TODO: standardize "Type" e.g. journal article, contribution to journal etc. --> journal article
 
@@ -97,7 +140,8 @@ def import_from_csv(university, csv_path):
                 row["Journal Name"],
                 row["Article URL"],
                 row["Researcher Name"],
-                row["Profile URL"]
+                row["Profile URL"],
+                row["Field"]
             ])
 
     standardize(all_data)

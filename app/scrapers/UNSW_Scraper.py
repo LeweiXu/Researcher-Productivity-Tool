@@ -111,6 +111,12 @@ def scraping(profile_url, driver):
     except Exception:
         name = ""
 
+    # Researcher role
+    try:
+        role = driver.find_element(By.CSS_SELECTOR, "h1.profile-heading + div").text.strip()
+    except Exception:
+        role = ""
+
     # Author ID & Institution ID for OpenAlex to look up
     author_id = get_author_id(clean_name(name))
     institution_id = get_ins_id("UNSW Sydney")
@@ -174,7 +180,7 @@ def scraping(profile_url, driver):
                     publications_info.append([title, year, article_type, journal, pub_url])
                     print(f"Found publication: {title} ({article_type})")
                 break
-    return name, publications_info
+    return name, publications_info, role
 
 
 # ---------------- Profile Scraping ----------------
@@ -199,14 +205,14 @@ def scrape_UNSW():
 
     driver = webdriver.Chrome()
     departments_urls = [
-        "https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BAccounting%252C%2BAuditing%2Band%2BTaxation&sort=metastaffLastName",
-        "https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BBanking%2Band%2BFinance&sort=metastaffLastName"
+        ("https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BAccounting%252C%2BAuditing%2Band%2BTaxation&sort=metastaffLastName", "Accounting"),
+        ("https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BBanking%2Band%2BFinance&sort=metastaffLastName", "Finance")
     ]
     
     num_ranks = 12
     profile_urls = []
 
-    for base_urls in departments_urls:
+    for base_urls, fields in departments_urls:
         start_rank = 1
         # Loop to paginate through the list of profiles
         while True:
@@ -214,15 +220,20 @@ def scrape_UNSW():
             urls = profile(page_url, driver)
             if not urls:
                 break
-            profile_urls.extend(urls)
+            profile_urls.extend((u, fields) for u in urls)
+
             start_rank += num_ranks
             time.sleep(1)
 
     all_data = []
-    for url in profile_urls:
-        name, publications_info = scraping(url, driver)
+    for url,fields in profile_urls:
+        name, publications_info, role = scraping(url, driver)
         for pub in publications_info:
-            all_data.append(pub + [name, url])
+
+            all_data.append(pub + [name, url, role, fields])  # Append fields
+
+
+
 
     # csv_filename = "UNSW.csv"
     # csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
@@ -234,12 +245,14 @@ def scrape_UNSW():
     #         for pub in publications_info:
     #             writer.writerow(pub + [name, url])
     
+
     driver.quit()
-    # end_time = time.time()  # End timer
-    # elapsed = end_time - start_time
+
     print("Scraping complete. Data saved to UNSW.csv")
-    # print(f"Elapsed time: {elapsed:.2f} seconds")
+
     return all_data
+
 
 # if __name__ == "__main__":
 #     main()
+
