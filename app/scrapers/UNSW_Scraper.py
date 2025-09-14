@@ -205,7 +205,7 @@ def scrape_UNSW():
 
     driver = webdriver.Chrome()
     departments_urls = [
-        ("https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BAccounting%252C%2BAuditing%2Band%2BTaxation&sort=metastaffLastName","Accouting"),
+        ("https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BAccounting%252C%2BAuditing%2Band%2BTaxation&sort=metastaffLastName","Accounting"),
         ("https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BBanking%2Band%2BFinance&sort=metastaffLastName","Finance")
     ]
     
