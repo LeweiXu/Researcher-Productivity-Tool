@@ -294,7 +294,7 @@ def parse_profile(driver, researcher_name: str, profile_url: str, researcher_rol
             researcher_name,
             profile_url,
             researcher_role,
-            fields
+            field
 
         ])
 
