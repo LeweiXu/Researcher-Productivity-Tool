@@ -29,7 +29,7 @@ def scrape_publications(profile_url, driver):
     Returns: (name, job_title, publications_info) where publications_info is a list of [Title, Date, Type, Journal, Article URL]
     """
     driver.get(profile_url)
-    time.sleep(2)
+    time.sleep(5)
     # Try to get name robustly
     try:
         name = driver.find_element(By.CSS_SELECTOR, "h1.name").text.strip()
@@ -49,7 +49,7 @@ def scrape_publications(profile_url, driver):
     while True:
         page_url = f"{profile_url}/publications/?page={page}"
         driver.get(page_url)
-        time.sleep(2)
+        time.sleep(5)
         publication_divs = driver.find_elements(By.CSS_SELECTOR, "div.rendering_researchoutput_portal-short")
         if not publication_divs:
             break

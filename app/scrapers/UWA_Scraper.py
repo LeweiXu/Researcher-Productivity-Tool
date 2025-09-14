@@ -3,12 +3,13 @@ from app.scrapers.helpers.big3_functions import scrape_publications, find_profil
 
 def scrape_UWA():
     options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1280,800")
-    options.add_argument("--lang=en-US,en")
+    # options.add_argument("--no-sandbox")
+    # options.add_argument("--disable-gpu")
+    # options.add_argument("--window-size=1280,800")
+    # options.add_argument("--lang=en-US,en")
     # options.add_argument("--headless")  # Uncomment for headless mode
     driver = uc.Chrome(options=options)
+    print("Chrome launched!")
     profiles_url = "https://www.uwa.edu.au/schools/business/accounting-and-finance"
     base = "https://research-repository.uwa.edu.au"
 
