@@ -10,9 +10,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # ========= CONFIG =========
 UNIVERSITY_NAME = "University of Adelaide"
-STAFF_INDEX_PAGES = [
-    "https://business.adelaide.edu.au/research/finance-and-business-analytics",
-    "https://business.adelaide.edu.au/research/accounting#lead-researchers",
+STAFF_INDEX_PAGES_WITH_FIELDS: List[Tuple[str, str]] = [
+    ("https://business.adelaide.edu.au/research/finance-and-business-analytics", "Finance"),
+    ("https://business.adelaide.edu.au/research/accounting#lead-researchers", "Accounting"),
 ]
 POLITE_DELAY = 0.6
 INDEX_WAIT_SEC = 12
@@ -39,11 +39,12 @@ def gentle_scroll(driver, steps: int = SCROLL_STEPS, pause: float = SCROLL_PAUSE
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(pause)
 
-def collect_entry_links(pages: List[str], driver) -> List[str]:
-    found = set()
-    for url in pages:
-        print("Index:", url)
-        driver.get(url)
+def collect_entry_links(pages_with_fields: List[Tuple[str, str]], driver) -> List[Tuple[str, str]]:
+    """Return (entry_url, field) pairs discovered on index pages."""
+    found: set[Tuple[str, str]] = set()
+    for index_url, field in pages_with_fields:
+        print(f"Index: {index_url} ({field})")
+        driver.get(index_url)
         wait_for_body(driver, INDEX_WAIT_SEC)
         time.sleep(1.2)
         gentle_scroll(driver)
@@ -58,13 +59,14 @@ def collect_entry_links(pages: List[str], driver) -> List[str]:
                 or ("business.adelaide.edu.au" in netloc and "/people/" in href)
                 or ("adelaide.edu.au" in netloc and "/directory/" in href)
             ):
-                found.add(href)
-    print(f"Collected {len(found)} entry links (mixed).")
-    return sorted(found)
+                found.add((href, field))
+    print(f"Collected {len(found)} entry links (with fields).")
+    return list(found)
 
-def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
+def resolve_to_profile(driver, entry_url: str, field: str) -> Optional[Tuple[str, str]]:
     if "researchers.adelaide.edu.au" in entry_url and "/profile/" in entry_url and "?name=" not in entry_url:
-        return entry_url.split("#")[0].rstrip("/")
+        return (entry_url.split("#")[0].rstrip("/"), field)
+
     print(f"Getting {entry_url}")
     driver.get(entry_url)
     wait_for_body(driver, PROFILE_WAIT_SEC)
@@ -74,7 +76,7 @@ def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
         for link in links:
             href = (link.get_attribute("href") or "").split("#")[0].rstrip("/")
             if "/profile/" in href and "?name=" not in href:
-                return href
+                return (href, field)
     except Exception:
         pass
     locators = [
@@ -86,14 +88,14 @@ def resolve_to_profile(driver, entry_url: str) -> Optional[str]:
             el = driver.find_element(*locator)
             href = (el.get_attribute("href") or "").split("#")[0].rstrip("/")
             if "researchers.adelaide.edu.au" in href and "/profile/" in href and "?name=" not in href:
-                return href
+                return (href, field)
         except Exception:
             pass
     try:
         for a in driver.find_elements(By.CSS_SELECTOR, "a[href*='researchers.adelaide.edu.au']"):
             href = (a.get_attribute("href") or "").split("#")[0].rstrip("/")
             if "/profile/" in href and "?name=" not in href:
-                return href
+                return (href, field)
     except Exception:
         pass
     return None
@@ -135,7 +137,6 @@ def parse_researcher_profile(html: str, profile_url : str):
     name_tag = soup.find("h1")
     researcher_name = name_tag.get_text(strip=True) if name_tag else ""
 
-# NOTE: Code for finding role
     role = None
     #Check both page formats
     role_row = soup.find("th", string=lambda text: text and "Position" in text)
@@ -184,31 +185,30 @@ def parse_researcher_profile(html: str, profile_url : str):
             a_tag = citation_td.find("a", href=True)
             if a_tag:
                 article_url = a_tag["href"]
-# NOTE: Append role here if needed
-            publications.append([title, year, pub_type, journal_name, article_url, researcher_name, profile_url])
+            publications.append([title, year, pub_type, journal_name, article_url, researcher_name, profile_url, role])
     return publications
 
 def scrape_UA(headless: bool = False):
     driver = make_driver(headless=headless)
     try:
-        entries = collect_entry_links(STAFF_INDEX_PAGES, driver)
-        print(entries)
-        profiles = set()
-        for entry in entries:
-            prof = resolve_to_profile(driver, entry)
-            if prof:
-                profiles.add(prof.rstrip("/"))
+        entry_pairs = collect_entry_links(STAFF_INDEX_PAGES_WITH_FIELDS, driver)
+        profile_pairs_set: set[Tuple[str, str]] = set()
+        for entry_url, field in entry_pairs:
+            resolved = resolve_to_profile(driver, entry_url, field)
+            if resolved:
+                profile_pairs_set.add((resolved[0].rstrip("/"), resolved[1]))
             else:
-                print("  ! No researcher profile found:", entry)
-        profiles = sorted(profiles)
-        print(f"Resolved {len(profiles)} researcher profile URLs.")
+                print("  ! No researcher profile found:", entry_url)
+        profile_pairs = list(profile_pairs_set)
+        print(f"Resolved {len(profile_pairs)} researcher profile URLs (with fields).")
         all_data = []
-        for i, profile_url in enumerate(profiles, 1):
-            print(f"[{i}/{len(profiles)}] {profile_url}")
+        for i, (profile_url, field) in enumerate(profile_pairs, 1):
+            print(f"[{i}/{len(profile_pairs)}] {profile_url} ({field})")
             html = open_publications_journals(driver, profile_url)
             publications = parse_researcher_profile(html, profile_url)
-            print(publications)
-            all_data.extend(publications)
+            for row in publications:
+                all_data.append(row + [field]) 
+
             time.sleep(POLITE_DELAY)
     finally:
         try:
