@@ -11,8 +11,8 @@ def scrape_ANU():
     driver = uc.Chrome(options=options)
 
     profiles_urls = [
-        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-accounting", #Accounting
-        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics" #finance
+        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-accounting/persons", #Accounting
+        "https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics/persons" #finance
     ]
     base = "https://researchportalplus.anu.edu.au"
     profile_urls = []

@@ -29,7 +29,7 @@ def make_driver(headless: bool = False):
     opts.add_argument("--disable-gpu")
     opts.add_argument("--window-size=1280,1100")
     opts.add_argument("--lang=en-US,en")
-    return uc.Chrome(options=opts, version_main=138)
+    return uc.Chrome(options=opts)
 
 def wait_for_body(driver, timeout: int):
     WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
