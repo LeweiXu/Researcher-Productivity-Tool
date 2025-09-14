@@ -1,16 +1,132 @@
-from app.scrapers.helpers.shared_functions import write_to_db
-from app.scrapers.helpers.shared_functions import match_journals
 from app.database import SessionLocal
 from app.models import Researchers, Publications
-from sqlalchemy import text
 import csv
 import re
 import os
+from app.models import Researchers, Publications, Journals
+from fuzzywuzzy import process
+import csv
 
-CSV_DIR = "app/files"
-csv_paths = [os.path.join(CSV_DIR, f) for f in os.listdir(CSV_DIR) if f.endswith("_data.csv")]
+def match_journals(threshold=95, force=False, university="all"):
+    print("Matching Journal Names With ABDC Rankings")
+    db = SessionLocal()
+    try:
+        journals = db.query(Journals).all()
+        journal_names = [j.name for j in journals]
+        journal_dict = {j.name: j for j in journals}
+        query = db.query(Publications)
+        if university != "all":
+            query = query.join(Researchers).filter(Researchers.university == university)
+        publications = query.all()
+        total = len(publications)
+        print(f"Total publications to process: {total}")
+        progress_bar_len = 40
 
-# NOTE: Scrapers return a list of lists in the format ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Role"]
+        def print_progress(count, total):
+            filled_len = int(progress_bar_len * count // total)
+            bar = '=' * filled_len + '-' * (progress_bar_len - filled_len)
+            print(f"\r[{bar}] {count}/{total}", end='', flush=True)
+
+        for idx, pub in enumerate(publications, 1):
+            if pub.journal_id and not force:
+                print_progress(idx, total)
+                continue
+            if not pub.journal_name:
+                print_progress(idx, total)
+                continue
+            match, score = process.extractOne(pub.journal_name, journal_names)
+            if score >= threshold:
+                matched_journal = journal_dict.get(match)
+                if matched_journal:
+                    pub.journal_id = matched_journal.id
+            print_progress(idx, total)
+        db.commit()
+        print()  # Move to next line after progress bar
+    finally:
+        db.close()
+
+# # Rapidfuzz Implementation by Frank
+# def rank_lookup(journal: Optional[str], names: List[str], ranks: List[str]) -> Optional[str]:
+#     """Return the ranking string for the given journal, if matched; else None."""
+#     if not journal or not names:
+#         return None
+#     j = journal.strip()
+#     if rf_fuzz is not None:
+#         scores = [rf_fuzz.token_set_ratio(j, str(n)) for n in names]
+#         if not scores:
+#             return None
+#         best_i = max(range(len(scores)), key=lambda i: scores[i])
+#         if scores[best_i] >= FUZZ_THRESHOLD:
+#             return ranks[best_i]
+#         return None
+#     jl = j.lower()
+#     for i, n in enumerate(names):
+#         if jl == str(n).lower():
+#             return ranks[i]
+#     return None
+
+def write_to_db(university):
+    print(f"Writing {university} data to database")
+    csv_path = f"app/files/{university}_data.csv"
+    all_data = []
+    with open(csv_path, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            all_data.append([
+                row["Title"],
+                row["Year"],
+                row["Type"],
+                row["Journal Name"],
+                row["Article URL"],
+                row["Researcher Name"],
+                row["Profile URL"],
+                row["Job Title"],
+                row["Field"]
+            ])
+
+    standardize(all_data) #standardize adds the Level field at index 9
+    print("Writing data to database")
+    db = SessionLocal()
+    try:
+        for row in all_data:
+
+            pub_title, year, type_val, journal, publication_url, name, profile_url, job_title, field, job_level = row
+            # Don't add researcher if same Name and Profile URL
+            researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
+            if not researcher:
+                researcher = Researchers(name=name, university=university, job_title=job_title, profile_url=profile_url, level=job_level, field=field)
+
+                db.add(researcher)
+                db.commit()
+                db.refresh(researcher)
+            else:
+                # Update existing researcher with job title if it's not empty
+                if researcher.job_title != job_title or researcher.field != field:
+                    researcher.job_title = job_title
+                    researcher.level = job_level
+                    researcher.field = field
+                    db.commit()
+            # Don't add publication if same Title and Researcher
+            db_publication = db.query(Publications).filter_by(title=pub_title, researcher_id=researcher.id).first()
+            if not db_publication:
+                db_publication = Publications(
+                    title=pub_title,
+                    year=year,
+                    publication_type=type_val,
+                    journal_name=journal,
+                    publication_url=publication_url,
+                    researcher_id=researcher.id
+                )
+                db.add(db_publication)
+                db.commit()
+                db.refresh(db_publication)
+            # Link researcher and publication (if not already linked)
+            if db_publication not in researcher.publication:
+                researcher.publication.append(db_publication)
+                db.commit()
+    finally:
+        db.close()
+        print("Completed writing to database")
 
 # Scientia Professor = normal professor
 # Emiritus = retired
@@ -88,68 +204,20 @@ def standardize(data):
             role_level = None
         else:
             role_level = role_level_map[row[7]]
-        row.insert(8, role_level)
+        row.insert(9, role_level)
 
         # TODO: standardize "Type" e.g. journal article, contribution to journal etc. --> journal article
 
-# Run standardize() function on all CSV files, then rewrite to database
-def re_standardize():
-    db = SessionLocal()
-    try:
-        # Clear association table first
-        db.execute(text('DELETE FROM Researcher_publication_association'))
-        db.commit()
-        # Clear Publications and Researchers
-        db.query(Publications).delete()
-        db.query(Researchers).delete()
-        db.commit()
-    finally:
-        db.close()
-        print("Successfully Removed All Data")
-
-    for csv_path in csv_paths:
-        university = csv_path.split("/")[-1].split("_")[0]  # Extract university name from file name
-        print(f"Re-standardizing {csv_path}")
-        # Read CSV
-        with open(csv_path, newline='', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            rows = list(reader)
-        if not rows:
-            return
-        print(f"Successfully read {csv_path}")
-        header, data = rows[0], rows[1:]
-        standardize(data)
-        # Write back to same file
-        with open(csv_path, mode="w", newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(header)
-            writer.writerows(data)
-        print(f"Successfully wrote standardized data to {csv_path}")
-        write_to_db(data, university)
-        match_journals(university=university)
-
-def import_from_csv(university, csv_path):
-    all_data = []
-    with open(csv_path, newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            all_data.append([
-                row["Title"],
-                row["Year"],
-                row["Type"],
-                row["Journal Name"],
-                row["Article URL"],
-                row["Researcher Name"],
-                row["Profile URL"],
-                row["Field"]
-            ])
-
-    standardize(all_data)
-    write_to_db(all_data, university)
-    match_journals(university=university)
-
 if __name__ == "__main__":
-    for university in ['ANU',  'MU', 'UA', 'UM', 'UNSW', 'UQ', 'USYD', 'UWA']:
-        print(f"Importing CSV for {university}")
-        import_from_csv(university, os.path.join(CSV_DIR, f"{university}_data.csv"))
-        print(f"Completed importing CSV for {university}")
+    CSV_PATHS = [
+        "app/files/UM_data.csv",
+        "app/files/UNSW_data.csv",
+        "app/files/USYD_data.csv",
+        "app/files/UQ_data.csv",
+        "app/files/UA_data.csv",
+    ]
+    for path in CSV_PATHS:
+        print("Processing:", path)
+        university = os.path.basename(path).split("_")[0]
+        write_to_db(university)
+        match_journals(university=university)

@@ -7,8 +7,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
 import re
+import csv
 
-links_to_scrape = [("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "Finance"),("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951", "Accounting"),]
+links_to_scrape = [("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895953", "Finance"),
+                   ("https://fbe.unimelb.edu.au/about/academic-staff?queries_tags_query=4895951", "Accounting")]
 
 #Only works for newer layout of researcher profile pages
 def find_researcher(academic, driver):
@@ -277,14 +279,17 @@ def get_works_website(academics, driver):
 
 
 def scrape_UM():
-    output = []
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field", "Level"]
+    with open("app/files/ANU_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
 
     driver = uc.Chrome() #removed version_main=138
     for url, field in links_to_scrape:
         staff_list = get_staff(url, driver, field)
 
         academic_list = clean_staff(staff_list)
-        output.extend(get_works_website(academic_list, driver))
-        output.extend(get_works_openalex(academic_list))
-
-    return(output)
+        with open("app/files/UM_data.csv", mode="a", newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerows(get_works_website(academic_list, driver))
+            writer.writerows(get_works_openalex(academic_list))

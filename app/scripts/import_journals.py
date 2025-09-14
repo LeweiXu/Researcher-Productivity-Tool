@@ -1,39 +1,49 @@
-import pandas as pd
-from app.models import Journals
+import csv
 from app.database import SessionLocal
+from app.models import Journals
 
-# Path to the CSV file
-CSV_PATH = "./app/files/2022 JQL.csv"
+CSV_PATH = "app/files/2022 JQL.csv"
 
 def import_journals():
-    df = pd.read_csv(CSV_PATH)
-    # Strip whitespace from column names and values
-    df.columns = [col.strip() for col in df.columns]
-    df = df[["Journal Title", "Publisher", "2022 rating"]]
-    df = df.rename(columns={
-        "Journal Title": "name",
-        "Publisher": "publisher",
-        "2022 rating": "abdc_rank"
-    })
-    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
-
-    session = SessionLocal()
+    db = SessionLocal()
     try:
-        for _, row in df.iterrows():
-            # Check if journal already exists
-            existing = session.query(Journals).filter_by(name=row['name']).first()
-            if not existing:
-                journal = Journals(
-                    name=row['name'],
-                    abdc_rank=row['abdc_rank'],
-                    #impact_factor=None,
-                    #h_index=None,
-                    publisher=row['publisher']
-                )
-                session.add(journal)
-        session.commit()
+        with open(CSV_PATH, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                name = row.get("Journal Title", "").strip()
+                publisher = row.get("Publisher", "").strip()
+                ISSN = row.get("ISSN", "").strip()
+                eISSN = row.get("ISSN Online", "").strip()
+                year_of_inception = row.get("Year Inception", "")
+                FoR = row.get("FoR", "")
+                abdc_rank = row.get("2022 rating", "").strip()
+
+                # Convert year_of_inception and FoR to int if possible
+                try:
+                    year_of_inception = int(year_of_inception) if year_of_inception else None
+                except Exception:
+                    year_of_inception = None
+                try:
+                    FoR = int(FoR) if FoR else None
+                except Exception:
+                    FoR = None
+
+                # Check if journal already exists
+                journal = db.query(Journals).filter_by(name=name).first()
+                if not journal:
+                    journal = Journals(
+                        name=name,
+                        publisher=publisher,
+                        ISSN=ISSN,
+                        eISSN=eISSN,
+                        year_of_inception=year_of_inception,
+                        FoR=FoR,
+                        abdc_rank=abdc_rank
+                    )
+                    db.add(journal)
+            db.commit()
     finally:
-        session.close()
+        db.close()
 
 if __name__ == "__main__":
     import_journals()

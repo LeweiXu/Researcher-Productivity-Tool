@@ -1,5 +1,6 @@
 import undetected_chromedriver as uc
 from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
+import csv
 
 def scrape_ANU():
     options = uc.ChromeOptions()
@@ -11,8 +12,8 @@ def scrape_ANU():
     driver = uc.Chrome(options=options)
 
     profiles_urls = [
-        ("https://researchportalplus.anu.edu.au/en/organisations/research-school-of-accounting", "Accounting" ), #accounting
-        ("https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics", "Finance" ) #finance
+        ("https://researchportalplus.anu.edu.au/en/organisations/research-school-of-accounting/persons/", "Accounting" ), #accounting
+        ("https://researchportalplus.anu.edu.au/en/organisations/research-school-of-finance-actuarial-studies-statistics/persons/", "Finance" ) #finance
     ]
     base = "https://researchportalplus.anu.edu.au"
     pairs = []
@@ -23,12 +24,16 @@ def scrape_ANU():
     profile_urls = list(set(pairs))
     print(f"Found {len(profile_urls)} profile URLs")
 
-    all_data = []   
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+    with open("app/files/ANU_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
+
     for profile_url, field in profile_urls:
         print(f"Scraping profile: {profile_url} ({field})")
         name, job_title, publications_info = scrape_publications(profile_url, driver)
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
-            all_data.append(line + [name, profile_url, job_title, field])
-
-    return all_data
+            with open("app/files/ANU_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(line + [name, profile_url, job_title, field])  # Append fields

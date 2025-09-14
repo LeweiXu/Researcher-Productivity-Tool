@@ -7,6 +7,7 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import csv
 
 # ========= CONFIG =========
 UNIVERSITY_NAME = "University of Adelaide"
@@ -201,13 +202,19 @@ def scrape_UA(headless: bool = False):
                 print("  ! No researcher profile found:", entry_url)
         profile_pairs = list(profile_pairs_set)
         print(f"Resolved {len(profile_pairs)} researcher profile URLs (with fields).")
-        all_data = []
+        csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+        with open("app/files/UA_data.csv", mode="w", newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(csv_header)
+
         for i, (profile_url, field) in enumerate(profile_pairs, 1):
             print(f"[{i}/{len(profile_pairs)}] {profile_url} ({field})")
             html = open_publications_journals(driver, profile_url)
             publications = parse_researcher_profile(html, profile_url)
             for row in publications:
-                all_data.append(row + [field]) 
+                with open("app/files/UA_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(row + [field])  # append field as a separate field
 
             time.sleep(POLITE_DELAY)
     finally:
@@ -215,5 +222,3 @@ def scrape_UA(headless: bool = False):
             driver.quit()
         except Exception:
             pass
-
-    return all_data

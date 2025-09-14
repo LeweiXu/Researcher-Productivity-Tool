@@ -8,7 +8,7 @@ def find_profile_urls(page_url, base, driver):
     while True:
         paged_url = f"{page_url}?page={page}"
         driver.get(paged_url)
-        time.sleep(2)
+        time.sleep(8)
         a_tags = driver.find_elements(By.TAG_NAME, "a")
         found_on_page = 0
         for a in a_tags:
@@ -29,7 +29,7 @@ def scrape_publications(profile_url, driver):
     Returns: (name, job_title, publications_info) where publications_info is a list of [Title, Date, Type, Journal, Article URL]
     """
     driver.get(profile_url)
-    time.sleep(5)
+    time.sleep(2)
     # Try to get name robustly
     try:
         name = driver.find_element(By.CSS_SELECTOR, "h1.name").text.strip()
@@ -41,15 +41,29 @@ def scrape_publications(profile_url, driver):
     # Try to get job title
     try:
         job_title = driver.find_element(By.CSS_SELECTOR, "span.job-title").text.strip()
+        if job_title == "":
+            # Try to get <p> under div.header.person-details
+            try:
+                job_title = driver.find_element(
+                    By.CSS_SELECTOR, "div.header.person-details > div.rendering_person_persontitlerendererportal > p"
+                ).text.strip()
+            except Exception:
+                job_title = ""
     except Exception:
-        job_title = ""
-    print(name, job_title)
+        # Try to get <p> under div.header.person-details if span.job-title fails
+        try:
+            job_title = driver.find_element(
+                By.CSS_SELECTOR, "div.header.person-details > div.rendering_person_persontitlerendererportal > p"
+            ).text.strip()
+        except Exception:
+            job_title = ""
     publications_info = []
     page = 0
     while True:
-        page_url = f"{profile_url}/publications/?page={page}"
+        if page == 0: page_url = f"{profile_url}/publications/"
+        else: page_url = f"{profile_url}/publications/?page={page}"
         driver.get(page_url)
-        time.sleep(5)
+        time.sleep(10)
         publication_divs = driver.find_elements(By.CSS_SELECTOR, "div.rendering_researchoutput_portal-short")
         if not publication_divs:
             break

@@ -225,34 +225,20 @@ def scrape_UNSW():
             start_rank += num_ranks
             time.sleep(1)
 
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+    with open("app/files/UNSW_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
+
     all_data = []
-    for url,fields in profile_urls:
+    for url, fields in profile_urls:
         name, publications_info, role = scraping(url, driver)
         for pub in publications_info:
-
-            all_data.append(pub + [name, url, role, fields])  # Append fields
-
-
-
-
-    # csv_filename = "UNSW.csv"
-    # csv_header = ["Title", "Year", "Type", "Journal", "Article URL", "Researcher Name", "Profile URL"]
-    # with open(csv_filename, mode="w", newline='', encoding="utf-8-sig") as f:
-    #     writer = csv.writer(f)
-    #     writer.writerow(csv_header)
-    #     for url in profile_urls:
-    #         name, publications_info = scraping(url, driver)
-    #         for pub in publications_info:
-    #             writer.writerow(pub + [name, url])
-    
+            with open("app/files/UNSW_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(pub + [name, url, role, fields])  # Append fields
 
     driver.quit()
 
-    print("Scraping complete. Data saved to UNSW.csv")
-
-    return all_data
-
-
-# if __name__ == "__main__":
-#     main()
+    print("Scraping complete. Data saved to UNSW_data.csv")
 
