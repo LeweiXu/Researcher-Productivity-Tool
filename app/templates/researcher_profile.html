@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
+
+<!-- Inline map so we can render full university names in the table -->
+{% set uni_map = {
+    "MU": "MONASH",
+    "ANU": "ANU",
+    "UA": "UA",
+    "UM": "UoM",
+    "UNSW": "UNSW",
+    "UQ": "UQ",
+    "USYD": "USYD",
+    "UWA": "UWA"
+} %}
+
 <head>
     <title>{{ researcher.name }} - Researcher Profile</title>
     <style>
@@ -36,7 +49,7 @@
     <div class="header">
         <div class="name"><a href="{{ researcher.profile_url }}">{{ researcher.name }}</a></div>
     </div>
-    <div class="uni">{{ researcher.university }}</div>
+    <div class="uni">{{ uni_map.get(researcher.university, researcher.university) }}</div>
     <div class="department">{{ researcher.department }}</div>
 
     <!-- Human-readable academic level -->
