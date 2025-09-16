@@ -99,7 +99,7 @@
         {% for pub in publications %}
             <tr>
                 <td><a href="{{ pub.publication_url }}">{{ pub.title }}</a></td>
-                <td>{{ pub.journal }}</td>
+                <td>{{ pub.journal if pub.journal else "Working Paper"}}</td>
                 <td>{{ pub.year }}</td>
                 <td>{{ pub.ranking }}</td>
                 <td>{{ pub.num_authors }}</td>
