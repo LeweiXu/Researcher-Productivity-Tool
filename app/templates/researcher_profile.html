@@ -110,9 +110,11 @@
 
     <!-- Pagination -->
     <div id="pagination">
+        <button id="firstPage" disabled>First</button>
         <button id="prevPage" disabled>Previous</button>
         <span id="pageInfo"></span>
         <button id="nextPage" disabled>Next</button>
+        <button id="lastPage" disabled>Last</button>
     </div>
 </div>
 
@@ -144,9 +146,16 @@
         });
         document.getElementById('prevPage').disabled = currentPage === 1;
         document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+        document.getElementById('firstPage').disabled = currentPage === 1;
+        document.getElementById('lastPage').disabled = currentPage === totalPages || totalPages === 0;
         document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
     }
 
+    document.getElementById('firstPage').onclick = () => showPage(1);
+    document.getElementById('lastPage').onclick = () => {
+        const totalPages = Math.ceil(filteredRows.length / getRowsPerPage()) || 1;
+        showPage(totalPages);
+    };
     document.getElementById('prevPage').onclick = () => showPage(currentPage - 1);
     document.getElementById('nextPage').onclick = () => showPage(currentPage + 1);
 
