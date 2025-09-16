@@ -27,6 +27,8 @@
         .pub-table { width: 100%; border-collapse: collapse; }
         .pub-table th, .pub-table td { border: 1px solid #bbb; padding: 10px 16px; text-align: left; }
         .pub-table th { background: #1976d2; color: #fff; cursor: pointer; user-select: none; }
+        .pub-table a { color: #1976d2; text-decoration: underline; font-weight: 500; }
+        .pub-table a:hover { color: #5b129b; text-decoration: underline; }
         .arrow { margin-left: 6px; font-size: 0.8em; opacity: 0.6; }
         #searchInput { margin: 10px 0; padding: 6px 8px; width: 240px; }
         a { color: #000000; text-decoration: none; }
@@ -98,7 +100,13 @@
         <tbody>
         {% for pub in publications %}
             <tr>
-                <td><a href="{{ pub.publication_url }}">{{ pub.title }}</a></td>
+                <td>
+                    {% if pub.publication_url %}
+                        <a href="{{ pub.publication_url }}">{{ pub.title }}</a>
+                    {% else %}
+                        {{ pub.title }}
+                    {% endif %}
+                </td>
                 <td>{{ pub.journal if pub.journal else "Working Paper"}}</td>
                 <td>{{ pub.year }}</td>
                 <td>{{ pub.ranking }}</td>
