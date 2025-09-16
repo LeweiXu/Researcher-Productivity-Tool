@@ -92,7 +92,7 @@
             <th data-type="text">Journal Name <span class="arrow"></span></th>
             <th data-type="number">Year <span class="arrow"></span></th>
             <th data-type="text">ABDC Ranking <span class="arrow"></span></th>
-            <th data-type="number">No. of Co-authors <span class="arrow"></span></th>
+            <th data-type="number">No. of Authors <span class="arrow"></span></th>
         </tr>
         </thead>
         <tbody>
@@ -102,7 +102,7 @@
                 <td>{{ pub.journal if pub.journal else "Working Paper"}}</td>
                 <td>{{ pub.year }}</td>
                 <td>{{ pub.ranking }}</td>
-                <td>{{ pub.num_authors }}</td>
+                <td>{{ pub.num_authors }}</td> <!-- Here might need to +1 if data scraped is number of co-authors -->
             </tr>
         {% endfor %}
         </tbody>
