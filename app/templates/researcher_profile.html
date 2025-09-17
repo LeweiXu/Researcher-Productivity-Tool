@@ -20,7 +20,8 @@
         .container { max-width: 1100px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #ccc; padding: 32px; }
         .header { display: flex; align-items: center; }
         .name { font-size: 2em; font-weight: bold; margin-right: 24px; }
-        .uni-department { font-size: 1.0em; color: #949494; margin-top: 10px; }
+        .uni-department a{ font-size: 1.0em; color: #949494; margin-top: 10px; }
+        .uni-department a:hover { color: #0d47a1; text-decoration: underline; }
         .level { font-size: 1.2em; color: #555; margin-top: 10px; margin-bottom: 32px; }
         .section-title { font-size: 1.2em; font-weight: bold; margin: 32px 0 12px 0; }
         .pub-table { width: 100%; border-collapse: collapse; }
@@ -51,8 +52,8 @@
         <div class="name"><a href="{{ researcher.profile_url }}">{{ researcher.name }}</a></div>
     </div>
     <div class="uni-department">
-        {{ uni_map.get(researcher.university, researcher.university) }}
-        {{ researcher.department }}
+        <a href="{{ url_for('researchers')}}?university={{ researcher.university }}">{{ uni_map.get(researcher.university, researcher.university) }}</a>
+        <a href="{{ url_for('researchers')}}?university={{ researcher.university }}&field={{ researcher.department }}">{{ researcher.department }}</a>
     </div>
 
     <!-- Human-readable academic level -->
