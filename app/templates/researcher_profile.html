@@ -42,6 +42,21 @@
         @media (max-width: 640px) {
             .rows-select { align-items: flex-start; }
         }
+        #clearSortBtn {
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.9em;
+            cursor: pointer;
+            box-shadow: 0 2px 6px #ccc;
+            transition: background 0.2s;
+            margin-left: 8px;
+        }
+        #clearSortBtn:hover {
+            background: #0d47a1;
+        }
     </style>
 </head>
 
@@ -86,6 +101,12 @@
                 <option value="all">All</option>
             </select>
         </div>
+    </div>
+    <div class="controls">
+        <div style="font-size: 0.85em; color: #555; margin-bottom: 1px;">
+            Note: <b>Shift+Click</b> column headers for secondary sorting etc.
+        </div>
+        <button id="clearSortBtn" style="display: flex; flex-direction: column; align-items: flex-end;">Clear Sorting</button>
     </div>
 
     <!-- Publications table -->
@@ -132,7 +153,6 @@
     const table = document.getElementById('pub-table');
     const tbody = table.tBodies[0];
     const headers = table.tHead.rows[0].cells;
-    const sortState = Array.from(headers).map(() => null);
 
     const rows = Array.from(tbody.querySelectorAll('tr'));
     let rowsPerPage = 50;
@@ -180,58 +200,85 @@
         showPage(1);
     });
 
-    function renderSortArrows(activeIdx) {
+    // Multi-column sorting
+    const sortOrder = [];
+
+    function renderSortArrows() {
         Array.from(headers).forEach((th, i) => {
             const arrow = th.querySelector('.arrow');
+            const orderIdx = sortOrder.findIndex(s => s.idx === i);
             if (!arrow) return;
-            if (i === activeIdx) {
-                arrow.textContent = sortState[i] === 'asc' ? '▲' : '▼';
+            if (orderIdx !== -1) {
+                arrow.textContent = sortOrder[orderIdx].dir === 'asc' ? '▲' : '▼';
+                arrow.style.opacity = 1;
+                arrow.title = orderIdx === 0 ? 'Primary sort' : `Sort priority ${orderIdx+1}`;
             } else {
                 arrow.textContent = '';
+                arrow.style.opacity = 0.6;
+                arrow.title = '';
             }
         });
     }
 
-    const getCellText = (tr, idx) =>
-        (tr.children[idx]?.textContent || '').trim();
+    function getCellText(tr, idx) {
+        return (tr.children[idx]?.textContent || '').trim();
+    }
 
-    const asNumber = (v) => {
+    function asNumber(v) {
         const cleaned = v.replace(/[, ]+/g, '');
         return parseFloat(cleaned);
-    };
+    }
 
-    const compareFactory = (idx, dir, type) => {
-        const mul = dir === 'asc' ? 1 : -1;
-        return (a, b) => {
-            let va = getCellText(a, idx);
-            let vb = getCellText(b, idx);
+    function multiCompare(a, b) {
+        for (const {idx, dir} of sortOrder) {
+            const th = headers[idx];
+            const type = th.dataset.type || 'text';
+            const va = getCellText(a, idx);
+            const vb = getCellText(b, idx);
+            let cmp;
             if (type === 'number') {
                 const na = asNumber(va);
                 const nb = asNumber(vb);
-                if (!Number.isNaN(na) && !Number.isNaN(nb)) {
-                    return (na - nb) * mul;
-                }
+                cmp = (!Number.isNaN(na) && !Number.isNaN(nb)) ? na - nb : va.localeCompare(vb);
+            } else {
+                cmp = va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' });
             }
-            return va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' }) * mul;
-        };
-    };
+            if (cmp !== 0) return dir === 'asc' ? cmp : -cmp;
+        }
+        return 0;
+    }
 
     Array.from(headers).forEach((th, idx) => {
-        th.addEventListener('click', () => {
-            sortState[idx] = sortState[idx] === 'asc' ? 'desc' : 'asc';
-            sortState.forEach((_, i) => { if (i !== idx) sortState[i] = null; });
-
-            const type = th.dataset.type || 'text';
-            const dir = sortState[idx] || 'asc';
-
-            filteredRows.sort(compareFactory(idx, dir, type));
-            filteredRows.forEach(row => tbody.appendChild(row)); // re-append in new order
-            renderSortArrows(idx);
+        th.addEventListener('click', (e) => {
+            // Shift+click adds to sortOrder, normal click resets to single column
+            const existing = sortOrder.find(s => s.idx === idx);
+            if (e.shiftKey) {
+                if (existing) {
+                    existing.dir = existing.dir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortOrder.push({idx, dir: 'asc'});
+                }
+            } else {
+                sortOrder.length = 0;
+                sortOrder.push({idx, dir: existing && existing.dir === 'asc' ? 'desc' : 'asc'});
+            }
+            filteredRows.sort(multiCompare);
+            filteredRows.forEach(row => tbody.appendChild(row));
+            renderSortArrows();
             showPage(1);
         });
     });
 
-    renderSortArrows(0);
+    // Clear button
+    document.getElementById('clearSortBtn').onclick = () => {
+        sortOrder.length = 0;
+        renderSortArrows();
+        filteredRows = [...rows];
+        filteredRows.forEach(row => tbody.appendChild(row));
+        showPage(1);
+    };
+
+    renderSortArrows();
     showPage(1);
 </script>
 </body>
