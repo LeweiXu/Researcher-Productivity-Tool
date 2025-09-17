@@ -130,33 +130,46 @@ def logout_post(request: Request):
 
 
 # ------------------------
-# Download Researchers table as CSV (Admin-only)
+# Download Master Spreadsheet (Researchers + Publications + Journals)
 # ------------------------
 @router.get("/admin/download/researchers.csv")
-def download_researchers_csv(request: Request):
+def download_master_csv(request: Request):
     """
-    Streams the entire Researchers table as a CSV download.
-    No file is created on disk; it streams directly from the DB.
+    Streams a master spreadsheet joining Researchers, Publications, and Journals.
+    Each row = one publication of one researcher with its journal.
     """
-    # basic session check like your /admin route
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/", status_code=303)
 
     db: Session = SessionLocal()
 
-    # Choose which columns to export from Researchers table
-    # 'field' sometimes appears as 'FoR' or 'for' in various code — handle that safely below.
-    header = ["id", "name", "university", "field", "level"]
+    # Query join across three tables
+    qry = (
+        db.query(
+            Researchers.id.label("researcher_id"),
+            Researchers.name.label("researcher_name"),
+            Researchers.university,
+            Researchers.field,
+            Researchers.level,
+            Publications.id.label("publication_id"),
+            Publications.title.label("publication_title"),
+            Publications.year.label("publication_year"),
+            Journals.id.label("journal_id"),
+            Journals.name.label("journal_name"),
+            Journals.abdc_rank.label("journal_rank"),
+        )
+        .join(Publications, Publications.researcher_id == Researchers.id)
+        .join(Journals, Journals.id == Publications.journal_id)
+    )
 
-    # Helper to robustly get the field-of-research attribute, whatever it's named
-    def get_field_value(r: Researchers):
-        for cand in ("field", "FoR", "for_", "for"):
-            if hasattr(r, cand):
-                return getattr(r, cand)
-        return ""
+    # Define header
+    header = [
+        "researcher_id", "researcher_name", "university", "field", "level",
+        "publication_id", "publication_title", "publication_year",
+        "journal_id", "journal_name", "journal_rank"
+    ]
 
-    # Stream the CSV (efficient for large tables)
     def csv_iter():
         buf = io.StringIO()
         writer = csv.writer(buf)
@@ -167,62 +180,14 @@ def download_researchers_csv(request: Request):
         buf.seek(0); buf.truncate(0)
 
         # rows
-        for r in db.query(Researchers).yield_per(500):
-            row = [
-                getattr(r, "id", ""),
-                getattr(r, "name", ""),
-                getattr(r, "university", ""),
-                get_field_value(r),
-                getattr(r, "level", ""),
-            ]
+        for row in qry.yield_per(500):
             writer.writerow(row)
             yield buf.getvalue()
             buf.seek(0); buf.truncate(0)
 
-        # close DB once iteration is done
         db.close()
 
     ts = datetime.datetime.now().strftime("%Y-%m-%d")
-    filename = f"researchers_{ts}.csv"
+    filename = f"master_spreadsheet_{ts}.csv"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return StreamingResponse(csv_iter(), media_type="text/csv", headers=headers)
-
-
-# ------------------------
-# (Optional) Signup & Reset Password stubs (kept commented)
-# ------------------------
-# @router.get("/signup", response_class=HTMLResponse)
-# async def signup_get(request: Request, error: Optional[str] = None, message: Optional[str] = None):
-#     return templates.TemplateResponse("sign_up.html", {"request": request, "error": error, "message": message})
-
-# @router.post("/signup")
-# async def signup_post(
-#     request: Request,
-#     name: str = Form(...),
-#     email: str = Form(...),
-#     password: str = Form(...),
-#     confirm_password: str = Form(...),
-# ):
-#     if password != confirm_password:
-#         return templates.TemplateResponse(
-#             "sign_up.html",
-#             {"request": request, "error": "Passwords do not match."},
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#         )
-#     # TODO: create user in DB here
-#     return templates.TemplateResponse(
-#         "Login.html",
-#         {"request": request, "message": "Signup successful. Please log in."},
-#     )
-
-# @router.get("/reset_password", response_class=HTMLResponse)
-# async def reset_password_get(request: Request, error: Optional[str] = None, message: Optional[str] = None):
-#     return templates.TemplateResponse("reset_password.html", {"request": request, "error": error, "message": message})
-
-# @router.post("/reset_password")
-# async def reset_password_post(request: Request, email: str = Form(...)):
-#     # TODO: send real email with token
-#     return templates.TemplateResponse(
-#         "reset_password.html",
-#         {"request": request, "message": f"If {email} exists, a reset link has been sent."},
-#     )
