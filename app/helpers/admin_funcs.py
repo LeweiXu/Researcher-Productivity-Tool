@@ -4,9 +4,11 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
 
+import pandas as pd
 import csv
 import io
 import datetime
+import os
 
 def download_master_csv(request):
     """
@@ -70,3 +72,47 @@ def download_clarivate_template():
 def download_UWA_staff_field_template():
     return FileResponse("app/files/upload_templates/UWA_staff_field_template.csv", media_type="text/csv", filename="UWA_staff_field_template.csv")
 
+def replace_ABDC_rankings(file_path="app/files/uploads_current/ABDC_upload.csv"):
+    df = pd.read_csv(file_path)
+    # Strip whitespace from column names and values
+    df.columns = [col.strip() for col in df.columns]
+
+    session = SessionLocal()
+    try:
+        # Remove all existing data from Journals table
+        session.query(Journals).delete()
+        session.commit()
+        # Add new data
+        for _, row in df.iterrows():
+            journal = Journals(
+                name=row['Journal Title'],
+                abdc_rank=row['rating'],
+                publisher=row['Publisher'],
+                ISSN=row['ISSN'],
+                eISSN=row['ISSN Online'],
+                FoR=row['FoR'],
+                year_of_inception=row['Year Inception']
+            )
+            session.add(journal)
+        session.commit()
+    finally:
+        session.close()
+
+def save_uploaded_file(upload_file, save_dir="app/files/uploads_current"):
+    """
+    Saves an uploaded file to the specified directory.
+    Returns the saved file path.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    file_path = os.path.join(save_dir, "ABDC_upload.csv")
+    upload_file.file.seek(0)  # Ensure pointer is at start
+    with open(file_path, "wb") as buffer:
+        while True:
+            chunk = upload_file.file.read(1024 * 1024)
+            if not chunk:
+                break
+            buffer.write(chunk)
+    # Log file path and size for confirmation
+    print(f"File saved to: {file_path}")
+    print(f"File size: {os.path.getsize(file_path)} bytes")
+    return file_path
