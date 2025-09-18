@@ -226,7 +226,7 @@ def scrape_UNSW():
             time.sleep(1)
 
     csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
-    with open("app/files/UNSW_data.csv", mode="w", newline='', encoding="utf-8") as f:
+    with open("app/files/temp/UNSW_data.csv", mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
 
@@ -234,7 +234,7 @@ def scrape_UNSW():
     for url, fields in profile_urls:
         name, publications_info, role = scraping(url, driver)
         for pub in publications_info:
-            with open("app/files/UNSW_data.csv", mode="a", newline='', encoding="utf-8") as f:
+            with open("app/files/temp/UNSW_data.csv", mode="a", newline='', encoding="utf-8") as f:
                 writer = csv.writer(f)
                 writer.writerow(pub + [name, url, role, fields])  # Append fields
 
