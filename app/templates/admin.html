@@ -52,6 +52,11 @@
             </form>
         </div>
     </div>
+    {% if flash %}
+        <div class="alert alert-info mt-3" role="alert">
+            {{ flash|safe }}
+        </div>
+    {% endif %}
     <div class="mt-4">
         <form action="/logout" method="post">
             <button type="submit" class="btn btn-danger">Logout</button>
