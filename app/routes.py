@@ -109,7 +109,7 @@ async def admin(request: Request):
     user = request.session.get("user")
     if not user:
         # Not logged in, redirect to login or show error
-        return RedirectResponse(url="/", status_code=303)
+        return templates.TemplateResponse("login.html", {"request": request, "error": None})
     return templates.TemplateResponse("admin.html", {"request": request, "user": user})
 
 
@@ -137,6 +137,7 @@ def download_master_csv(request: Request):
     """
     Streams a master spreadsheet joining Researchers, Publications, and Journals.
     Each row = one publication of one researcher with its journal.
+    All columns from all three tables are included.
     """
     user = request.session.get("user")
     if not user:
@@ -144,31 +145,24 @@ def download_master_csv(request: Request):
 
     db: Session = SessionLocal()
 
-    # Query join across three tables
+    # Get all columns for each table
+    researcher_cols = [c.name for c in Researchers.__table__.columns]
+    publication_cols = [c.name for c in Publications.__table__.columns]
+    journal_cols = [c.name for c in Journals.__table__.columns]
+
+    # Build query with all columns
     qry = (
         db.query(
-            Researchers.id.label("researcher_id"),
-            Researchers.name.label("researcher_name"),
-            Researchers.university,
-            Researchers.field,
-            Researchers.level,
-            Publications.id.label("publication_id"),
-            Publications.title.label("publication_title"),
-            Publications.year.label("publication_year"),
-            Journals.id.label("journal_id"),
-            Journals.name.label("journal_name"),
-            Journals.abdc_rank.label("journal_rank"),
+            *[getattr(Publications, col) for col in publication_cols],
+            *[getattr(Researchers, col) for col in researcher_cols],
+            *[getattr(Journals, col) for col in journal_cols],
         )
-        .join(Publications, Publications.researcher_id == Researchers.id)
-        .join(Journals, Journals.id == Publications.journal_id)
+        .join(Researchers, Publications.researcher_id == Researchers.id)
+        .join(Journals, Publications.journal_id == Journals.id)
     )
 
-    # Define header
-    header = [
-        "researcher_id", "researcher_name", "university", "field", "level",
-        "publication_id", "publication_title", "publication_year",
-        "journal_id", "journal_name", "journal_rank"
-    ]
+    # Header: publication columns + researcher columns + journal columns
+    header = publication_cols + researcher_cols + journal_cols
 
     def csv_iter():
         buf = io.StringIO()
