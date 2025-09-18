@@ -1,6 +1,9 @@
 import pandas as pd
 from app.models import Journals
 from app.database import SessionLocal
+import csv
+import os
+import fnmatch
 
 # Path to the CSV file
 CSV_PATH = "./app/files/2022 JQL.csv"
@@ -48,6 +51,50 @@ def print_issns_in_batches(batch_size=600):
                 f.write(";".join(batch) + "\n")
     finally:
         session.close()
-        
+
+def import_jif_csv(jif_csv_path):
+    session = SessionLocal()
+    try:
+        with open(jif_csv_path, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                issn = str(row.get("ISSN", "")).strip()
+                if not issn:
+                    continue
+                jif = row.get("2024 JIF", None)
+                jif_5 = row.get("5 Year JIF", None)
+                citation_pct = row.get("% of Citable OA", None)
+                # Remove % and convert to float if needed
+                if isinstance(citation_pct, str) and "%" in citation_pct:
+                    citation_pct = citation_pct.replace("%", "").strip()
+                try:
+                    jif = float(jif) if jif not in [None, ""] else None
+                except Exception:
+                    jif = None
+                try:
+                    jif_5 = float(jif_5) if jif_5 not in [None, ""] else None
+                except Exception:
+                    jif_5 = None
+                try:
+                    citation_pct = float(citation_pct) if citation_pct not in [None, ""] else None
+                except Exception:
+                    citation_pct = None
+
+                journal = session.query(Journals).filter_by(ISSN=issn).first()
+                if journal:
+                    journal.JIF = jif
+                    journal.JIF_5_year = jif_5
+                    journal.citation_percentage = citation_pct
+        session.commit()
+    finally:
+        session.close()
+
+def import_all_jif(csv_dir="app/files/uploads_current"):
+    for fname in os.listdir(csv_dir):
+        if fnmatch.fnmatch(fname, "JIF_*.csv"):
+            path = os.path.join(csv_dir, fname)
+            print(f"Importing JIF data from {path}")
+            import_jif_csv(path)
+
 if __name__ == "__main__":
-    print_issns_in_batches()
+    import_all_jif()
