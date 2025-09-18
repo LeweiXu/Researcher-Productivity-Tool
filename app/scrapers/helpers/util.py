@@ -173,6 +173,7 @@ def standardize(data):
             "Senior Lecturer": "Senior Lecturer",
             "Senior Fellow": "Senior Fellow",
             "Associate Professor": "Associate Professor",
+            "Associate Prof": "Associate Professor",
             "Professor": "Professor",
             "Professorial Fellow": "Professorial Fellow",
             "Professor Emeritus": "Professor Emeritus",
