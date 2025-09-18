@@ -5,7 +5,7 @@ from app.database import SessionLocal
 # Path to the CSV file
 CSV_PATH = "./app/files/2022 JQL.csv"
 
-def import_journals():
+def import_journals(CSV_PATH=CSV_PATH):
     df = pd.read_csv(CSV_PATH)
     # Strip whitespace from column names and values
     df.columns = [col.strip() for col in df.columns]
@@ -18,7 +18,7 @@ def import_journals():
             if not existing:
                 journal = Journals(
                     name=row['Journal Title'],
-                    abdc_rank=row['2022 rating'],
+                    abdc_rank=row['rating'],
                     publisher=row['Publisher'],
                     ISSN=row['ISSN'],
                     eISSN=row['ISSN Online'],
