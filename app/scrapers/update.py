@@ -59,4 +59,4 @@ def update_USYD(db=True, match=True):
     if match: match_journals(university="USYD")
 
 if __name__ == "__main__":
-    update_UQ()
+    update_UA()
