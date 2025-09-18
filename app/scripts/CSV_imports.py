@@ -32,7 +32,7 @@ def import_journals():
 
 def print_issns_in_batches(batch_size=600):
     session = SessionLocal()
-    output_path = "./app/files/issn_batches.txt"
+    output_path = "./app/files/temp/issn_batches.txt"
     try:
         issns = [j.ISSN for j in session.query(Journals).filter(Journals.ISSN.isnot(None)).all() if j.ISSN]
         eissns = [j.eISSN for j in session.query(Journals).filter(Journals.eISSN.isnot(None)).all() if j.eISSN]
@@ -50,4 +50,4 @@ def print_issns_in_batches(batch_size=600):
         session.close()
         
 if __name__ == "__main__":
-    import_journals()
+    print_issns_in_batches()
