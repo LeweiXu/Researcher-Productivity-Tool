@@ -29,7 +29,7 @@
         <h4>Upload CSV</h4>
         <div class="mb-3">
             <h6>ABDC Rankings</h6>
-            <form class="d-flex align-items-center" action="/admin/upload_abdc" method="post" enctype="multipart/form-data">
+            <form class="d-flex align-items-center" action="/admin/upload/abdc" method="post" enctype="multipart/form-data">
                 <input type="file" class="form-control me-2" name="abdc_csv" accept=".csv">
                 <button type="submit" class="btn btn-primary me-2">Upload</button>
                 <a href="/admin/download/abdc_template.csv" class="btn btn-link">Download Template</a>
@@ -37,7 +37,7 @@
         </div>
         <div class="mb-3">
             <h6>Clarivate Rankings</h6>
-            <form class="d-flex align-items-center" action="/admin/upload_clarivate" method="post" enctype="multipart/form-data">
+            <form class="d-flex align-items-center" action="/admin/upload/clarivate" method="post" enctype="multipart/form-data">
                 <input type="file" class="form-control me-2" name="clarivate_csv" accept=".csv">
                 <button type="submit" class="btn btn-primary me-2">Upload</button>
                 <a href="/admin/download/clarivate_template.csv" class="btn btn-link">Download Template</a>
@@ -45,7 +45,7 @@
         </div>
         <div class="mb-3">
             <h6>UWA Staff to Field Mappings</h6>
-            <form class="d-flex align-items-center" action="/admin/upload_uwa_staff_field" method="post" enctype="multipart/form-data">
+            <form class="d-flex align-items-center" action="/admin/upload/uwa_staff_field" method="post" enctype="multipart/form-data">
                 <input type="file" class="form-control me-2" name="uwa_staff_field_csv" accept=".csv">
                 <button type="submit" class="btn btn-primary me-2">Upload</button>
                 <a href="/admin/download/UWA_staff_field_template.csv" class="btn btn-link">Download Template</a>
