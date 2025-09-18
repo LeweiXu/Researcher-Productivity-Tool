@@ -160,11 +160,13 @@ def parse_researcher_profile(html: str, profile_url: str):
 
     researcher_role = ""
     titles = soup.find_all(class_="position__title")
+    role_parts = []
     for tag in titles:
         text = tag.get_text(strip=True)
         if text:  # non-empty
-            researcher_role = text
-            break
+            role_parts.append(text)
+    if len(role_parts) > 0:
+        researcher_role = " ".join(role_parts)
 
     publications = []
 
