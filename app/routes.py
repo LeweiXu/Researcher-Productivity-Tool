@@ -63,43 +63,11 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
 # ------------------------
 @router.get("/universities", response_class=HTMLResponse)
 def universities(request: Request):
-    db = SessionLocal()
-
-    # Optional sorting: allow ?sort_by=accounting_count|finance_count|total_researchers (default total_researchers)
-    sort_by = request.query_params.get("sort_by", "total_researchers")
-    sort_col_map = {
-        "accounting_count": "accounting_count",
-        "finance_count": "finance_count",
-        "total_researchers": "total_researchers",
-    }
-
-    # Build aggregated query
-    qry = (
-        db.query(
-            Researchers.university.label("name"),
-            func.count(Researchers.id).label("total_researchers"),
-            func.sum(case((Researchers.field == "Accounting", 1), else_=0)).label("accounting_count"),
-            func.sum(case((Researchers.field == "Finance", 1), else_=0)).label("finance_count"),
-        )
-        .group_by(Researchers.university)
-    )
-
-    rows = qry.all()
-    db.close()
-
-    # Sort in Python based on the chosen column (descending)
-    key_name = sort_col_map.get(sort_by, "total_researchers")
-    universities_data = sorted(rows, key=lambda r: getattr(r, key_name) or 0, reverse=True)
-
+    university_list, variable_label = get_university_data(request)
     return templates.TemplateResponse(
         "universities.html",
-        {
-            "request": request,
-            "universities": universities_data,
-            "variable_label": "Researchers by Field"
-        }
+        {"request": request, "universities": university_list, "variable_label": variable_label},
     )
-
 
 # ------------------------
 # Admin page
@@ -184,4 +152,5 @@ def download_master_csv(request: Request):
     ts = datetime.datetime.now().strftime("%Y-%m-%d")
     filename = f"master_spreadsheet_{ts}.csv"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(csv_iter(), media_type="text/csv", headers=headers)
     return StreamingResponse(csv_iter(), media_type="text/csv", headers=headers)
