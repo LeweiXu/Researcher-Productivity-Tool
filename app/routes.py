@@ -1,20 +1,15 @@
-from fastapi import APIRouter, Request, Form, status, Path
+from fastapi import APIRouter, Request, Path
 from fastapi.responses import HTMLResponse, RedirectResponse
-from starlette.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import func, case
-from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.models import Researchers, Publications, Journals
-from typing import Optional
 from app.helpers.researchers_funcs import get_researcher_data
 from app.helpers.researcher_profile_funcs import get_researcher_profile
-from app.helpers.universities_funcs import get_university_data  # (unused now, but you can remove if you want)
-
-import csv
-import io
-import datetime
-
+from app.helpers.universities_funcs import get_university_data
+from app.helpers.admin_funcs import (
+    download_master_csv,
+    download_ABDC_template,
+    download_clarivate_template,
+    download_UWA_staff_field_template,
+)
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
@@ -98,59 +93,27 @@ def logout_post(request: Request):
 
 
 # ------------------------
-# Download Master Spreadsheet (Researchers + Publications + Journals)
+# Admin Download Functionalities
 # ------------------------
 @router.get("/admin/download/researchers.csv")
-def download_master_csv(request: Request):
-    """
-    Streams a master spreadsheet joining Researchers, Publications, and Journals.
-    Each row = one publication of one researcher with its journal.
-    All columns from all three tables are included.
-    """
-    user = request.session.get("user")
-    if not user:
-        return RedirectResponse(url="/", status_code=303)
+def download_master_csv_route(request: Request):
+    return download_master_csv(request)
 
-    db: Session = SessionLocal()
 
-    # Get all columns for each table
-    researcher_cols = [c.name for c in Researchers.__table__.columns]
-    publication_cols = [c.name for c in Publications.__table__.columns]
-    journal_cols = [c.name for c in Journals.__table__.columns]
+@router.get("/admin/download/abdc_template.csv")
+def abdc_template_route():
+    return download_ABDC_template()
 
-    # Build query with all columns
-    qry = (
-        db.query(
-            *[getattr(Publications, col) for col in publication_cols],
-            *[getattr(Researchers, col) for col in researcher_cols],
-            *[getattr(Journals, col) for col in journal_cols],
-        )
-        .join(Researchers, Publications.researcher_id == Researchers.id)
-        .join(Journals, Publications.journal_id == Journals.id)
-    )
 
-    # Header: publication columns + researcher columns + journal columns
-    header = publication_cols + researcher_cols + journal_cols
+@router.get("/admin/download/clarivate_template.csv")
+def clarivate_template_route():
+    return download_clarivate_template()
 
-    def csv_iter():
-        buf = io.StringIO()
-        writer = csv.writer(buf)
 
-        # header
-        writer.writerow(header)
-        yield buf.getvalue()
-        buf.seek(0); buf.truncate(0)
+@router.get("/admin/download/UWA_staff_field_template.csv")
+def uwa_staff_field_template_route():
+    return download_UWA_staff_field_template()
 
-        # rows
-        for row in qry.yield_per(500):
-            writer.writerow(row)
-            yield buf.getvalue()
-            buf.seek(0); buf.truncate(0)
-
-        db.close()
-
-    ts = datetime.datetime.now().strftime("%Y-%m-%d")
-    filename = f"master_spreadsheet_{ts}.csv"
-    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-    return StreamingResponse(csv_iter(), media_type="text/csv", headers=headers)
-    return StreamingResponse(csv_iter(), media_type="text/csv", headers=headers)
+# ------------------------
+# Admin Upload Functionalities
+# ------------------------
