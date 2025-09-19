@@ -19,10 +19,9 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 #------------------------
-# Utility functions
+# Helper function
 #------------------------
 def competition_rank(sorted_rows, value_fn):
-    """sorted_rows must already be DESC by the metric."""
     out = []
     prev = object()
     rank = 0
@@ -52,7 +51,7 @@ def home(request: Request):
 @router.get("/researchers", response_class=HTMLResponse)
 def researchers(request: Request):
     researcher_list, variable_label = get_researcher_data(request)
-    # Ensure DESC sort by the metric shown in the table
+    
     researcher_list = sorted(
         researcher_list,
         key=lambda d: d.get("variable_value") or 0,
@@ -69,7 +68,7 @@ def researchers(request: Request):
         "researchers.html",
         {
             "request": request,
-            "researchers": researchers_with_rank,  # now has .rank
+            "researchers": researchers_with_rank, 
             "variable_label": variable_label
         }
     )
@@ -120,7 +119,7 @@ def universities(request: Request):
     key_name = sort_col_map.get(sort_by, "total_researchers")
     universities_data = sorted(rows, key=lambda r: getattr(r, key_name) or 0, reverse=True)
 
-    # Tie-aware ranks; flatten to dicts for template
+    
     ranked = competition_rank(universities_data, value_fn=lambda r: getattr(r, key_name) or 0)
     universities_with_rank = [
         {
@@ -136,20 +135,11 @@ def universities(request: Request):
         "universities.html",
         {
             "request": request,
-            "universities": universities_with_rank,  # now has .rank
+            "universities": universities_with_rank, 
             "variable_label": "Researchers by Field"
         }
     )
-'''
-    return templates.TemplateResponse(
-        "universities.html",
-        {
-            "request": request,
-            "universities": universities_data,
-            "variable_label": "Researchers by Field"
-        }
-    )
-'''
+
 
 # ------------------------
 # Admin page
