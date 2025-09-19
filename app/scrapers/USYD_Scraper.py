@@ -80,8 +80,9 @@ def _get_scoped_page_researchers(driver):
         name = (name_el.text or "").strip()
         href = (a.get_attribute("href") or "").split("#")[0]
         print(name)
-        role_el = b.find_element(By.CSS_SELECTOR, "div.m-find-a-researcher__profile-wrapper--profile-title p")
-        role = (role_el.text or "").strip()
+        role_el = b.find_element(By.CLASS_NAME, "m-find-a-researcher__profile-wrapper--profile-title")
+        role = role_el.text.strip()
+        role = role.replace("\n", " ")
         if name and href and role:
             out.append((name, href, role))
     return out

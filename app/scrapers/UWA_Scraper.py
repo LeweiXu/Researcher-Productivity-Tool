@@ -27,9 +27,15 @@ def scrape_UWA():
         writer = csv.writer(f)
         writer.writerow(csv_header)
 
-    for profile_url, field in profile_urls:
-        print(f"Scraping profile: {profile_url} ({field})")
+    for profile_url in profile_urls:
+        print(f"Scraping profile: {profile_url}")
         name, job_title, publications_info = scrape_publications(profile_url, driver)
+        
+        # Lookup field in csv
+        print('Getting fields from "UWA Accounting Finance Staff_YW.csv"')
+        field = field_lookup.get(name, None)
+        print(f"Researcher: {name}, Field: {field}")
+
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
             with open("app/files/UWA_data.csv", mode="a", newline='', encoding="utf-8") as f:
