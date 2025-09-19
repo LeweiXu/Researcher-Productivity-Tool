@@ -6,7 +6,7 @@
     "MU": "MONASH",
     "ANU": "ANU",
     "UA": "UA",
-    "UM": "UoM",
+    "UM": "UM",
     "UNSW": "UNSW",
     "UQ": "UQ",
     "USYD": "USYD",
@@ -71,20 +71,24 @@
         <a href="{{ url_for('researchers')}}?university={{ researcher.university }}&field={{ researcher.department }}">{{ researcher.department }}</a>
     </div>
 
-    <!-- Human-readable academic level -->
+    <!-- Preferred: show actual job title from data; fallback to letter mapping if absent -->
     <div class="level">
-        {% if researcher.level == "A" %}
-            Associate Lecturer
-        {% elif researcher.level == "B" %}
-            Lecturer
-        {% elif researcher.level == "C" %}
-            Senior Lecturer
-        {% elif researcher.level == "D" %}
-            Associate Professor
-        {% elif researcher.level == "E" %}
-            Professor
+        {% if researcher.job_title %}
+            {{ researcher.job_title }}
         {% else %}
-            {{ researcher.level }}
+            {% if researcher.level == "A" %}
+                Associate Lecturer
+            {% elif researcher.level == "B" %}
+                Lecturer
+            {% elif researcher.level == "C" %}
+                Senior Lecturer
+            {% elif researcher.level == "D" %}
+                Associate Professor
+            {% elif researcher.level == "E" %}
+                Professor
+            {% else %}
+                {{ researcher.level }}
+            {% endif %}
         {% endif %}
     </div>
 
