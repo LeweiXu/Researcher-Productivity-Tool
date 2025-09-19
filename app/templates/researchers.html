@@ -86,7 +86,7 @@
     <tbody>
         {% for researcher in researchers %}
         <tr style="text-align:center; border-bottom: 1px solid #eee;">
-            <td style="padding: 10px 6px;">{{ loop.index }}</td>
+            <td style="padding: 10px 6px;">{{ researcher.rank }}</td>
             <td style="padding: 10px 6px;"><a href="/researchers/{{ researcher.id }}" style="color:#1976d2; text-decoration:underline;">{{ researcher.name }}</a></td>
             <td style="padding: 10px 6px;">{{ researcher.FoR or researcher.for or researcher.field or '' }}</td>
             <td style="padding: 10px 6px;">{{ researcher.level }}</td>
