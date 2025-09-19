@@ -148,10 +148,6 @@ def standardize(data):
             if row[i] == "":
                 row[i] = None
 
-        # Clean researcher name
-        if len(row) > 5 and row[5]:
-            row[5] = title_pattern.sub("", row[5]).strip()
-
         # Remove unwanted characters from publication type for big 3 universities
         if len(row) > 2 and row[2]:
             type_val = row[2]
@@ -189,6 +185,18 @@ def standardize(data):
         else:
             row[7] = None
         
+        # Check name for title if no title found
+        name_roles = ["Associate Professor", "Professor"]
+        name_roles = sorted(name_roles, key=len, reverse=True)
+        if row[7] is None:
+            for role in name_roles:
+                if role.lower() in row[5].lower():
+                    row[7] =  role
+
+        # Clean researcher name
+        if len(row) > 5 and row[5]:
+            row[5] = title_pattern.sub("", row[5]).strip()
+
         # Add role levels
         role_level_map = {
             "Associate Lecturer": "A",
