@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="entry-section p-4">
+                <h2 class="text-center">Login</h2>
+                <p class="text-center">This is a dummy login. Any username and password will work.</p>
+                <form id="dummyLoginForm" action="/login" method="post">
+                    <div class="mb-3">
+                        <label for="dummy-username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="dummy-username" name="username" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="dummy-password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="dummy-password" name="password" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <div class="text-center mt-3">
+                    Don't have an account? <a href="/register">Register</a>
+                </div>
+                <div id="dummy-login-success" class="alert alert-success text-center mt-3" style="display:none;">Login successful! (dummy)</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

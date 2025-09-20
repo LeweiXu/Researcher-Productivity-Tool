@@ -27,26 +27,36 @@
     </div>
     <div class="mb-4">
         <h4>Upload CSV</h4>
-        <form>
-            <input type="file" class="form-control mb-2" accept=".csv">
-            <button type="submit" class="btn btn-primary">Upload</button>
-        </form>
+        <div class="mb-3">
+            <h6>ABDC Rankings</h6>
+            <form class="d-flex align-items-center" action="/admin/upload/abdc" method="post" enctype="multipart/form-data">
+                <input type="file" class="form-control me-2" name="abdc_csv" accept=".csv">
+                <button type="submit" class="btn btn-primary me-2">Upload</button>
+                <a href="/admin/download/abdc_template.csv" class="btn btn-link">Download Template</a>
+            </form>
+        </div>
+        <div class="mb-3">
+            <h6>Clarivate Rankings</h6>
+            <form class="d-flex align-items-center" action="/admin/upload/clarivate" method="post" enctype="multipart/form-data">
+                <input type="file" class="form-control me-2" name="clarivate_csv" accept=".csv">
+                <button type="submit" class="btn btn-primary me-2">Upload</button>
+                <a href="/admin/download/clarivate_template.csv" class="btn btn-link">Download Template</a>
+            </form>
+        </div>
+        <div class="mb-3">
+            <h6>UWA Staff to Field Mappings</h6>
+            <form class="d-flex align-items-center" action="/admin/upload/uwa_staff_field" method="post" enctype="multipart/form-data">
+                <input type="file" class="form-control me-2" name="uwa_staff_field_csv" accept=".csv">
+                <button type="submit" class="btn btn-primary me-2">Upload</button>
+                <a href="/admin/download/UWA_staff_field_template.csv" class="btn btn-link">Download Template</a>
+            </form>
+        </div>
     </div>
-    <div>
-        <h4>Create New User</h4>
-        <form>
-            <div class="mb-2">
-                <input type="text" class="form-control" placeholder="Username">
-            </div>
-            <div class="mb-2">
-                <input type="email" class="form-control" placeholder="Email">
-            </div>
-            <div class="mb-2">
-                <input type="password" class="form-control" placeholder="Password">
-            </div>
-            <button type="submit" class="btn btn-success">Create User</button>
-        </form>
-    </div>
+    {% if flash %}
+        <div class="alert alert-info mt-3" role="alert">
+            {{ flash|safe }}
+        </div>
+    {% endif %}
     <div class="mt-4">
         <form action="/logout" method="post">
             <button type="submit" class="btn btn-danger">Logout</button>

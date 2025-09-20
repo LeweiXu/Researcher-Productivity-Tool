@@ -21,12 +21,19 @@ def get_university_data(request: Request):
                     universities[uni] = {
                         "name": uni,
                         "num_researchers": 0,
+                        "accounting_count": 0,
+                        "finance_count": 0,
                         "total_articles": 0,
                         "abdc_a_star_a": 0,
                         "jif_list": [],
                         "jif5_list": [],
                     }
                 universities[uni]["num_researchers"] += 1
+                # Count researchers per field
+                if r.field == "Accounting":
+                    universities[uni]["accounting_count"] += 1
+                elif r.field == "Finance":
+                    universities[uni]["finance_count"] += 1
             for pub in publications:
                 researcher = next((r for r in researchers if r.id == pub.researcher_id), None)
                 if not researcher:
@@ -49,6 +56,8 @@ def get_university_data(request: Request):
                 university_list.append({
                     "name": stats["name"],
                     "num_researchers": stats["num_researchers"],
+                    "accounting_count": stats["accounting_count"],
+                    "finance_count": stats["finance_count"],
                     "total_articles": stats["total_articles"],
                     "abdc_a_star_a": stats["abdc_a_star_a"],
                     "avg_jif": avg_jif,
