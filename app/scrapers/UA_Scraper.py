@@ -203,7 +203,7 @@ def scrape_UA(headless: bool = False):
         profile_pairs = list(profile_pairs_set)
         print(f"Resolved {len(profile_pairs)} researcher profile URLs (with fields).")
         csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
-        with open("app/files/UA_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        with open("app/files/temp/UA_data.csv", mode="w", newline='', encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(csv_header)
 
@@ -212,7 +212,7 @@ def scrape_UA(headless: bool = False):
             html = open_publications_journals(driver, profile_url)
             publications = parse_researcher_profile(html, profile_url)
             for row in publications:
-                with open("app/files/UA_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                with open("app/files/temp/UA_data.csv", mode="a", newline='', encoding="utf-8") as f:
                     writer = csv.writer(f)
                     writer.writerow(row + [field])  # append field as a separate field
 

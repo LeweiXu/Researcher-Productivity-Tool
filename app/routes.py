@@ -275,5 +275,3 @@ async def scraper_status(request: Request):
     """Endpoint for the frontend to poll for scraper progress and logs."""
     global scraper_status_data
     return JSONResponse(content=scraper_status_data)
-
-
