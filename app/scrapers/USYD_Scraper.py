@@ -305,7 +305,7 @@ def scrape_USYD(urls: List[str] = URLS, *, print_names: bool = False) -> List[Li
     """Collect and return CSV rows only (no header, no writing)."""
     d = make_driver()
     csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
-    with open("app/files/USYD_data.csv", mode="w", newline='', encoding="utf-8") as f:
+    with open("app/files/temp/USYD_data.csv", mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
 
@@ -323,7 +323,7 @@ def scrape_USYD(urls: List[str] = URLS, *, print_names: bool = False) -> List[Li
                         job_title_split = lines[i][-2].split('\n')
                         if len(job_title_split) > 1:
                             lines[i][-2] = job_title_split[0].strip()
-                    with open("app/files/USYD_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                    with open("app/files/temp/USYD_data.csv", mode="a", newline='', encoding="utf-8") as f:
                         writer = csv.writer(f)
                         writer.writerows(lines)  # write all rows for this researcher
                 except Exception as e:

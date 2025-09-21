@@ -4,7 +4,7 @@ import csv
 from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
 
 # Load classification CSV
-df = pd.read_csv("app/files/UWA Accounting Finance Staff_YW.csv", encoding="latin1")
+df = pd.read_csv("app/files/uploads_current/UWA_staff_field_mapping.csv", encoding="latin1")
 field_lookup = dict(zip(df["Name"], df["Field"]))
 
 def scrape_UWA():
@@ -23,7 +23,7 @@ def scrape_UWA():
     print(f"Found {len(profile_urls)} profile URLs")
 
     csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
-    with open("app/files/UWA_data.csv", mode="w", newline='', encoding="utf-8") as f:
+    with open("app/files/temp/UWA_data.csv", mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
 
@@ -38,6 +38,6 @@ def scrape_UWA():
 
         print(f"Found {len(publications_info)} publications in {profile_url}")
         for line in publications_info:
-            with open("app/files/UWA_data.csv", mode="a", newline='', encoding="utf-8") as f:
+            with open("app/files/temp/UWA_data.csv", mode="a", newline='', encoding="utf-8") as f:
                 writer = csv.writer(f)
                 writer.writerow(line + [name, profile_url, job_title, field])  # Append fields

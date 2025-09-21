@@ -249,7 +249,7 @@ def scrape_UQ(headless: bool = False):
         print(f"Resolved {len(profiles_sorted)} researcher profile URLs.")
 
         csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
-        with open("app/files/UQ_data.csv", mode="w", newline='', encoding="utf-8") as f:
+        with open("app/files/temp/UQ_data.csv", mode="w", newline='', encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(csv_header)
         for i, (profile_url, dept) in enumerate(profiles_sorted, 1):
@@ -258,7 +258,7 @@ def scrape_UQ(headless: bool = False):
             publications = parse_researcher_profile(html, profile_url)
             print(f"  parsed {len(publications)} pubs")
             for row in publications:
-                with open("app/files/UQ_data.csv", mode="a", newline='', encoding="utf-8") as f:
+                with open("app/files/temp/UQ_data.csv", mode="a", newline='', encoding="utf-8") as f:
                     writer = csv.writer(f)
                     writer.writerow(row + [dept])  # append department as a separate field
 
