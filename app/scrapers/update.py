@@ -8,15 +8,40 @@ from app.scrapers.UM_Scraper import scrape_UM
 from app.scrapers.USYD_Scraper import scrape_USYD
 from app.scrapers.helpers.util import write_to_db, match_journals
 
-def update_all(db=True, match=True):
-    update_UWA(db, match)
-    update_MU(db, match)
-    update_ANU(db, match)
-    update_UNSW(db, match)
-    update_UA(db, match)
-    update_UQ(db, match)
-    update_UM(db, match)
-    update_USYD(db, match)
+def update_all(db=True, match=True, progress_callback=None):
+    """
+    Runs all university scrapers sequentially and calls a callback function 
+    to report progress after each one.
+    """
+    scrapers = [
+        # update_UWA, # Temporarily ignored as requested due to issues
+        update_MU,
+        update_ANU,
+        update_UNSW,
+        update_UA,
+        update_UQ,
+        update_UM,
+        update_USYD
+    ]
+    total_scrapers = len(scrapers)
+    
+    # Handle case where no scrapers are listed
+    if total_scrapers == 0 and progress_callback:
+        progress_callback(100)
+        return
+
+    for i, scraper_func in enumerate(scrapers):
+        try:
+            print(f"--- Running scraper: {scraper_func.__name__} ---")
+            scraper_func(db, match)
+        except Exception as e:
+            # Print error but continue to the next scraper
+            print(f"!!! Error in {scraper_func.__name__}: {e} !!!")
+        finally:
+            # This block is GUARANTEED to run, ensuring progress is always updated.
+            if progress_callback:
+                progress = int(((i + 1) / total_scrapers) * 100)
+                progress_callback(progress)
 
 def update_UWA(db=True, match=True):
     scrape_UWA()
@@ -59,4 +84,4 @@ def update_USYD(db=True, match=True):
     if match: match_journals(university="USYD")
 
 if __name__ == "__main__":
-    update_UWA()
+    update_ANU()

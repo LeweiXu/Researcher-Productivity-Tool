@@ -22,13 +22,19 @@ def match_journals(threshold=95, force=False, university="all"):
         print(f"Total publications to process: {total}")
         progress_bar_len = 40
 
+        # If force=True, reset all Publications.journal_id to None
+        if force:
+            print("Resetting all Publications.journal_id to None")
+            db.query(Publications).update({Publications.journal_id: None})
+            db.commit()
+
         def print_progress(count, total):
             filled_len = int(progress_bar_len * count // total)
             bar = '=' * filled_len + '-' * (progress_bar_len - filled_len)
             print(f"\r[{bar}] {count}/{total}", end='', flush=True)
 
         for idx, pub in enumerate(publications, 1):
-            if pub.journal_id and not force:
+            if pub.journal_id:
                 print_progress(idx, total)
                 continue
             if not pub.journal_name:
