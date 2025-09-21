@@ -40,7 +40,8 @@ def scrape_publications(profile_url, driver):
             name = ""
     # Try to get job title
     try:
-        job_title = driver.find_element(By.CSS_SELECTOR, "span.job-title").text.strip()
+        titles = [e.text.strip() for e in driver.find_elements(By.CSS_SELECTOR, "span.job-title") if e.text.strip()]
+        job_title = " ".join(dict.fromkeys(titles)) if titles else ""
         if job_title == "":
             # Try to get <p> under div.header.person-details
             try:
