@@ -14,7 +14,7 @@ def update_all(db=True, match=True, progress_callback=None):
     to report progress after each one.
     """
     scrapers = [
-        # update_UWA, # Temporarily ignored as requested due to issues
+        update_UWA, # Temporarily ignored as requested due to issues
         update_MU,
         update_ANU,
         update_UNSW,
@@ -84,4 +84,4 @@ def update_USYD(db=True, match=True):
     if match: match_journals(university="USYD")
 
 if __name__ == "__main__":
-    update_ANU()
+    update_all()
