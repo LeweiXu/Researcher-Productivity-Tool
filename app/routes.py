@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form, status, Path
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from starlette.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, case
@@ -9,15 +9,23 @@ from app.models import Researchers, Publications, Journals
 from typing import Optional
 from app.helpers.researchers_funcs import get_researcher_data
 from app.helpers.researcher_profile_funcs import get_researcher_profile
-from app.helpers.universities_funcs import get_university_data  # (unused now, but you can remove if you want)
+from app.helpers.universities_funcs import get_university_data
 
 import csv
 import io
+import sys
 import datetime
+import threading
+import traceback
+from contextlib import redirect_stdout
+from app.scrapers import update as scraper_update
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+# --- New Global State Variable with 'logs' key ---
+# This dictionary now holds logs in addition to progress and messages.
+scraper_status_data = {"progress": 0, "message": "Not started", "logs": []}
 #------------------------
 # Helper function
 #------------------------
@@ -231,3 +239,78 @@ def download_master_csv(request: Request):
     filename = f"master_spreadsheet_{ts}.csv"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return StreamingResponse(csv_iter(), media_type="text/csv", headers=headers)
+# ------------------------
+# Scraper Endpoints
+# ------------------------
+
+
+class FrontendLogHandler(io.StringIO):
+    """
+    A custom stream handler that captures print statements
+    and appends them to our global status dictionary's log list.
+    """
+    def write(self, s):
+        global scraper_status_data
+        line = s.strip()
+        if line:
+            scraper_status_data["logs"].append(line)
+        # Also write to the actual stdout to see logs in the terminal
+        sys.__stdout__.write(s)
+        sys.__stdout__.flush()
+
+
+def run_scraper_task():
+    """
+    This function runs in a separate thread and uses the FrontendLogHandler
+    to capture all print outputs.
+    """
+    global scraper_status_data
+    scraper_status_data['progress'] = 0
+    scraper_status_data['message'] = 'Scraping started...'
+    scraper_status_data['logs'] = [] # Reset logs for a new run
+    
+    log_capture = FrontendLogHandler()
+    
+    try:
+        # Redirect all standard output within this block to our handler
+        with redirect_stdout(log_capture):
+            scraper_update.update_all(progress_callback=update_progress)
+        
+        if scraper_status_data.get('progress') != -1:
+             scraper_status_data['message'] = 'Completed successfully!'
+
+    except Exception as e:
+        # Capture any exceptions as well
+        error_message = traceback.format_exc()
+        scraper_status_data['logs'].append(error_message)
+        scraper_status_data['progress'] = -1
+        scraper_status_data['message'] = f"An error occurred: {e}"
+
+def update_progress(progress):
+    """Callback function to update the global progress status."""
+    global scraper_status_data
+    scraper_status_data['progress'] = progress
+
+@router.post("/admin/run-scraper")
+async def run_scraper(request: Request):
+    """Endpoint to start the scraper thread."""
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/", status_code=303)
+    
+    if any("run_scraper_task" in t.name for t in threading.enumerate()):
+        return JSONResponse(content={"message": "Scraper is already running."}, status_code=409)
+
+    global scraper_status_data
+    scraper_status_data = {"progress": 0, "message": "Not started", "logs": []}
+    
+    thread = threading.Thread(target=run_scraper_task, name="run_scraper_task")
+    thread.start()
+    
+    return JSONResponse(content={"message": "Scraper started"})
+
+@router.get("/admin/scraper-status")
+async def scraper_status(request: Request):
+    """Endpoint for the frontend to poll for scraper progress and logs."""
+    global scraper_status_data
+    return JSONResponse(content=scraper_status_data)
