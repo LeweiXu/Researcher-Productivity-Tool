@@ -280,7 +280,7 @@ def get_works_website(academics, driver):
 
 def scrape_UM():
     csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field", "Level"]
-    with open("app/files/ANU_data.csv", mode="w", newline='', encoding="utf-8") as f:
+    with open("app/files/temp/ANU_data.csv", mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
 
@@ -289,7 +289,7 @@ def scrape_UM():
         staff_list = get_staff(url, driver, field)
 
         academic_list = clean_staff(staff_list)
-        with open("app/files/UM_data.csv", mode="a", newline='', encoding="utf-8") as f:
+        with open("app/files/temp/UM_data.csv", mode="a", newline='', encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerows(get_works_website(academic_list, driver))
             writer.writerows(get_works_openalex(academic_list))

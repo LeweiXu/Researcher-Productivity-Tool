@@ -29,13 +29,14 @@
     </form>
 </div>
 
-<table style="margin: 30px auto; border-collapse: collapse; width: 95%; max-width: 1000px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+<table id="universities-table" style="margin: 30px auto; border-collapse: collapse; width: 95%; max-width: 1000px; background: #fff; box-shadow: 0 2px 8px #ccc;">
     <thead>
         <tr style="background: #1976d2; color: #fff; text-align: center;">
-            <th style="padding: 12px 8px;">Rank</th>
-            <th style="padding: 12px 8px;">University</th>
-            <th style="padding: 12px 8px;">Total Researchers (Accounting)</th>
-            <th style="padding: 12px 8px;">Total Researchers (Finance)</th>
+            <th style="padding: 12px 8px;" data-type="number">Rank <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="text">University <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="number">Total Researchers (Accounting) <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="number">Total Researchers (Finance) <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="number">{{ variable_label }} <span class="arrow"></span></th>
         </tr>
     </thead>
     <tbody>
@@ -45,8 +46,69 @@
             <td style="padding: 10px 6px;">{{ uni_map.get(university.name, university.name) }}</td>
             <td style="padding: 10px 6px;">{{ university.accounting_count }}</td>
             <td style="padding: 10px 6px;">{{ university.finance_count }}</td>
+            <td style="padding: 10px 6px;">{{ university.variable_value }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+<script>
+    const table = document.getElementById('universities-table');
+    const tbody = table.tBodies[0];
+    const headers = table.tHead.rows[0].cells;
+    const sortState = Array.from(headers).map(() => null);
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    function renderSortArrows(activeIdx) {
+        Array.from(headers).forEach((th, i) => {
+            const arrow = th.querySelector('.arrow');
+            if (!arrow) return;
+            if (i === activeIdx) {
+                arrow.textContent = sortState[i] === 'asc' ? '▲' : '▼';
+            } else {
+                arrow.textContent = '';
+            }
+        });
+    }
+
+    const getCellText = (tr, idx) => (tr.children[idx]?.textContent || '').trim();
+
+    const asNumber = (v) => {
+        const cleaned = v.replace(/[, ]+/g, '');
+        return parseFloat(cleaned);
+    };
+
+    const compareFactory = (idx, dir, type) => {
+        const mul = dir === 'asc' ? 1 : -1;
+        return (a, b) => {
+            let va = getCellText(a, idx);
+            let vb = getCellText(b, idx);
+            if (type === 'number') {
+                const na = asNumber(va);
+                const nb = asNumber(vb);
+                if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+                    return (na - nb) * mul;
+                }
+            }
+            return va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' }) * mul;
+        };
+    };
+
+    Array.from(headers).forEach((th, idx) => {
+        th.addEventListener('click', () => {
+            sortState[idx] = sortState[idx] === 'asc' ? 'desc' : 'asc';
+            sortState.forEach((_, i) => { if (i !== idx) sortState[i] = null; });
+
+            const type = th.dataset.type || 'text';
+            const dir = sortState[idx] || 'asc';
+
+            rows.sort(compareFactory(idx, dir, type));
+            rows.forEach(row => tbody.appendChild(row));
+            renderSortArrows(idx);
+        });
+    });
+
+    renderSortArrows(0);
+</script>
 {% endblock %}
