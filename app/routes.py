@@ -27,6 +27,21 @@ templates = Jinja2Templates(directory="app/templates")
 # This dictionary now holds logs in addition to progress and messages.
 scraper_status_data = {"progress": 0, "message": "Not started", "logs": []}
 
+#------------------------
+# Helper function
+#------------------------
+def competition_rank(sorted_rows, value_fn):
+    out = []
+    prev = object()
+    rank = 0
+    for i, row in enumerate(sorted_rows, start=1):
+        val = value_fn(row) or 0
+        if val != prev:
+            rank = i
+            prev = val
+        out.append((rank, row))
+    return out
+
 
 # ------------------------
 # Home page
@@ -45,11 +60,24 @@ def home(request: Request):
 @router.get("/researchers", response_class=HTMLResponse)
 def researchers(request: Request):
     researcher_list, variable_label = get_researcher_data(request)
+    
+    researcher_list = sorted(
+        researcher_list,
+        key=lambda d: d.get("variable_value") or 0,
+        reverse=True
+    )
+
+    ranked = competition_rank(
+        researcher_list,
+        value_fn=lambda d: d.get("variable_value") or 0
+    )
+    researchers_with_rank = [{**d, "rank": rk} for rk, d in ranked]
+
     return templates.TemplateResponse(
         "researchers.html",
         {
             "request": request,
-            "researchers": researcher_list,
+            "researchers": researchers_with_rank, 
             "variable_label": variable_label
         }
     )
@@ -100,11 +128,23 @@ def universities(request: Request):
     key_name = sort_col_map.get(sort_by, "total_researchers")
     universities_data = sorted(rows, key=lambda r: getattr(r, key_name) or 0, reverse=True)
 
+    
+    ranked = competition_rank(universities_data, value_fn=lambda r: getattr(r, key_name) or 0)
+    universities_with_rank = [
+        {
+            "rank": rk,
+            "name": r.name,
+            "accounting_count": r.accounting_count,
+            "finance_count": r.finance_count,
+        }
+        for rk, r in ranked
+    ]
+
     return templates.TemplateResponse(
         "universities.html",
         {
             "request": request,
-            "universities": universities_data,
+            "universities": universities_with_rank, 
             "variable_label": "Researchers by Field"
         }
     )
@@ -275,5 +315,4 @@ async def scraper_status(request: Request):
     """Endpoint for the frontend to poll for scraper progress and logs."""
     global scraper_status_data
     return JSONResponse(content=scraper_status_data)
-
 
