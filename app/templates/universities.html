@@ -42,7 +42,7 @@
     <tbody>
         {% for university in universities %}
         <tr style="text-align:center; border-bottom: 1px solid #eee;">
-            <td style="padding: 10px 6px;">{{ loop.index }}</td>
+            <td style="padding: 10px 6px;">{{ university.rank }}</td>
             <td style="padding: 10px 6px;">{{ uni_map.get(university.name, university.name) }}</td>
             <td style="padding: 10px 6px;">{{ university.accounting_count }}</td>
             <td style="padding: 10px 6px;">{{ university.finance_count }}</td>
