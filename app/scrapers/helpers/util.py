@@ -73,7 +73,7 @@ def match_journals(threshold=95, force=False, university="all"):
 
 def write_to_db(university):
     print(f"Writing {university} data to database")
-    csv_path = f"app/files/{university}_data.csv"
+    csv_path = f"app/files/temp/{university}_data.csv"
     all_data = []
     with open(csv_path, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
