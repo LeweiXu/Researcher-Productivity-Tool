@@ -26,6 +26,7 @@ templates = Jinja2Templates(directory="app/templates")
 # --- New Global State Variable with 'logs' key ---
 # This dictionary now holds logs in addition to progress and messages.
 scraper_status_data = {"progress": 0, "message": "Not started", "logs": []}
+
 #------------------------
 # Helper function
 #------------------------
@@ -314,3 +315,4 @@ async def scraper_status(request: Request):
     """Endpoint for the frontend to poll for scraper progress and logs."""
     global scraper_status_data
     return JSONResponse(content=scraper_status_data)
+
