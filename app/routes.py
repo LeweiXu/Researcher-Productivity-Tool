@@ -55,6 +55,17 @@ def home(request: Request):
 
 
 # ------------------------
+# Documentation page
+# ------------------------
+@router.get("/documentation", response_class=HTMLResponse)
+def documentation(request: Request):
+    return templates.TemplateResponse(
+        "documentation.html",
+        {"request": request}
+    )
+
+
+# ------------------------
 # Researcher level ranking page
 # ------------------------
 @router.get("/researchers", response_class=HTMLResponse)
