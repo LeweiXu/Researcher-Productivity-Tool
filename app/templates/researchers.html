@@ -78,7 +78,7 @@
             <th style="padding: 12px 8px;" data-type="number">Rank <span class="arrow"></span></th>
             <th style="padding: 12px 8px;" data-type="text">Name <span class="arrow"></span></th>
             <th style="padding: 12px 8px;" data-type="text">FoR <span class="arrow"></span></th>
-            <th style="padding: 12px 8px;" data-type="text">Level <span class="arrow"></span></th>
+            <th style="padding: 12px 8px;" data-type="level">Level <span class="arrow"></span></th>
             <th style="padding: 12px 8px;" data-type="text">University <span class="arrow"></span></th>
             <th style="padding: 12px 8px;" data-type="number">{{ variable_label }} <span class="arrow"></span></th>
         </tr>
@@ -171,9 +171,22 @@
 
     const compareFactory = (idx, dir, type) => {
         const mul = dir === 'asc' ? 1 : -1;
+        const levelOrder = { A:1, B:2, C:3, D:4, E:5 };
         return (a, b) => {
             let va = getCellText(a, idx);
             let vb = getCellText(b, idx);
+
+            if (type === 'level') {
+                const aMissing = !va || va.toLowerCase() === 'none';
+                const bMissing = !vb || vb.toLowerCase() === 'none';
+                if (aMissing && bMissing) return 0;
+                if (aMissing) return 1;
+                if (bMissing) return -1;
+                const oa = levelOrder[va] || 0;
+                const ob = levelOrder[vb] || 0;
+                return (oa - ob) * (dir === 'asc' ? 1 : -1);
+            }
+
             if (type === 'number') {
                 const na = asNumber(va);
                 const nb = asNumber(vb);
