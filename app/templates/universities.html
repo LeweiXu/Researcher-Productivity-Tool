@@ -24,6 +24,9 @@
             <option value="abdc_a_star_a" {% if request.query_params.get('sort_by', 'total_researchers') == "abdc_a_star_a" %}selected{% endif %}>Total number of articles with A* or A rank journal</option>
             <option value="avg_jif" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_jif" %}selected{% endif %}>Average JIF of all articles</option>
             <option value="avg_jif_5" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of all articles</option>
+            <option value="avg_articles" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_articles" %}selected{% endif %}>Average number of articles per researcher</option>
+            <option value="avg_articles_accounting" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_articles_accounting" %}selected{% endif %}>Average number of articles per accounting researcher</option>
+            <option value="avg_articles_finance" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_articles_finance" %}selected{% endif %}>Average number of articles per finance researcher</option>
         </select>
         <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
     </form>

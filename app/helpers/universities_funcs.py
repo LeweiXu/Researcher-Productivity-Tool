@@ -24,6 +24,8 @@ def get_university_data(request: Request):
                         "accounting_count": 0,
                         "finance_count": 0,
                         "total_articles": 0,
+                        "accounting_articles": 0,
+                        "finance_articles": 0,
                         "abdc_a_star_a": 0,
                         "jif_list": [],
                         "jif5_list": [],
@@ -40,6 +42,10 @@ def get_university_data(request: Request):
                     continue
                 uni = researcher.university or "Unknown"
                 universities[uni]["total_articles"] += 1
+                if researcher.field == "Accounting":
+                    universities[uni]["accounting_articles"] += 1
+                elif researcher.field == "Finance":
+                    universities[uni]["finance_articles"] += 1
                 journal = journals.get(pub.journal_id)
                 if journal:
                     if journal.abdc_rank in ["A*", "A"]:
@@ -53,15 +59,23 @@ def get_university_data(request: Request):
             for uni, stats in universities.items():
                 avg_jif = round(sum(stats["jif_list"])/len(stats["jif_list"]), 2) if stats["jif_list"] else 0
                 avg_jif5 = round(sum(stats["jif5_list"])/len(stats["jif5_list"]), 2) if stats["jif5_list"] else 0
+                overall_avg_articles = round(stats["total_articles"]/stats["num_researchers"], 2) if stats["num_researchers"] else 0
+                accounting_avg_articles = round(stats["accounting_articles"]/stats["accounting_count"], 2) if stats["accounting_count"] else 0
+                finance_avg_articles = round(stats["finance_articles"]/stats["finance_count"], 2) if stats["finance_count"] else 0
                 university_list.append({
                     "name": stats["name"],
                     "num_researchers": stats["num_researchers"],
                     "accounting_count": stats["accounting_count"],
                     "finance_count": stats["finance_count"],
                     "total_articles": stats["total_articles"],
+                    "accounting_articles": stats["accounting_articles"],
+                    "finance_articles": stats["finance_articles"],
                     "abdc_a_star_a": stats["abdc_a_star_a"],
                     "avg_jif": avg_jif,
                     "avg_jif5": avg_jif5,
+                    "avg_articles_overall": overall_avg_articles,
+                    "avg_articles_accounting": accounting_avg_articles,
+                    "avg_articles_finance": finance_avg_articles,
                 })
             UNIVERSITY_STATS_CACHE = university_list
         finally:
@@ -95,6 +109,21 @@ def get_university_data(request: Request):
         for u in university_list:
             u["variable_value"] = u["avg_jif5"]
         university_list.sort(key=lambda x: x["avg_jif5"], reverse=True)
+    elif sort_by == "avg_articles":
+        variable_label = "Avg. Articles/Researcher"
+        for u in university_list:
+            u["variable_value"] = u["avg_articles_overall"]
+        university_list.sort(key=lambda x: x["avg_articles_overall"], reverse=True)
+    elif sort_by == "avg_articles_accounting":
+        variable_label = "Avg. Articles/Accounting Researcher"
+        for u in university_list:
+            u["variable_value"] = u["avg_articles_accounting"]
+        university_list.sort(key=lambda x: x["avg_articles_accounting"], reverse=True)
+    elif sort_by == "avg_articles_finance":
+        variable_label = "Avg. Articles/Finance Researcher"
+        for u in university_list:
+            u["variable_value"] = u["avg_articles_finance"]
+        university_list.sort(key=lambda x: x["avg_articles_finance"], reverse=True)
     else:
         variable_label = "Total Researchers"
         for u in university_list:
