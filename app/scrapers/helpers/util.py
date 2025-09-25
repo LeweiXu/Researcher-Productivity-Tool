@@ -91,7 +91,6 @@ def write_to_db(university):
             ])
 
     standardize(all_data) #standardize adds the Level field at index 9
-    print("Writing data to database")
     db = SessionLocal()
     try:
         for row in all_data:
@@ -147,6 +146,7 @@ def standardize(data):
     for row in data:
         # Check required fields
         if row[0] == "" or row[2] == "" or row[5] == "" or row[6] == "":
+            print(row)
             raise ValueError(f"Missing required field in row: {row}")
 
         # Ensure NULL fields are set to None
@@ -218,21 +218,14 @@ def standardize(data):
         if row[7] is None:
             role_level = None
         else:
-            role_level = role_level_map[row[7]]
+            try:
+                role_level = role_level_map[row[7]]
+            except KeyError:
+                role_level = None
         row.insert(9, role_level)
 
         # TODO: standardize "Type" e.g. journal article, contribution to journal etc. --> journal article
 
 if __name__ == "__main__":
-    CSV_PATHS = [
-        "app/files/UM_data.csv",
-        "app/files/UNSW_data.csv",
-        "app/files/USYD_data.csv",
-        "app/files/UQ_data.csv",
-        "app/files/UA_data.csv",
-    ]
-    for path in CSV_PATHS:
-        print("Processing:", path)
-        university = os.path.basename(path).split("_")[0]
-        write_to_db(university)
-        match_journals(university=university)
+    write_to_db("MU")
+    match_journals(university="MU")

@@ -32,12 +32,11 @@ def scrape_publications(profile_url, driver):
     time.sleep(2)
     # Try to get name robustly
     try:
-        name = driver.find_element(By.CSS_SELECTOR, "h1.name").text.strip()
+        # Extract name from profile_url, e.g. https://research.monash.edu/en/persons/viet-nga-cao
+        name_part = profile_url.rstrip('/').split('/')[-1]  # 'viet-nga-cao'
+        name = ' '.join(word.capitalize() for word in name_part.split('-'))
     except Exception:
-        try:
-            name = driver.find_element(By.CSS_SELECTOR, "h1").text.strip()
-        except Exception:
-            name = ""
+        name = ""
     # Try to get job title
     try:
         titles = [e.text.strip() for e in driver.find_elements(By.CSS_SELECTOR, "span.job-title") if e.text.strip()]
