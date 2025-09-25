@@ -1,8 +1,7 @@
 from app.models import Users
 from sqlalchemy.orm import Session
 import bcrypt
-from app.database import SessionLocal, engine
-from app.models import Base
+from app.database import SessionLocal
 
 def create_user(username: str, email: str, password: str):
     db = SessionLocal()

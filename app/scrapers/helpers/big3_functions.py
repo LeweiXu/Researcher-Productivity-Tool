@@ -100,7 +100,7 @@ def scrape_publications(profile_url, driver):
                     journal = ""
             except Exception:
                 journal = ""
-            publications_info.append([pub_title, year, type_val, journal, publication_url])
+            publications_info.append([pub_title, year, type_val, journal, publication_url, num_authors])
             print(f"Found publication: {pub_title}")
         page += 1
     return name, job_title, publications_info

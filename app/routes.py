@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Path, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from contextlib import redirect_stdout
-from app.scrapers import update as scraper_update
+from app.scrapers.update import update_all
 from app.scrapers.helpers.util import match_journals
 from app.scripts.CSV_imports import import_all_jif
 from app.helpers.researchers_funcs import get_researcher_data
@@ -195,7 +195,7 @@ def run_scraper_task():
     try:
         # Redirect all standard output within this block to our handler
         with redirect_stdout(log_capture):
-            scraper_update.update_all(progress_callback=update_progress)
+            update_all(progress_callback=update_progress)
         
         if scraper_status_data.get('progress') != -1:
              scraper_status_data['message'] = 'Completed successfully!'
