@@ -1,46 +1,29 @@
-from fastapi import APIRouter, Request, Form, status, Path
+from fastapi import APIRouter, Request, Path, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from starlette.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import func, case
-from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.models import Researchers, Publications, Journals
-from typing import Optional
+from contextlib import redirect_stdout
+from app.scrapers import update as scraper_update
+from app.scrapers.helpers.util import match_journals
+from app.scripts.CSV_imports import import_all_jif
 from app.helpers.researchers_funcs import get_researcher_data
 from app.helpers.researcher_profile_funcs import get_researcher_profile
 from app.helpers.universities_funcs import get_university_data
+from app.helpers.admin_funcs import (
+    download_master_csv,
+    download_ABDC_template,
+    download_clarivate_template,
+    download_UWA_staff_field_template,
+    save_uploaded_file,
+    replace_ABDC_rankings
+)
 
-import csv
 import io
 import sys
-import datetime
 import threading
 import traceback
-from contextlib import redirect_stdout
-from app.scrapers import update as scraper_update
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-
-# --- New Global State Variable with 'logs' key ---
-# This dictionary now holds logs in addition to progress and messages.
-scraper_status_data = {"progress": 0, "message": "Not started", "logs": []}
-
-#------------------------
-# Helper function
-#------------------------
-def competition_rank(sorted_rows, value_fn):
-    out = []
-    prev = object()
-    rank = 0
-    for i, row in enumerate(sorted_rows, start=1):
-        val = value_fn(row) or 0
-        if val != prev:
-            rank = i
-            prev = val
-        out.append((rank, row))
-    return out
 
 
 # ------------------------
@@ -55,40 +38,16 @@ def home(request: Request):
 
 
 # ------------------------
-# Documentation page
-# ------------------------
-@router.get("/documentation", response_class=HTMLResponse)
-def documentation(request: Request):
-    return templates.TemplateResponse(
-        "documentation.html",
-        {"request": request}
-    )
-
-
-# ------------------------
 # Researcher level ranking page
 # ------------------------
 @router.get("/researchers", response_class=HTMLResponse)
 def researchers(request: Request):
     researcher_list, variable_label = get_researcher_data(request)
-    
-    researcher_list = sorted(
-        researcher_list,
-        key=lambda d: d.get("variable_value") or 0,
-        reverse=True
-    )
-
-    ranked = competition_rank(
-        researcher_list,
-        value_fn=lambda d: d.get("variable_value") or 0
-    )
-    researchers_with_rank = [{**d, "rank": rk} for rk, d in ranked]
-
     return templates.TemplateResponse(
         "researchers.html",
         {
             "request": request,
-            "researchers": researchers_with_rank, 
+            "researchers": researcher_list,
             "variable_label": variable_label
         }
     )
@@ -112,22 +71,10 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
 @router.get("/universities", response_class=HTMLResponse)
 def universities(request: Request):
     university_list, variable_label = get_university_data(request)
-
-    ranked = competition_rank(
-        sorted(university_list, key=lambda u: u.get("variable_value") or 0, reverse=True),
-        value_fn=lambda u: u.get("variable_value") or 0
-    )
-    universities_with_rank = [{**u, "rank": rk} for rk, u in ranked]
-
     return templates.TemplateResponse(
         "universities.html",
-        {
-            "request": request,
-            "universities": universities_with_rank,
-            "variable_label": variable_label
-        }
+        {"request": request, "universities": university_list, "variable_label": variable_label},
     )
-
 
 # ------------------------
 # Admin page
@@ -135,10 +82,11 @@ def universities(request: Request):
 @router.get("/admin", response_class=HTMLResponse)
 async def admin(request: Request):
     user = request.session.get("user")
+    flash = request.session.pop("flash", None)
     if not user:
         # Not logged in, redirect to login or show error
-        return RedirectResponse(url="/", status_code=303)
-    return templates.TemplateResponse("admin.html", {"request": request, "user": user})
+        return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    return templates.TemplateResponse("admin.html", {"request": request, "user": user, "flash": flash})
 
 
 @router.post("/login")
@@ -158,71 +106,56 @@ def logout_post(request: Request):
 
 
 # ------------------------
-# Download Master Spreadsheet (Researchers + Publications + Journals)
+# Admin Download Functionalities
 # ------------------------
 @router.get("/admin/download/researchers.csv")
-def download_master_csv(request: Request):
-    """
-    Streams a master spreadsheet joining Researchers, Publications, and Journals.
-    Each row = one publication of one researcher with its journal.
-    """
-    user = request.session.get("user")
-    if not user:
-        return RedirectResponse(url="/", status_code=303)
+def download_master_csv_route(request: Request):
+    return download_master_csv(request)
 
-    db: Session = SessionLocal()
 
-    # Query join across three tables
-    qry = (
-        db.query(
-            Researchers.id.label("researcher_id"),
-            Researchers.name.label("researcher_name"),
-            Researchers.university,
-            Researchers.field,
-            Researchers.level,
-            Publications.id.label("publication_id"),
-            Publications.title.label("publication_title"),
-            Publications.year.label("publication_year"),
-            Journals.id.label("journal_id"),
-            Journals.name.label("journal_name"),
-            Journals.abdc_rank.label("journal_rank"),
+@router.get("/admin/download/abdc_template.csv")
+def abdc_template_route():
+    return download_ABDC_template()
+
+
+@router.get("/admin/download/clarivate_template.csv")
+def clarivate_template_route():
+    return download_clarivate_template()
+
+
+@router.get("/admin/download/UWA_staff_field_template.csv")
+def uwa_staff_field_template_route():
+    return download_UWA_staff_field_template()
+
+# ------------------------
+# Admin Upload Functionalities
+# ------------------------
+
+@router.post("/admin/upload/abdc")
+async def upload_abdc(
+    request: Request,
+    abdc_csv: UploadFile = File(None)
+):
+    if not abdc_csv:
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
         )
-        .join(Publications, Publications.researcher_id == Researchers.id)
-        .join(Journals, Journals.id == Publications.journal_id)
+    file_path = save_uploaded_file(abdc_csv)
+    # Flash message
+    request.session["flash"] = (
+        f"File '{abdc_csv.filename}' uploaded successfully.<br>"
+        "The website will be temporarily unavailable while the CSV file is being processed."
     )
+    replace_ABDC_rankings(file_path)
+    import_all_jif()  # Re-import all JIF data to refresh journal matches
+    match_journals(force=True)  # Re-match journals after ABDC update
+    return RedirectResponse(url="/admin", status_code=303)
 
-    # Define header
-    header = [
-        "researcher_id", "researcher_name", "university", "field", "level",
-        "publication_id", "publication_title", "publication_year",
-        "journal_id", "journal_name", "journal_rank"
-    ]
 
-    def csv_iter():
-        buf = io.StringIO()
-        writer = csv.writer(buf)
-
-        # header
-        writer.writerow(header)
-        yield buf.getvalue()
-        buf.seek(0); buf.truncate(0)
-
-        # rows
-        for row in qry.yield_per(500):
-            writer.writerow(row)
-            yield buf.getvalue()
-            buf.seek(0); buf.truncate(0)
-
-        db.close()
-
-    ts = datetime.datetime.now().strftime("%Y-%m-%d")
-    filename = f"master_spreadsheet_{ts}.csv"
-    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-    return StreamingResponse(csv_iter(), media_type="text/csv", headers=headers)
 # ------------------------
 # Scraper Endpoints
 # ------------------------
-
 
 class FrontendLogHandler(io.StringIO):
     """
@@ -237,7 +170,6 @@ class FrontendLogHandler(io.StringIO):
         # Also write to the actual stdout to see logs in the terminal
         sys.__stdout__.write(s)
         sys.__stdout__.flush()
-
 
 def run_scraper_task():
     """
