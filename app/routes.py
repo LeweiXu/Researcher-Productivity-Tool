@@ -55,6 +55,17 @@ def home(request: Request):
 
 
 # ------------------------
+# Documentation page
+# ------------------------
+@router.get("/documentation", response_class=HTMLResponse)
+def documentation(request: Request):
+    return templates.TemplateResponse(
+        "documentation.html",
+        {"request": request}
+    )
+
+
+# ------------------------
 # Researcher level ranking page
 # ------------------------
 @router.get("/researchers", response_class=HTMLResponse)
@@ -100,52 +111,20 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
 # ------------------------
 @router.get("/universities", response_class=HTMLResponse)
 def universities(request: Request):
-    db = SessionLocal()
+    university_list, variable_label = get_university_data(request)
 
-    # Optional sorting: allow ?sort_by=accounting_count|finance_count|total_researchers (default total_researchers)
-    sort_by = request.query_params.get("sort_by", "total_researchers")
-    sort_col_map = {
-        "accounting_count": "accounting_count",
-        "finance_count": "finance_count",
-        "total_researchers": "total_researchers",
-    }
-
-    # Build aggregated query
-    qry = (
-        db.query(
-            Researchers.university.label("name"),
-            func.count(Researchers.id).label("total_researchers"),
-            func.sum(case((Researchers.field == "Accounting", 1), else_=0)).label("accounting_count"),
-            func.sum(case((Researchers.field == "Finance", 1), else_=0)).label("finance_count"),
-        )
-        .group_by(Researchers.university)
+    ranked = competition_rank(
+        sorted(university_list, key=lambda u: u.get("variable_value") or 0, reverse=True),
+        value_fn=lambda u: u.get("variable_value") or 0
     )
-
-    rows = qry.all()
-    db.close()
-
-    # Sort in Python based on the chosen column (descending)
-    key_name = sort_col_map.get(sort_by, "total_researchers")
-    universities_data = sorted(rows, key=lambda r: getattr(r, key_name) or 0, reverse=True)
-
-    
-    ranked = competition_rank(universities_data, value_fn=lambda r: getattr(r, key_name) or 0)
-    universities_with_rank = [
-        {
-            "rank": rk,
-            "name": r.name,
-            "accounting_count": r.accounting_count,
-            "finance_count": r.finance_count,
-        }
-        for rk, r in ranked
-    ]
+    universities_with_rank = [{**u, "rank": rk} for rk, u in ranked]
 
     return templates.TemplateResponse(
         "universities.html",
         {
             "request": request,
-            "universities": universities_with_rank, 
-            "variable_label": "Researchers by Field"
+            "universities": universities_with_rank,
+            "variable_label": variable_label
         }
     )
 

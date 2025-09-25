@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+    <title>Researcher Productivity Tool - Documentation</title>
+    <style>
+        .title {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .download-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 5px;
+            margin-top: 30px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .download-btn:hover {
+            background-color: #1d7630;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title">Researcher Productivity Tool Documentation</div>
+    <button onclick="window.print()" class="download-btn">Download documentation as PDF</button> <!--- Dummy Button --->>
+</body>
+{% endblock %}
