@@ -16,6 +16,7 @@ from app.helpers.admin_funcs import (
     save_uploaded_file,
     replace_ABDC_rankings
 )
+from app.helpers.auth_funcs import authenticate_user
 
 import io
 import sys
@@ -90,13 +91,21 @@ async def admin(request: Request):
 
 
 @router.post("/login")
-def login_post(request: Request):
-    # TODO: replace with real auth
-    request.session["user"] = "yuanji.wen"
-    return templates.TemplateResponse(
-        "admin.html",
-        {"request": request}
-    )
+async def login_post(request: Request):
+    form = await request.form()
+    username = form.get("username")
+    password = form.get("password")
+    if authenticate_user(username, password):
+        request.session["user"] = username
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": username}
+        )
+    else:
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Invalid username or password."}
+        )
 
 
 @router.post("/logout")
