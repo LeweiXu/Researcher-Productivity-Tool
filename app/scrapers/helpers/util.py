@@ -145,7 +145,7 @@ def standardize(data):
     # Enhanced pattern to match titles in any order (e.g., "Professor Emeritus" or "Emeritus Professor")
     title_pattern = re.compile(
         r"^(Dr\.?|Associate Professor|Professor|Ms\.?|Mr\.?|Mrs\.?|Lecturer|Prof\.?|EmPr|AsPr"
-        r"|Scientia Professor|Professor Scientia|Emeritus Professor|Professor Emeritus)\s+",
+        r"|Scientia Professor|Professor Scientia|Emeritus Professor|Professor Emeritus|Emeritus)\s+",
         re.IGNORECASE
     )
     for row in data:
@@ -187,10 +187,13 @@ def standardize(data):
                 "Senior Fellow": "Senior Fellow",
                 "Associate Professor": "Associate Professor",
                 "Associate Prof": "Associate Professor",
+                "AsPr": "Associate Professor",
                 "Professor": "Professor",
+                "Prof": "Professor",
                 "Professorial Fellow": "Professorial Fellow",
                 "Professor Emeritus": "Professor Emeritus",
-                "Emeritus Professor": "Professor Emeritus"
+                "Emeritus Professor": "Professor Emeritus",
+                "Emeritus": "Professor Emeritus"
             }
             # Sort by length so longer matches take priority
             titles = sorted(title_map.keys(), key=len, reverse=True)
@@ -200,15 +203,12 @@ def standardize(data):
                 raw = match.group()
                 row[7] = title_map.get(raw, raw)  # map to canonical form
             else:
-                row[7] = None
-            
-            # Check name for title if no title found
-            name_roles = ["Associate Professor", "Professor"]
-            name_roles = sorted(name_roles, key=len, reverse=True)
-            if row[7] is None:
-                for role in name_roles:
-                    if role.lower() in row[5].lower():
-                        row[7] =  role
+                match = re.search(pattern, row[5], flags=re.IGNORECASE)
+                if match:
+                    raw = match.group()
+                    row[7] = title_map.get(raw, raw)
+                else:
+                    row[7] = None
 
         # Clean researcher name
         if len(row) > 5 and row[5]:
