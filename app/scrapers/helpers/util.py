@@ -96,6 +96,11 @@ def write_to_db(university):
         for row in all_data:
 
             pub_title, year, type_val, journal, publication_url, name, profile_url, job_title, field, job_level = row
+            
+            # Don't add researcher if title is "Exclude"
+            if job_title == "Exclude":
+                continue
+
             # Don't add researcher if same Name and Profile URL
             researcher = db.query(Researchers).filter_by(name=name, profile_url=profile_url).first()
             if not researcher:
@@ -140,7 +145,7 @@ def standardize(data):
     # Enhanced pattern to match titles in any order (e.g., "Professor Emeritus" or "Emeritus Professor")
     title_pattern = re.compile(
         r"^(Dr\.?|Associate Professor|Professor|Ms\.?|Mr\.?|Mrs\.?|Lecturer|Prof\.?|EmPr|AsPr"
-        r"|Scientia Professor|Professor Scientia|Emeritus Professor|Professor Emeritus)\s+",
+        r"|Scientia Professor|Professor Scientia|Emeritus Professor|Professor Emeritus|Emeritus)\s+",
         re.IGNORECASE
     )
     for row in data:
@@ -165,39 +170,45 @@ def standardize(data):
         if row[1] and row[1].isnumeric():
             row[1] = int(row[1])
 
-        # Ensure role names are expected
-        # Define all possible forms and their canonical mapping
-        title_map = {
-            "Associate Lecturer": "Associate Lecturer",
-            "Lecturer (A)": "Associate Lecturer",
-            "Lecturer": "Lecturer",
-            "Fellow": "Fellow",
-            "Senior Lecturer": "Senior Lecturer",
-            "Senior Fellow": "Senior Fellow",
-            "Associate Professor": "Associate Professor",
-            "Associate Prof": "Associate Professor",
-            "Professor": "Professor",
-            "Professorial Fellow": "Professorial Fellow",
-            "Professor Emeritus": "Professor Emeritus",
-            "Emeritus Professor": "Professor Emeritus"
-        }
-        # Sort by length so longer matches take priority
-        titles = sorted(title_map.keys(), key=len, reverse=True)
-        pattern = r"\b(" + "|".join(re.escape(t) for t in titles) + r")\b"
-        match = re.search(pattern, row[7], flags=re.IGNORECASE)
-        if match:
-            raw = match.group()
-            row[7] = title_map.get(raw, raw)  # map to canonical form
+        # Blacklist certain role keywords
+        title_blacklist = ["Education-Focused", "Education Focused", "Education Focussed", "Teaching-Focused", "Teaching Focused", "Teaching Focussed"]
+        blacklist_pattern = re.compile(r'\b(?:' + '|'.join(re.escape(term) for term in title_blacklist) + r')\b', re.IGNORECASE)
+        if row[7] and blacklist_pattern.search(row[7]):
+            row[7] = "Exclude"
         else:
-            row[7] = None
-        
-        # Check name for title if no title found
-        name_roles = ["Associate Professor", "Professor"]
-        name_roles = sorted(name_roles, key=len, reverse=True)
-        if row[7] is None:
-            for role in name_roles:
-                if role.lower() in row[5].lower():
-                    row[7] =  role
+            # Ensure role names are expected
+            # Define all possible forms and their canonical mapping
+            title_map = {
+                "Associate Lecturer": "Associate Lecturer",
+                "Lecturer (A)": "Associate Lecturer",
+                "Lecturer": "Lecturer",
+                "Fellow": "Fellow",
+                "Senior Lecturer": "Senior Lecturer",
+                "Senior Fellow": "Senior Fellow",
+                "Associate Professor": "Associate Professor",
+                "Associate Prof": "Associate Professor",
+                "AsPr": "Associate Professor",
+                "Professor": "Professor",
+                "Prof": "Professor",
+                "Professorial Fellow": "Professorial Fellow",
+                "Professor Emeritus": "Professor Emeritus",
+                "Emeritus Professor": "Professor Emeritus",
+                "Emeritus": "Professor Emeritus"
+            }
+            # Sort by length so longer matches take priority
+            titles = sorted(title_map.keys(), key=len, reverse=True)
+            pattern = r"\b(" + "|".join(re.escape(t) for t in titles) + r")\b"
+            match = re.search(pattern, row[7], flags=re.IGNORECASE)
+            if match:
+                raw = match.group()
+                row[7] = title_map.get(raw, raw)  # map to canonical form
+            else:
+                match = re.search(pattern, row[5], flags=re.IGNORECASE)
+                if match:
+                    raw = match.group()
+                    row[7] = title_map.get(raw, raw)
+                else:
+                    row[7] = None
 
         # Clean researcher name
         if len(row) > 5 and row[5]:
@@ -213,7 +224,8 @@ def standardize(data):
             "Associate Professor": "D",
             "Professor": "E",
             "Professorial Fellow": "E",
-            "Professor Emeritus": "E"
+            "Professor Emeritus": "E",
+            "Exclude": None
         }
         if row[7] is None:
             role_level = None
