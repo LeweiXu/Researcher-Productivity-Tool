@@ -6,28 +6,222 @@
         .title {
             text-align: center;
             margin-top: 40px;
-            font-size: 2.5em;
-            font-weight: bold;
+            font-size: 2.2rem;
+            font-weight: 800;
         }
         .download-btn {
             background-color: #28a745;
             color: white;
             border: none;
             padding: 12px 24px;
-            font-size: 1em;
-            border-radius: 5px;
-            margin-top: 30px;
+            font-size: 1rem;
+            border-radius: 6px;
+            margin: 24px auto 8px;
+            display: block;
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        .download-btn:hover {
-            background-color: #1d7630;
-        }
+        .download-btn:hover { background-color: #1d7630; }
+
+        .container { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; line-height: 1.65; }
+        h2 { margin-top: 36px; font-size: 1.6rem; border-bottom: 2px solid #eee; padding-bottom: 6px; }
+        h3 { margin-top: 18px; font-size: 1.15rem; }
+        ul { margin: 8px 0 12px 20px; }
+        ol { margin: 8px 0 12px 20px; }
+        code, kbd { background: #f6f8fa; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        .toc { background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 12px 16px; margin-top: 12px; }
+        .note { background: #fff8e6; border: 1px solid #ffe49a; border-radius: 6px; padding: 10px 12px; }
+        table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+        th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+        th { background: #f8fafc; font-weight: 600; }
+        .muted { color: #6b7280; }
     </style>
 </head>
 
 <body>
-    <div class="title">Researcher Productivity Tool Documentation</div>
-    <button onclick="window.print()" class="download-btn">Download documentation as PDF</button> <!--- Dummy Button --->>
+    <div class="title">Researcher Productivity Tool — Methodology (User Documentation)</div>
+    <button onclick="window.print()" class="download-btn">Download documentation as PDF</button>
+
+    <div class="container">
+        <div class="toc">
+            <strong>Contents</strong>
+            <ul>
+                <li><a href="#data-sources">1) Data Sources & Joins</a></li>
+                <li><a href="#standardisation">2) Standardisation Pipeline</a></li>
+                <li><a href="#db-write">3) What Gets Written to the Database</a></li>
+                <li><a href="#ranking">4) Ranking Metrics</a></li>
+                <li><a href="#limitations">5) Known Limitations</a></li>
+                <li><a href="#example">6) Worked Example</a></li>
+                <li><a href="#lists">7) Complete Lists (for Auditing)</a></li>
+            </ul>
+        </div>
+
+        <h2 id="data-sources">1) Data Sources & Joins</h2>
+        <h3>University Staff Directories</h3>
+        <ul>
+            <li>Scrape official Accounting/Finance staff pages across G8 universities.</li>
+            <li>Collected fields: researcher name, job title, profile URL, field (Accounting/Finance).</li>
+        </ul>
+
+        <h3>Publications (OpenAlex)</h3>
+        <ul>
+            <li>Query OpenAlex using name + affiliation to retrieve publication lists.</li>
+            <li>Heuristic matching; common names can introduce noise.</li>
+        </ul>
+
+        <h3>Journal Quality Lists (ABDC/JQL)</h3>
+        <ul>
+            <li>Load ABDC/JQL files (e.g., 2010/2016/2022).</li>
+            <li>Primary join on <strong>ISSN</strong> (preferred).</li>
+            <li>Fallback to <strong>fuzzy title matching</strong> when ISSN is missing/ambiguous.</li>
+        </ul>
+
+        <h3>Journal Impact Factor (Clarivate JIF)</h3>
+        <ul>
+            <li>Where ISSN exists in JCR, attach JIF and 5-year JIF to the journal.</li>
+            <li>Journals without JIF are excluded from JIF-based averages.</li>
+        </ul>
+
+        <h3>Database Linking (journal matching pass)</h3>
+        <ul>
+            <li>Match <code>Publications.journal_name</code> → <code>Journals</code> using fuzzywuzzy <code>process.extractOne</code> with threshold <strong>95</strong>.</li>
+            <li><code>force=True</code>: reset existing <code>journal_id</code> before re-matching.</li>
+            <li><code>university="all" | "&lt;name&gt;"</code>: limit matching scope.</li>
+        </ul>
+
+        <h2 id="standardisation">2) Standardisation Pipeline (Exactly How We Clean & Normalize)</h2>
+        
+
+        <h3>2.1 Required fields & null handling</h3>
+        <ul>
+            <li>Required: Title (index 0), Type (2), Researcher Name (5), Profile URL (6). Missing → row rejected.</li>
+            <li>Empty → <code>None</code> for: Year (1), Journal Name (3), Article URL (4).</li>
+        </ul>
+
+        <h3>2.2 Type cleanup</h3>
+        <ul>
+            <li>Trim trailing <code>›</code> from publication type strings where present.</li>
+        </ul>
+
+        <h3>2.3 Year coercion</h3>
+        <ul>
+            <li>If Year is numeric, convert to integer.</li>
+        </ul>
+
+        <h3>2.4 Role blacklist (exclusions)</h3>
+        <ul>
+            <li>If job title contains any of: <em>Education-Focused, Education Focused, Education Focussed, Teaching-Focused, Teaching Focused, Teaching Focussed</em> → set job title to <code>"Exclude"</code>.</li>
+            <li>Rationale: these positions are not comparable to research-active roles for ranking.</li>
+        </ul>
+
+        <h3>2.5 Title normalization (canonical roles)</h3>
+        <p>Normalize raw titles to canonical forms. We search Job Title first, then Researcher Name if needed.</p>
+        <table>
+            <thead><tr><th>Raw / Variant</th><th>Canonical</th></tr></thead>
+            <tbody>
+                <tr><td>Associate Lecturer</td><td>Associate Lecturer</td></tr>
+                <tr><td>Lecturer (A)</td><td>Associate Lecturer</td></tr>
+                <tr><td>Lecturer</td><td>Lecturer</td></tr>
+                <tr><td>Fellow</td><td>Fellow</td></tr>
+                <tr><td>Senior Lecturer</td><td>Senior Lecturer</td></tr>
+                <tr><td>Senior Fellow</td><td>Senior Fellow</td></tr>
+                <tr><td>Associate Professor / Associate Prof / AsPr</td><td>Associate Professor</td></tr>
+                <tr><td>Professor / Prof</td><td>Professor</td></tr>
+                <tr><td>Professorial Fellow</td><td>Professorial Fellow</td></tr>
+                <tr><td>Professor Emeritus / Emeritus Professor / Emeritus</td><td>Professor Emeritus</td></tr>
+            </tbody>
+        </table>
+
+        <h3>2.6 Name cleaning</h3>
+        <ul>
+            <li>Strip prefixes from Researcher Name: <em>Dr., Ms., Mr., Mrs., Prof., Associate Professor, Professor, Scientia Professor, Professor Scientia, Emeritus Professor, Professor Emeritus, Emeritus</em>, and short codes <em>EmPr, AsPr</em>.</li>
+            <li>Result example: “Prof. Jane Q. Smith” → “Jane Q. Smith”.</li>
+        </ul>
+
+        <h3>2.7 Academic level mapping (A–E)</h3>
+        <table>
+            <thead><tr><th>Canonical Title</th><th>Level</th></tr></thead>
+            <tbody>
+                <tr><td>Associate Lecturer</td><td>A</td></tr>
+                <tr><td>Lecturer</td><td>B</td></tr>
+                <tr><td>Fellow</td><td>B</td></tr>
+                <tr><td>Senior Lecturer</td><td>C</td></tr>
+                <tr><td>Senior Fellow</td><td>C</td></tr>
+                <tr><td>Associate Professor</td><td>D</td></tr>
+                <tr><td>Professor</td><td>E</td></tr>
+                <tr><td>Professorial Fellow</td><td>E</td></tr>
+                <tr><td>Professor Emeritus</td><td>E</td></tr>
+                <tr><td>Exclude</td><td>—</td></tr>
+            </tbody>
+        </table>
+        <p class="note"><strong>Note:</strong> If role is <code>None</code> or unrecognized, the level is set to <code>None</code>.</p>
+
+        <h2 id="db-write">3) What Gets Written to the Database</h2>
+        <ul>
+            <li>After standardization, the academic level is inserted into each row at index <strong>9</strong>.</li>
+            <li>Skip researchers whose job title equals <code>"Exclude"</code>.</li>
+            <li><strong>Researcher uniqueness</strong>: (Name, Profile URL). If found, update job title / level / field when changed.</li>
+            <li><strong>Publication uniqueness</strong>: (Title, Researcher). New publications are inserted and linked.</li>
+        </ul>
+
+        <h2 id="ranking">4) Ranking Metrics (Exactly How They're Computed)</h2>
+        <ol>
+            <li><strong>Total Publications</strong>: count of journal articles retrieved (after cleaning).</li>
+            <li><strong>A*/A-Ranked Publications</strong>: count of publications whose journals map to ABDC A* or A.</li>
+            <li><strong>Average JIF</strong>: mean of JIF values across only those articles with valid JIF.<br>
+                <code>Avg JIF = (Σ JIF<sub>i</sub>) / N</code>, where <code>N</code> = number of articles with JIF.</li>
+            <li><strong>Average 5-Year JIF</strong>: same as above, using 5-year JIF.</li>
+            <li><strong>Average Citation Percentile</strong>: mean of available OpenAlex citation percentiles for a researcher’s publications.</li>
+        </ol>
+        <p class="note"><strong>Notes:</strong> JIF and 5-year JIF are journal-level stats joined via ISSN → JCR. If no JIF exists, JIF-based averages are undefined (not zero).</p>
+
+        <h2 id="limitations">5) Known Limitations (Transparency for Users)</h2>
+        <ul>
+            <li><strong>University data dependency</strong>: institutional directories may be incomplete/out-of-date.</li>
+            <li><strong>Name/affiliation matching noise</strong>: can produce over-/under-counting, especially for common names.</li>
+            <li><strong>Journal matching</strong>: fuzzy matching (threshold 95) can mis-map near-duplicates; ISSN is preferred but not always present.</li>
+            <li><strong>Coverage gaps</strong>: some journals lack ABDC ranks or JIF, leading to missing metrics.</li>
+            <li><strong>Metric bias</strong>: total publications favor volume; averages can be skewed by outliers; citation norms vary by field/year.</li>
+        </ul>
+
+        <h2 id="example">6) Worked Example (End-to-End)</h2>
+        <p>Assume a researcher has 5 articles:</p>
+        <ul>
+            <li>Four with JIFs: 7.5, 5.0, 2.5, 1.2; ABDC: A*, A, A, B.</li>
+            <li>One in a journal with no JIF and no ABDC entry.</li>
+        </ul>
+        <p><strong>Totals</strong>: total publications = 5; A*/A publications = 3.</p>
+        <p><strong>Avg JIF</strong>: (7.5 + 5.0 + 2.5 + 1.2) / 4 = <strong>4.05</strong></p>
+        <p><strong>Avg 5-year JIF</strong>: computed the same way, using 5-year values only.</p>
+        <p><strong>Avg Citation Percentile</strong>: mean of all available publication percentiles.</p>
+
+        <h2 id="lists">7) Complete Lists (for Auditing)</h2>
+        <h3>Accepted canonical roles</h3>
+        <ul>
+            <li>Associate Lecturer</li>
+            <li>Lecturer</li>
+            <li>Fellow</li>
+            <li>Senior Lecturer</li>
+            <li>Senior Fellow</li>
+            <li>Associate Professor</li>
+            <li>Professor</li>
+            <li>Professorial Fellow</li>
+            <li>Professor Emeritus</li>
+        </ul>
+
+        <h3>Raw variants recognized (mapped to above)</h3>
+        <ul>
+            <li>Associate Lecturer, Lecturer (A), Lecturer, Fellow, Senior Lecturer, Senior Fellow</li>
+            <li>Associate Professor, Associate Prof, AsPr</li>
+            <li>Professor, Prof, Professorial Fellow</li>
+            <li>Professor Emeritus, Emeritus Professor, Emeritus</li>
+        </ul>
+
+        <h3>Excluded keywords (blacklist)</h3>
+        <ul>
+            <li>Education-Focused, Education Focused, Education Focussed</li>
+            <li>Teaching-Focused, Teaching Focused, Teaching Focussed</li>
+        </ul>
+    </div>
 </body>
 {% endblock %}
