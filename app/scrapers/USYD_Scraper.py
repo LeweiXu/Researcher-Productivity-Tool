@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import undetected_chromedriver as uc
 
 
 # URLS 
@@ -20,11 +21,11 @@ CSV_OUT = "usyd_publications.csv"
 
 # ---------- driver ----------
 def make_driver(headless: bool = False):
-    opts = webdriver.ChromeOptions()
+    opts = uc.ChromeOptions()
     if headless:
         opts.add_argument("--headless=new")
     opts.add_argument("--window-size=1280,1100")
-    return webdriver.Chrome(options=opts)
+    return uc.Chrome(options=opts)
 
 def wait_css(driver, css, t=15):
     return WebDriverWait(driver, t).until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))

@@ -1,9 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import time
 import csv
 import re
 from pyalex import Works, Authors, Institutions
+import undetected_chromedriver as uc
 
 
 # ---------------- OpenAlex Helpers ----------------
@@ -201,9 +203,7 @@ def profile(page_url, driver):
 
 # ---------------- Main Function ----------------
 def scrape_UNSW():
-    # start_time = time.time()  # Start timer for testing purpose
-
-    driver = webdriver.Chrome()
+    driver = uc.Chrome()
     departments_urls = [
         ("https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BAccounting%252C%2BAuditing%2Band%2BTaxation&sort=metastaffLastName", "Accounting"),
         ("https://www.unsw.edu.au/business/our-people#search=&filters=f.School%257CstaffSchool%3ASchool%2Bof%2BBanking%2Band%2BFinance&sort=metastaffLastName", "Finance")
@@ -239,6 +239,8 @@ def scrape_UNSW():
                 writer.writerow(pub + [name, url, role, fields])  # Append fields
 
     driver.quit()
+
+    print("Scraping complete. Data saved to UNSW_data.csv")
 
     print("Scraping complete. Data saved to UNSW_data.csv")
 
