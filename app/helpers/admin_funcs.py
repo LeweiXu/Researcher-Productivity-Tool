@@ -14,7 +14,7 @@ def download_master_csv(request):
     """
     Streams a master spreadsheet joining Researchers, Publications, and Journals.
     Each row = one publication of one researcher with its journal.
-    All columns from all three tables are included.
+    Columns are properly organized and prefixed to avoid confusion.
     """
     user = request.session.get("user")
     if not user:
@@ -22,37 +22,85 @@ def download_master_csv(request):
 
     db: Session = SessionLocal()
 
-    # Get all columns for each table
-    researcher_cols = [c.name for c in Researchers.__table__.columns]
-    publication_cols = [c.name for c in Publications.__table__.columns]
-    journal_cols = [c.name for c in Journals.__table__.columns]
+    # Define clean, organized column structure
+    # Publication columns (core data)
+    publication_cols = [
+        'publication_id', 'title', 'year', 'publication_type', 'publication_url', 
+        'num_authors', 'journal_name'
+    ]
+    
+    # Researcher columns
+    researcher_cols = [
+        'researcher_id', 'researcher_name', 'university', 'profile_url', 
+        'job_title', 'level', 'field'
+    ]
+    
+    # Journal columns
+    journal_cols = [
+        'journal_id', 'journal_name_clean', 'abdc_rank', 'JIF', 'JIF_5_year', 
+        'citation_percentage', 'ISSN', 'eISSN', 'publisher', 'abdc_FoR', 'year_of_inception'
+    ]
 
-    # Build query with all columns
+    # Build query with proper column selection and aliasing
     qry = (
         db.query(
-            *[getattr(Publications, col) for col in publication_cols],
-            *[getattr(Researchers, col) for col in researcher_cols],
-            *[getattr(Journals, col) for col in journal_cols],
+            # Publication data
+            Publications.id.label('publication_id'),
+            Publications.title,
+            Publications.year,
+            Publications.publication_type,
+            Publications.publication_url,
+            Publications.num_authors,
+            Publications.journal_name,
+            
+            # Researcher data
+            Researchers.id.label('researcher_id'),
+            Researchers.name.label('researcher_name'),
+            Researchers.university,
+            Researchers.profile_url,
+            Researchers.job_title,
+            Researchers.level,
+            Researchers.field,
+            
+            # Journal data
+            Journals.id.label('journal_id'),
+            Journals.name.label('journal_name_clean'),
+            Journals.abdc_rank,
+            Journals.JIF,
+            Journals.JIF_5_year,
+            Journals.citation_percentage,
+            Journals.ISSN,
+            Journals.eISSN,
+            Journals.publisher,
+            Journals.FoR.label('abdc_FoR'),
+            Journals.year_of_inception
         )
         .join(Researchers, Publications.researcher_id == Researchers.id)
         .join(Journals, Publications.journal_id == Journals.id)
     )
 
-    # Header: publication columns + researcher columns + journal columns
+    # Clean header with all columns
     header = publication_cols + researcher_cols + journal_cols
 
     def csv_iter():
         buf = io.StringIO()
         writer = csv.writer(buf)
 
-        # header
+        # Write header
         writer.writerow(header)
         yield buf.getvalue()
         buf.seek(0); buf.truncate(0)
 
-        # rows
+        # Write data rows
         for row in qry.yield_per(500):
-            writer.writerow(row)
+            # Convert row to list and handle None values
+            row_data = []
+            for value in row:
+                if value is None:
+                    row_data.append('')
+                else:
+                    row_data.append(str(value))
+            writer.writerow(row_data)
             yield buf.getvalue()
             buf.seek(0); buf.truncate(0)
 
