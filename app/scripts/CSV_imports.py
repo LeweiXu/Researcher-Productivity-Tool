@@ -21,7 +21,7 @@ def import_journals(CSV_PATH=CSV_PATH):
             if not existing:
                 journal = Journals(
                     name=row['Journal Title'],
-                    abdc_rank=row['rating'],
+                    abdc_rank=row['Rating'],
                     publisher=row['Publisher'],
                     ISSN=row['ISSN'],
                     eISSN=row['ISSN Online'],
@@ -41,13 +41,17 @@ def print_issns_in_batches(batch_size=600):
         eissns = [j.eISSN for j in session.query(Journals).filter(Journals.eISSN.isnot(None)).all() if j.eISSN]
         with open(output_path, "w") as f:
             # Write ISSNs in batches
+            f.write("ISSNs:\n")
             for i in range(0, len(issns), batch_size):
                 batch = issns[i:i+batch_size]
+                f.write(f"BATCH {i//600 + 1}:\n")
                 f.write(";".join(batch) + "\n")
             # Write eISSNs in batches after a line break
             f.write("\n")
+            f.write("eISSNs:\n")
             for i in range(0, len(eissns), batch_size):
                 batch = eissns[i:i+batch_size]
+                f.write(f"BATCH {i//600 + 1}:\n")
                 f.write(";".join(batch) + "\n")
     finally:
         session.close()

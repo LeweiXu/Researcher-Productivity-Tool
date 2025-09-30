@@ -3,11 +3,11 @@ import pandas as pd
 import csv
 from app.scrapers.helpers.big3_functions import scrape_publications, find_profile_urls
 
-# Load classification CSV
-df = pd.read_csv("app/files/uploads_current/UWA_staff_field_mapping.csv", encoding="latin1")
-field_lookup = dict(zip(df["Name"], df["Field"]))
-
 def scrape_UWA():
+    # Load classification CSV
+    df = pd.read_csv("app/files/uploads_current/UWA_staff_field_upload.csv", encoding="latin1")
+    field_lookup = dict(zip(df["Name"], df["Field"]))
+
     options = uc.ChromeOptions()
     # options.add_argument("--no-sandbox")
     # options.add_argument("--disable-gpu")

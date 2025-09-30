@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block head %}
+{% extends "base.html" %} 
+{% block head %}
 <style>
   .admin-card {
     background: #fff;
@@ -15,67 +16,77 @@
   .admin-card h4 {
     margin-top: 24px;
   }
-
-  /* New styles for the log display area */
   #scraper-logs {
-    background-color: #212529; /* Dark background */
-    color: #f8f9fa; /* Light text */
+    background-color: #212529;
+    color: #f8f9fa;
     border: 1px solid #495057;
     border-radius: 4px;
     padding: 12px;
     margin-top: 16px;
     max-height: 400px;
     overflow-y: auto;
-    white-space: pre-wrap; /* Allows text to wrap */
+    white-space: pre-wrap;
     word-wrap: break-word;
-    font-family: 'Courier New', Courier, monospace; /* Monospaced font for logs */
+    font-family: 'Courier New', Courier, monospace;
     font-size: 0.875em;
-    display: none; /* Hidden by default */
+    display: none;
+  }
+  #issn-batches-content {
+    display: none;
+    background: #f8f9fa;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
   }
 </style>
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
 <div class="admin-card">
   <h1 class="mb-4">Admin Dashboard</h1>
   <div class="list-group mb-4">
-    <a
-      href="/admin/download/researchers.csv"
-      class="list-group-item list-group-item-action"
-    >
+    <a href="/admin/download/researchers.csv" class="list-group-item list-group-item-action">
       Download Master Spreadsheet
     </a>
   </div>
-    <div class="mb-4">
-        <h4>Upload CSV</h4>
-        <div class="mb-3">
-            <h6>ABDC Rankings</h6>
-            <form class="d-flex align-items-center" action="/admin/upload/abdc" method="post" enctype="multipart/form-data">
-                <input type="file" class="form-control me-2" name="abdc_csv" accept=".csv">
-                <button type="submit" class="btn btn-primary me-2">Upload</button>
-                <a href="/admin/download/abdc_template.csv" class="btn btn-link">Download Template</a>
-            </form>
-        </div>
-        <div class="mb-3">
-            <h6>Clarivate Rankings</h6>
-            <form class="d-flex align-items-center" action="/admin/upload/clarivate" method="post" enctype="multipart/form-data">
-                <input type="file" class="form-control me-2" name="clarivate_csv" accept=".csv">
-                <button type="submit" class="btn btn-primary me-2">Upload</button>
-                <a href="/admin/download/clarivate_template.csv" class="btn btn-link">Download Template</a>
-            </form>
-        </div>
-        <div class="mb-3">
-            <h6>UWA Staff to Field Mappings</h6>
-            <form class="d-flex align-items-center" action="/admin/upload/uwa_staff_field" method="post" enctype="multipart/form-data">
-                <input type="file" class="form-control me-2" name="uwa_staff_field_csv" accept=".csv">
-                <button type="submit" class="btn btn-primary me-2">Upload</button>
-                <a href="/admin/download/UWA_staff_field_template.csv" class="btn btn-link">Download Template</a>
-            </form>
-        </div>
+  <div class="mb-4">
+    <h4>Upload CSV</h4>
+    <div class="mb-3">
+      <h6>ABDC Rankings</h6>
+      <form class="d-flex align-items-center" action="/admin/upload/abdc" method="post" enctype="multipart/form-data">
+        <input type="file" class="form-control me-2" name="abdc_csv" accept=".csv">
+        <button type="submit" class="btn btn-primary me-2">Upload</button>
+        <a href="/admin/download/abdc_template.csv" class="btn btn-link">Download Template</a>
+      </form>
     </div>
-    {% if flash %}
-        <div class="alert alert-info mt-3" role="alert">
-            {{ flash|safe }}
-        </div>
-    {% endif %}
+    <div class="mb-3">
+      <h6>UWA Staff to Field Mappings</h6>
+      <form class="d-flex align-items-center" action="/admin/upload/uwa_staff_field" method="post" enctype="multipart/form-data">
+        <input type="file" class="form-control me-2" name="uwa_staff_field_csv" accept=".csv">
+        <button type="submit" class="btn btn-primary me-2">Upload</button>
+        <a href="/admin/download/UWA_staff_field_template.csv" class="btn btn-link">Download Template</a>
+      </form>
+    </div>
+    <div class="mb-3">
+      <h6>Clarivate Rankings</h6>
+      <form class="d-flex align-items-center" action="/admin/upload/clarivate" method="post" enctype="multipart/form-data">
+        <input type="file" class="form-control me-2" name="clarivate_csv" accept=".csv">
+        <button type="submit" class="btn btn-primary me-2">Upload</button>
+        <a href="/admin/download/clarivate_template.csv" class="btn btn-link">Download Template</a>
+      </form>
+      <button id="show-issn-batches" class="btn btn-secondary mt-2" type="button">Show ISSN Batches</button>
+      <div id="issn-batches-content">{% if issn_batches_content %}{{ issn_batches_content }}{% endif %}</div>
+    </div>
+  </div>
+  {% if flash %}
+    <div class="alert alert-info mt-3" role="alert">
+      {{ flash|safe }}
+    </div>
+  {% endif %}
   <!-- This is the section for running the scraper -->
   <div class="mt-4">
     <h4>Run Scraper</h4>
@@ -94,17 +105,14 @@
       </div>
     </div>
     <small id="scraper-message" class="form-text text-muted mt-1"></small>
-    <!-- This new <pre> element will display the logs -->
     <pre id="scraper-logs"></pre>
   </div>
-
   <div class="mt-4">
     <form action="/logout" method="post">
       <button type="submit" class="btn btn-danger">Logout</button>
     </form>
   </div>
 </div>
-
 <script>
   document.getElementById('run-scraper').addEventListener('click', function () {
     var button = this;
@@ -125,7 +133,7 @@
     progressBar.textContent = '0%';
     progressContainer.style.display = 'block';
 
-    logsElement.style.display = 'block'; // Make the log area visible
+    logsElement.style.display = 'block';
     logsElement.textContent = 'Initializing scraper, waiting for logs...';
 
     // --- Start the scraper task ---
@@ -192,6 +200,36 @@
         logsElement.textContent =
           'Failed to start the scraper task. Check the browser console for errors.';
       });
+  });
+
+  document.addEventListener("DOMContentLoaded", function() {
+    var btn = document.getElementById("show-issn-batches");
+    var content = document.getElementById("issn-batches-content");
+    if (btn && content) {
+        btn.addEventListener("click", function() {
+            if (content.style.display === "none" || content.style.display === "") {
+                // If content is empty, fetch from server
+                if (!content.textContent.trim()) {
+                    fetch("/admin/issn_batches")
+                        .then(resp => resp.text())
+                        .then(html => {
+                            // Parse the returned HTML and extract the issn_batches_content
+                            var parser = new DOMParser();
+                            var doc = parser.parseFromString(html, "text/html");
+                            var newContent = doc.getElementById("issn-batches-content");
+                            if (newContent) {
+                                content.innerHTML = newContent.innerHTML;
+                            }
+                            content.style.display = "block";
+                        });
+                } else {
+                    content.style.display = "block";
+                }
+            } else {
+                content.style.display = "none";
+            }
+        });
+    }
   });
 </script>
 {% endblock %}

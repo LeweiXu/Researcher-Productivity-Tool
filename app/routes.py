@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from contextlib import redirect_stdout
 from app.scrapers.update import update_all
 from app.scrapers.helpers.util import match_journals
-from app.scripts.CSV_imports import import_all_jif
+from app.scripts.CSV_imports import print_issns_in_batches
 from app.helpers.researchers_funcs import get_researcher_data
 from app.helpers.researcher_profile_funcs import get_researcher_profile
 from app.helpers.universities_funcs import get_university_data
@@ -14,7 +14,9 @@ from app.helpers.admin_funcs import (
     download_clarivate_template,
     download_UWA_staff_field_template,
     save_uploaded_file,
-    replace_ABDC_rankings
+    replace_ABDC_rankings,
+    import_clarivate,
+    update_UWA_staff_fields
 )
 from app.helpers.auth_funcs import authenticate_user
 
@@ -133,7 +135,6 @@ def universities(request: Request):
     )
 
 
-
 # ------------------------
 # Admin page
 # ------------------------
@@ -207,17 +208,84 @@ async def upload_abdc(
             "admin.html",
             {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
         )
-    file_path = save_uploaded_file(abdc_csv)
+    file_path = save_uploaded_file(abdc_csv, "ABDC_upload.csv")
     # Flash message
     request.session["flash"] = (
         f"File '{abdc_csv.filename}' uploaded successfully.<br>"
         "The website will be temporarily unavailable while the CSV file is being processed."
     )
     replace_ABDC_rankings(file_path)
-    import_all_jif()  # Re-import all JIF data to refresh journal matches
+    try:
+        import_clarivate("/app/files/uploads_current/clarivate_upload.csv")  # Re-import all JIF data to refresh journal matches
+    except Exception as e:
+        request.session["flash"] += f"No clarivate data found, please upload clarivate data as well."
     match_journals(force=True)  # Re-match journals after ABDC update
     return RedirectResponse(url="/admin", status_code=303)
 
+@router.post("/admin/upload/clarivate")
+async def upload_clarivate(
+    request: Request,
+    clarivate_csv: UploadFile = File(None)
+):
+    if not clarivate_csv:
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
+        )
+    # Save the uploaded file (you may want to implement a save_uploaded_file for clarivate as well)
+    file_path = save_uploaded_file(clarivate_csv, "clarivate_upload.csv")
+    # Flash message
+    request.session["flash"] = (
+        f"File '{clarivate_csv.filename}' uploaded successfully.<br>"
+        "The website will be temporarily unavailable while the CSV file is being processed."
+    )
+    import_clarivate(file_path)
+    return RedirectResponse(url="/admin", status_code=303)
+
+@router.post("/admin/upload/uwa_staff_field")
+async def upload_uwa_staff_field(
+    request: Request,
+    uwa_staff_field_csv: UploadFile = File(None)
+):
+    if not uwa_staff_field_csv:
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
+        )
+    # Save the uploaded file
+    file_path = save_uploaded_file(uwa_staff_field_csv, "UWA_staff_field_upload.csv")
+    # Flash message
+    request.session["flash"] = (
+        f"File '{uwa_staff_field_csv.filename}' uploaded successfully.<br>"
+        "The website will be temporarily unavailable while the CSV file is being processed."
+    )
+    update_UWA_staff_fields(file_path)
+    return RedirectResponse(url="/admin", status_code=303)
+
+@router.get("/admin/issn_batches")
+async def issn_batches(request: Request):
+    user = request.session.get("user")
+    flash = request.session.pop("flash", None)
+    issn_batches_content = ""
+    try:
+        with open("app/files/temp/issn_batches.txt", "r", encoding="utf-8") as f:
+            issn_batches_content = f.read()
+    except Exception as e:
+        print_issns_in_batches()  # Generate the file if it doesn't exist
+        try:
+            with open("app/files/temp/issn_batches.txt", "r", encoding="utf-8") as f:
+                issn_batches_content = f.read()
+        except Exception as e:
+            issn_batches_content = f"Error reading ISSN batches: {e}"
+    return templates.TemplateResponse(
+        "admin.html",
+        {
+            "request": request,
+            "user": user,
+            "flash": flash,
+            "issn_batches_content": issn_batches_content
+        }
+    )
 
 # ------------------------
 # Scraper Endpoints

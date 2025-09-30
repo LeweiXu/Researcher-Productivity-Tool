@@ -146,13 +146,65 @@ def replace_ABDC_rankings(file_path="app/files/uploads_current/ABDC_upload.csv")
     finally:
         session.close()
 
-def save_uploaded_file(upload_file, save_dir="app/files/uploads_current"):
+def import_clarivate(jif_csv_path):
+    session = SessionLocal()
+    try:
+        with open(jif_csv_path, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                issn = str(row.get("ISSN", "")).strip()
+                if not issn:
+                    continue
+                jif = row.get("JIF", None)
+                jif_5 = row.get("5 Year JIF", None)
+                citation_pct = row.get("% of Citable OA", None)
+                # Remove % and convert to float if needed
+                if isinstance(citation_pct, str) and "%" in citation_pct:
+                    citation_pct = citation_pct.replace("%", "").strip()
+                try:
+                    jif = float(jif) if jif not in [None, ""] else None
+                except Exception:
+                    jif = None
+                try:
+                    jif_5 = float(jif_5) if jif_5 not in [None, ""] else None
+                except Exception:
+                    jif_5 = None
+                try:
+                    citation_pct = float(citation_pct) if citation_pct not in [None, ""] else None
+                except Exception:
+                    citation_pct = None
+
+                journal = session.query(Journals).filter_by(ISSN=issn).first()
+                if journal:
+                    journal.JIF = jif
+                    journal.JIF_5_year = jif_5
+                    journal.citation_percentage = citation_pct
+        session.commit()
+    finally:
+        session.close()
+
+def update_UWA_staff_fields(file_path="app/files/uploads_current/UWA_staff_field_upload.csv"):
+    df = pd.read_csv(file_path)
+    # Strip whitespace from column names and values
+    df.columns = [col.strip() for col in df.columns]
+
+    session = SessionLocal()
+    try:
+        for _, row in df.iterrows():
+            researcher = session.query(Researchers).filter_by(name=row['Name']).first()
+            if researcher:
+                researcher.field = row['Field']
+        session.commit()
+    finally:
+        session.close()
+
+def save_uploaded_file(upload_file, filename, save_dir="app/files/uploads_current"):
     """
     Saves an uploaded file to the specified directory.
     Returns the saved file path.
     """
     os.makedirs(save_dir, exist_ok=True)
-    file_path = os.path.join(save_dir, "ABDC_upload.csv")
+    file_path = os.path.join(save_dir, filename)
     upload_file.file.seek(0)  # Ensure pointer is at start
     with open(file_path, "wb") as buffer:
         while True:
