@@ -77,8 +77,8 @@ def documentation(request: Request):
 # ------------------------
 @router.get("/researchers", response_class=HTMLResponse)
 def researchers(request: Request):
-    researcher_list, variable_label = get_researcher_data(request)
-    
+    global RESEARCHER_STATS_CACHE
+    researcher_list, variable_label, RESEARCHER_STATS_CACHE = get_researcher_data(request, RESEARCHER_STATS_CACHE)
     researcher_list = sorted(
         researcher_list,
         key=lambda d: d.get("variable_value") or 0,
@@ -106,8 +106,7 @@ def researchers(request: Request):
 # ------------------------
 @router.get("/researchers/{researcher_id}", response_class=HTMLResponse)
 def researcher_profile(request: Request, researcher_id: int = Path(...)):
-    global RESEARCHER_STATS_CACHE
-    researcher_data, pub_list, RESEARCHER_STATS_CACHE = get_researcher_profile(researcher_id, RESEARCHER_STATS_CACHE)
+    researcher_data, pub_list = get_researcher_profile(researcher_id)
     return templates.TemplateResponse(
         "researcher_profile.html",
         {"request": request, "researcher": researcher_data, "publications": pub_list},
