@@ -28,10 +28,11 @@ import traceback
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-
 # --- New Global State Variable with 'logs' key ---
 # This dictionary now holds logs in addition to progress and messages.
 scraper_status_data = {"progress": 0, "message": "Not started", "logs": []}
+RESEARCHER_STATS_CACHE = None
+UNIVERSITY_STATS_CACHE = None
 
 #------------------------
 # Helper function
@@ -105,7 +106,8 @@ def researchers(request: Request):
 # ------------------------
 @router.get("/researchers/{researcher_id}", response_class=HTMLResponse)
 def researcher_profile(request: Request, researcher_id: int = Path(...)):
-    researcher_data, pub_list = get_researcher_profile(researcher_id)
+    global RESEARCHER_STATS_CACHE
+    researcher_data, pub_list, RESEARCHER_STATS_CACHE = get_researcher_profile(researcher_id, RESEARCHER_STATS_CACHE)
     return templates.TemplateResponse(
         "researcher_profile.html",
         {"request": request, "researcher": researcher_data, "publications": pub_list},
@@ -117,7 +119,8 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
 # ------------------------
 @router.get("/universities", response_class=HTMLResponse)
 def universities(request: Request):
-    university_list, variable_label = get_university_data(request)
+    global UNIVERSITY_STATS_CACHE
+    university_list, variable_label, UNIVERSITY_STATS_CACHE = get_university_data(request, UNIVERSITY_STATS_CACHE)
 
     ranked = competition_rank(
         sorted(university_list, key=lambda u: u.get("variable_value") or 0, reverse=True),
@@ -220,6 +223,9 @@ async def upload_abdc(
     except Exception as e:
         request.session["flash"] += f"No clarivate data found, please upload clarivate data as well."
     match_journals(force=True)  # Re-match journals after ABDC update
+    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated journal data
+    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated journal data
     return RedirectResponse(url="/admin", status_code=303)
 
 @router.post("/admin/upload/clarivate")
@@ -240,6 +246,9 @@ async def upload_clarivate(
         "The website will be temporarily unavailable while the CSV file is being processed."
     )
     import_clarivate(file_path)
+    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated journal data
+    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated journal data
     return RedirectResponse(url="/admin", status_code=303)
 
 @router.post("/admin/upload/uwa_staff_field")
@@ -260,6 +269,9 @@ async def upload_uwa_staff_field(
         "The website will be temporarily unavailable while the CSV file is being processed."
     )
     update_UWA_staff_fields(file_path)
+    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated journal data
+    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated journal data
     return RedirectResponse(url="/admin", status_code=303)
 
 @router.get("/admin/issn_batches")

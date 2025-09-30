@@ -3,10 +3,6 @@ from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
 import math
 
-# Cache researcher stats as page very slow if requerying DB every time you reload
-# Need to restart server to clear cache (for now)
-RESEARCHER_STATS_CACHE = None
-
 def filter_researchers(request, researcher_list):
     field = request.query_params.get("field", "")
     level = request.query_params.get("level", "")
@@ -23,8 +19,7 @@ def filter_researchers(request, researcher_list):
         filtered = [r for r in filtered if name in (r["name"] or "").lower()]
     return filtered
 
-def get_researcher_data(request: Request):
-    global RESEARCHER_STATS_CACHE
+def get_researcher_data(request: Request, RESEARCHER_STATS_CACHE):
     sort_by = request.query_params.get("sort_by", "total_articles")
 
     if RESEARCHER_STATS_CACHE is None:
@@ -110,4 +105,4 @@ def get_researcher_data(request: Request):
             r["variable_value"] = r["total_articles"]
         researcher_list.sort(key=lambda x: x["total_articles"], reverse=True)
 
-    return researcher_list, variable_label
+    return researcher_list, variable_label, RESEARCHER_STATS_CACHE

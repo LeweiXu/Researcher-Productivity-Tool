@@ -2,10 +2,7 @@ from fastapi import Request
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
 
-UNIVERSITY_STATS_CACHE = None
-
-def get_university_data(request: Request):
-    global UNIVERSITY_STATS_CACHE
+def get_university_data(request: Request, UNIVERSITY_STATS_CACHE):
     sort_by = request.query_params.get("sort_by", "total_researchers")
     if UNIVERSITY_STATS_CACHE is None:
         db = SessionLocal()
@@ -130,4 +127,4 @@ def get_university_data(request: Request):
             u["variable_value"] = u["num_researchers"]
         university_list.sort(key=lambda x: x["num_researchers"], reverse=True)
 
-    return university_list, variable_label
+    return university_list, variable_label, UNIVERSITY_STATS_CACHE
