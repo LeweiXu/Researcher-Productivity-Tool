@@ -16,7 +16,8 @@ from app.helpers.admin_funcs import (
     save_uploaded_file,
     replace_ABDC_rankings,
     import_clarivate,
-    update_UWA_staff_fields
+    update_UWA_staff_fields,
+    reupload_master_spreadsheet
 )
 from app.helpers.auth_funcs import authenticate_user
 
@@ -200,6 +201,28 @@ def uwa_staff_field_template_route():
 # Admin Upload Functionalities
 # ------------------------
 
+@router.post("/admin/upload/master_csv")
+async def upload_master_csv(
+    request: Request,
+    master_csv: UploadFile = File(None)
+):
+    if not master_csv:
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
+        )
+    file_path = save_uploaded_file(master_csv, "master_spreadsheet_upload.csv")
+    # Flash message
+    request.session["flash"] = (
+        f"File '{master_csv.filename}' uploaded successfully.<br>"
+        "The website will be temporarily unavailable while the CSV file is being processed."
+    )
+    reupload_master_spreadsheet(file_path)
+    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated data
+    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated data
+    return RedirectResponse(url="/admin", status_code=303)
+
 @router.post("/admin/upload/abdc")
 async def upload_abdc(
     request: Request,
@@ -241,8 +264,7 @@ async def upload_clarivate(
     file_path = save_uploaded_file(clarivate_csv, "clarivate_upload.csv")
     # Flash message
     request.session["flash"] = (
-        f"File '{clarivate_csv.filename}' uploaded successfully.<br>"
-        "The website will be temporarily unavailable while the CSV file is being processed."
+        f"File '{clarivate_csv.filename}' uploaded successfully"
     )
     import_clarivate(file_path)
     global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
@@ -264,8 +286,7 @@ async def upload_uwa_staff_field(
     file_path = save_uploaded_file(uwa_staff_field_csv, "UWA_staff_field_upload.csv")
     # Flash message
     request.session["flash"] = (
-        f"File '{uwa_staff_field_csv.filename}' uploaded successfully.<br>"
-        "The website will be temporarily unavailable while the CSV file is being processed."
+        f"File '{uwa_staff_field_csv.filename}' uploaded successfully."
     )
     update_UWA_staff_fields(file_path)
     global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE

@@ -52,6 +52,10 @@
     <a href="/admin/download/researchers.csv" class="list-group-item list-group-item-action">
       Download Master Spreadsheet
     </a>
+    <form class="d-flex align-items-center mt-2" action="/admin/upload/master_csv" method="post" enctype="multipart/form-data">
+      <input type="file" class="form-control me-2" name="master_csv" accept=".csv">
+      <button type="submit" class="btn btn-primary me-2">Upload Master CSV</button>
+    </form>
   </div>
   <div class="mb-4">
     <h4>Upload CSV</h4>
