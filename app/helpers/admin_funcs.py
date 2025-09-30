@@ -75,8 +75,9 @@ def download_master_csv(request):
             Journals.FoR.label('abdc_FoR'),
             Journals.year_of_inception
         )
-        .join(Researchers, Publications.researcher_id == Researchers.id)
-        .join(Journals, Publications.journal_id == Journals.id)
+        .select_from(Publications)
+        .outerjoin(Researchers, Publications.researcher_id == Researchers.id)
+        .outerjoin(Journals, Publications.journal_id == Journals.id)
     )
 
     # Clean header with all columns
