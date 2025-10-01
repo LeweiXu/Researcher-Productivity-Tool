@@ -25,20 +25,34 @@
             <option value="avg_jif" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_jif" %}selected{% endif %}>Average JIF of all articles</option>
             <option value="avg_jif_5" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_jif_5" %}selected{% endif %}>Average 5-year JIF of all articles</option>
             <option value="avg_articles" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_articles" %}selected{% endif %}>Average number of articles per researcher</option>
-            <option value="avg_articles_accounting" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_articles_accounting" %}selected{% endif %}>Average number of articles per accounting researcher</option>
-            <option value="avg_articles_finance" {% if request.query_params.get('sort_by', 'total_researchers') == "avg_articles_finance" %}selected{% endif %}>Average number of articles per finance researcher</option>
         </select>
         <button type="submit" style="padding:7px 18px; background:#1976d2; color:#fff; border:none; border-radius:4px; font-size:1em; cursor:pointer;">Update</button>
     </form>
 </div>
 
-<table id="universities-table" style="margin: 30px auto; border-collapse: collapse; width: 95%; max-width: 1000px; background: #fff; box-shadow: 0 2px 8px #ccc;">
+<table id="universities-table" style="margin: 30px auto; border-collapse: collapse; width: 95%; max-width: 1200px; background: #fff; box-shadow: 0 2px 8px #ccc;">
     <thead>
         <tr style="background: #1976d2; color: #fff; text-align: center;">
             <th style="padding: 12px 8px;" data-type="number">Rank <span class="arrow"></span></th>
             <th style="padding: 12px 8px;" data-type="text">University <span class="arrow"></span></th>
             <th style="padding: 12px 8px;" data-type="number">Total Researchers (Accounting) <span class="arrow"></span></th>
             <th style="padding: 12px 8px;" data-type="number">Total Researchers (Finance) <span class="arrow"></span></th>
+            {% if sort_by == "total_articles" %}
+                <th style="padding: 12px 8px;" data-type="number">No. of Articles (Accounting) <span class="arrow"></span></th>
+                <th style="padding: 12px 8px;" data-type="number">No. of Articles (Finance) <span class="arrow"></span></th>
+            {% elif sort_by == "abdc_a_star_a" %}
+                <th style="padding: 12px 8px;" data-type="number">No. of A*/A Articles (Accounting) <span class="arrow"></span></th>
+                <th style="padding: 12px 8px;" data-type="number">No. of A*/A Articles (Finance) <span class="arrow"></span></th>
+            {% elif sort_by == "avg_jif" %}
+                <th style="padding: 12px 8px;" data-type="number">Avg. JIF (Accounting) <span class="arrow"></span></th>
+                <th style="padding: 12px 8px;" data-type="number">Avg. JIF (Finance) <span class="arrow"></span></th>
+            {% elif sort_by == "avg_jif_5" %}
+                <th style="padding: 12px 8px;" data-type="number">Avg. 5-Year JIF (Accounting) <span class="arrow"></span></th>
+                <th style="padding: 12px 8px;" data-type="number">Avg. 5-Year JIF (Finance) <span class="arrow"></span></th>
+            {% elif sort_by == "avg_articles" %}
+                <th style="padding: 12px 8px;" data-type="number">Avg. Articles/Accounting Researcher <span class="arrow"></span></th>
+                <th style="padding: 12px 8px;" data-type="number">Avg. Articles/Finance Researcher <span class="arrow"></span></th>
+            {% endif %}   
             <th style="padding: 12px 8px;" data-type="number">{{ variable_label }} <span class="arrow"></span></th>
         </tr>
     </thead>
@@ -49,6 +63,22 @@
             <td style="padding: 10px 6px;">{{ uni_map.get(university.name, university.name) }}</td>
             <td style="padding: 10px 6px;">{{ university.accounting_count }}</td>
             <td style="padding: 10px 6px;">{{ university.finance_count }}</td>
+            {% if sort_by == "total_articles" %}
+                <td style="padding: 10px 6px;">{{ university.accounting_articles }}</td>
+                <td style="padding: 10px 6px;">{{ university.finance_articles }}</td>
+            {% elif sort_by == "abdc_a_star_a" %}
+                <td style="padding: 10px 6px;">{{ university.accounting_a_star_a_articles }}</td>
+                <td style="padding: 10px 6px;">{{ university.finance_a_star_a_articles }}</td>
+            {% elif sort_by == "avg_jif" %}
+                <td style="padding: 10px 6px;">{{ university.avg_jif_accounting }}</td>
+                <td style="padding: 10px 6px;">{{ university.avg_jif_finance }}</td>
+            {% elif sort_by == "avg_jif_5" %}
+                <td style="padding: 10px 6px;">{{ university.avg_jif5_accounting }}</td>
+                <td style="padding: 10px 6px;">{{ university.avg_jif5_finance }}</td>
+            {% elif sort_by == "avg_articles" %}
+                <td style="padding: 10px 6px;">{{ university.avg_articles_accounting }}</td>
+                <td style="padding: 10px 6px;">{{ university.avg_articles_finance }}</td>
+            {% endif %}
             <td style="padding: 10px 6px;">{{ university.variable_value }}</td>
         </tr>
         {% endfor %}

@@ -47,6 +47,12 @@ def get_university_data(request: Request, UNIVERSITY_STATS_CACHE):
                 if journal:
                     if journal.abdc_rank in ["A*", "A"]:
                         universities[uni]["abdc_a_star_a"] += 1
+                        if researcher.field == "Accounting":
+                            universities[uni].setdefault("accounting_a_star_a_articles", 0)
+                            universities[uni]["accounting_a_star_a_articles"] += 1
+                        elif researcher.field == "Finance":
+                            universities[uni].setdefault("finance_a_star_a_articles", 0)
+                            universities[uni]["finance_a_star_a_articles"] += 1
                     if journal.JIF is not None:
                         universities[uni]["jif_list"].append(journal.JIF)
                     if journal.JIF_5_year is not None:
@@ -54,11 +60,37 @@ def get_university_data(request: Request, UNIVERSITY_STATS_CACHE):
             # Finalize stats
             university_list = []
             for uni, stats in universities.items():
+                accounting_jif_list = []
+                finance_jif_list = []
+                accounting_jif5_list = []
+                finance_jif5_list = []
+                for pub in publications:
+                    researcher = next((r for r in researchers if r.id == pub.researcher_id), None)
+                    if not researcher or researcher.university != uni:
+                        continue
+                    journal = journals.get(pub.journal_id)
+                    if journal:
+                        if journal.JIF is not None:
+                            if researcher.field == "Accounting":
+                                accounting_jif_list.append(journal.JIF)
+                            elif researcher.field == "Finance":
+                                finance_jif_list.append(journal.JIF)
+                        if journal.JIF_5_year is not None:
+                            if researcher.field == "Accounting":
+                                accounting_jif5_list.append(journal.JIF_5_year)
+                            elif researcher.field == "Finance":
+                                finance_jif5_list.append(journal.JIF_5_year)
                 avg_jif = round(sum(stats["jif_list"])/len(stats["jif_list"]), 2) if stats["jif_list"] else 0
+                avg_jif_accounting = round(sum(accounting_jif_list)/len(accounting_jif_list), 2) if accounting_jif_list else 0
+                avg_jif_finance = round(sum(finance_jif_list)/len(finance_jif_list), 2) if finance_jif_list else 0
                 avg_jif5 = round(sum(stats["jif5_list"])/len(stats["jif5_list"]), 2) if stats["jif5_list"] else 0
+                avg_jif5_accounting = round(sum(accounting_jif5_list)/len(accounting_jif5_list), 2) if accounting_jif5_list else 0
+                avg_jif5_finance = round(sum(finance_jif5_list)/len(finance_jif5_list), 2) if finance_jif5_list else 0
                 overall_avg_articles = round(stats["total_articles"]/stats["num_researchers"], 2) if stats["num_researchers"] else 0
                 accounting_avg_articles = round(stats["accounting_articles"]/stats["accounting_count"], 2) if stats["accounting_count"] else 0
                 finance_avg_articles = round(stats["finance_articles"]/stats["finance_count"], 2) if stats["finance_count"] else 0
+                accounting_a_star_a = stats.get("accounting_a_star_a_articles", 0)
+                finance_a_star_a = stats.get("finance_a_star_a_articles", 0)
                 university_list.append({
                     "name": stats["name"],
                     "num_researchers": stats["num_researchers"],
@@ -68,8 +100,14 @@ def get_university_data(request: Request, UNIVERSITY_STATS_CACHE):
                     "accounting_articles": stats["accounting_articles"],
                     "finance_articles": stats["finance_articles"],
                     "abdc_a_star_a": stats["abdc_a_star_a"],
+                    "accounting_a_star_a_articles": accounting_a_star_a,
+                    "finance_a_star_a_articles": finance_a_star_a,
                     "avg_jif": avg_jif,
+                    "avg_jif_accounting": avg_jif_accounting,
+                    "avg_jif_finance": avg_jif_finance,
                     "avg_jif5": avg_jif5,
+                    "avg_jif5_accounting": avg_jif5_accounting,
+                    "avg_jif5_finance": avg_jif5_finance,
                     "avg_articles_overall": overall_avg_articles,
                     "avg_articles_accounting": accounting_avg_articles,
                     "avg_articles_finance": finance_avg_articles,

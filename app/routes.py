@@ -120,7 +120,7 @@ def researcher_profile(request: Request, researcher_id: int = Path(...)):
 def universities(request: Request):
     global UNIVERSITY_STATS_CACHE
     university_list, variable_label, UNIVERSITY_STATS_CACHE = get_university_data(request, UNIVERSITY_STATS_CACHE)
-
+    sort_by = request.query_params.get("sort_by", "total_researchers")
     ranked = competition_rank(
         sorted(university_list, key=lambda u: u.get("variable_value") or 0, reverse=True),
         value_fn=lambda u: u.get("variable_value") or 0
@@ -132,7 +132,8 @@ def universities(request: Request):
         {
             "request": request,
             "universities": universities_with_rank,
-            "variable_label": variable_label
+            "variable_label": variable_label,
+            "sort_by": sort_by
         }
     )
 
