@@ -315,13 +315,33 @@ def reupload_master_spreadsheet(file_path="app/files/uploads_current/master_spre
         session.close()
         
 def switch_db(db_name):
+    """
+    Switches the database URL and reloads SQLAlchemy engine/session.
+    If switching to a new db (not 'main'), copy main.db to the new db if it doesn't exist.
+    If switching back to 'main', delete the edit db if it exists.
+    Prints the current DB URL after switching.
+    """
+    from shutil import copyfile
     script_dir = Path(__file__).resolve().parent
-    config_path = script_dir.parents[1] / "config.json"
-    
-    with open(config_path, "r+") as config_file:
-        config = json.load(config_file)
-        config["DB_URL"] = f"sqlite:///app/{db_name}.db"
-        config_file.seek(0)
-        json.dump(config, config_file, indent=4)
-        config_file.truncate()
-        return(f"Switched to {db_name}.db")
+    project_dir = script_dir.parents[1]
+    main_db_path = project_dir / "app" / "main.db"
+    target_db_path = project_dir / "app" / f"{db_name}.db"
+
+    # If switching to edit db, copy main.db if edit db doesn't exist
+    if db_name != "main":
+        if not target_db_path.exists() and main_db_path.exists():
+            copyfile(main_db_path, target_db_path)
+    else:
+        # If switching back to main, delete edit db if it exists
+        edit_db_path = project_dir / "app" / "edit_master.db"
+        if edit_db_path.exists():
+            edit_db_path.unlink()
+
+    # Attempt to reload SQLAlchemy engine/session
+    try:
+        from app import database
+        database.reload_engine(db_name)
+        print(f"Current DB URL: {database.DB_URL}")
+    except Exception as e:
+        print(f"Warning: Could not reload SQLAlchemy engine automatically. Please restart the server. Error: {e}")
+    return f"Switched to {db_name}.db"
