@@ -17,7 +17,8 @@ from app.helpers.admin_funcs import (
     replace_ABDC_rankings,
     import_clarivate,
     update_UWA_staff_fields,
-    reupload_master_spreadsheet
+    reupload_master_spreadsheet,
+    switch_db
 )
 from app.helpers.auth_funcs import authenticate_user
 
@@ -201,11 +202,44 @@ def uwa_staff_field_template_route():
 # Admin Upload Functionalities
 # ------------------------
 
+@router.post("/admin/edit-mode")
+async def enter_edit_mode(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/", status_code=303)
+    # Switch to edit DB (e.g., "edit_master")
+    switch_db("edit_master")
+    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated data
+    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated data
+    request.session["edit_mode"] = True
+    request.session["flash"] = "Edit mode enabled. You may now upload and modify data. Changes will persist until you exit edit mode."
+    return RedirectResponse(url="/admin", status_code=303)
+
+@router.post("/admin/exit-edit-mode")
+async def exit_edit_mode(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/", status_code=303)
+    # Switch back to main DB (e.g., "main")
+    switch_db("main")
+    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated data
+    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated data
+    request.session["edit_mode"] = False
+    request.session["flash"] = "Edit mode exited. Changes are now saved to the main database."
+    return RedirectResponse(url="/admin", status_code=303)
+
 @router.post("/admin/upload/master_csv")
 async def upload_master_csv(
     request: Request,
     master_csv: UploadFile = File(None)
 ):
+    if not request.session.get("edit_mode"):
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "You must enable edit mode to upload."}
+        )
     if not master_csv:
         return templates.TemplateResponse(
             "admin.html",
@@ -228,6 +262,11 @@ async def upload_abdc(
     request: Request,
     abdc_csv: UploadFile = File(None)
 ):
+    if not request.session.get("edit_mode"):
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "You must enable edit mode to upload."}
+        )
     if not abdc_csv:
         return templates.TemplateResponse(
             "admin.html",
@@ -255,6 +294,11 @@ async def upload_clarivate(
     request: Request,
     clarivate_csv: UploadFile = File(None)
 ):
+    if not request.session.get("edit_mode"):
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "You must enable edit mode to upload."}
+        )
     if not clarivate_csv:
         return templates.TemplateResponse(
             "admin.html",
@@ -277,6 +321,11 @@ async def upload_uwa_staff_field(
     request: Request,
     uwa_staff_field_csv: UploadFile = File(None)
 ):
+    if not request.session.get("edit_mode"):
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "user": request.session.get("user"), "error": "You must enable edit mode to upload."}
+        )
     if not uwa_staff_field_csv:
         return templates.TemplateResponse(
             "admin.html",
