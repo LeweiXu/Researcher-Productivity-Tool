@@ -3,12 +3,14 @@ from starlette.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Researchers, Publications, Journals
+from pathlib import Path
 
 import pandas as pd
 import csv
 import io
 import datetime
 import os
+import json
 
 def download_master_csv(request):
     """
@@ -311,3 +313,15 @@ def reupload_master_spreadsheet(file_path="app/files/uploads_current/master_spre
         session.commit()
     finally:
         session.close()
+        
+def switch_db(db_name):
+    script_dir = Path(__file__).resolve().parent
+    config_path = script_dir.parents[1] / "config.json"
+    
+    with open(config_path, "r+") as config_file:
+        config = json.load(config_file)
+        config["DB_URL"] = f"sqlite:///app/{db_name}.db"
+        config_file.seek(0)
+        json.dump(config, config_file, indent=4)
+        config_file.truncate()
+        return(f"Switched to {db_name}.db")
