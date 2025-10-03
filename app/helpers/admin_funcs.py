@@ -220,6 +220,100 @@ def save_uploaded_file(upload_file, filename, save_dir="app/files/uploads_curren
     print(f"File size: {os.path.getsize(file_path)} bytes")
     return file_path
 
+def reupload_master_spreadsheet(file_path="app/files/uploads_current/master_spreadsheet_upload.csv"):
+    """
+    Replaces all data in Journals, Researchers, and Publications tables
+    with the data from the uploaded master spreadsheet CSV.
+    """
+    from app.models import Journals, Researchers, Publications
+    from app.database import SessionLocal
+
+    # Define columns as in download_master_csv
+    publication_cols = [
+        'publication_id', 'title', 'year', 'publication_type', 'publication_url', 
+        'num_authors', 'journal_name'
+    ]
+    researcher_cols = [
+        'researcher_id', 'researcher_name', 'university', 'profile_url', 
+        'job_title', 'level', 'field'
+    ]
+    journal_cols = [
+        'journal_id', 'journal_name_clean', 'abdc_rank', 'JIF', 'JIF_5_year', 
+        'citation_percentage', 'ISSN', 'eISSN', 'publisher', 'abdc_FoR', 'year_of_inception'
+    ]
+    header = publication_cols + researcher_cols + journal_cols
+
+    df = pd.read_csv(file_path, dtype=str).fillna("")
+
+    session = SessionLocal()
+    try:
+        # Remove all existing data
+        session.query(Publications).delete()
+        session.query(Researchers).delete()
+        session.query(Journals).delete()
+        session.commit()
+
+        # Insert Journals
+        journals_map = {}
+        for _, row in df.iterrows():
+            journal_id = row['journal_id']
+            if journal_id and journal_id not in journals_map:
+                journal = Journals(
+                    id=int(journal_id),
+                    name=row['journal_name_clean'],
+                    abdc_rank=row['abdc_rank'] or None,
+                    JIF=float(row['JIF']) if row['JIF'] else None,
+                    JIF_5_year=float(row['JIF_5_year']) if row['JIF_5_year'] else None,
+                    citation_percentage=float(row['citation_percentage']) if row['citation_percentage'] else None,
+                    ISSN=row['ISSN'] or None,
+                    eISSN=row['eISSN'] or None,
+                    publisher=row['publisher'] or None,
+                    FoR=int(row['abdc_FoR']) if row['abdc_FoR'] else None,
+                    year_of_inception=int(row['year_of_inception']) if row['year_of_inception'] else None
+                )
+                session.add(journal)
+                journals_map[journal_id] = journal
+        session.commit()
+
+        # Insert Researchers
+        researchers_map = {}
+        for _, row in df.iterrows():
+            researcher_id = row['researcher_id']
+            if researcher_id and researcher_id not in researchers_map:
+                researcher = Researchers(
+                    id=int(researcher_id),
+                    name=row['researcher_name'],
+                    university=row['university'],
+                    profile_url=row['profile_url'] or None,
+                    job_title=row['job_title'] or None,
+                    level=row['level'] or None,
+                    field=row['field'] or None
+                )
+                session.add(researcher)
+                researchers_map[researcher_id] = researcher
+        session.commit()
+
+        # Insert Publications
+        for _, row in df.iterrows():
+            publication_id = row['publication_id']
+            if not publication_id:
+                continue
+            pub = Publications(
+                id=int(publication_id),
+                title=row['title'],
+                year=int(row['year']) if row['year'] else None,
+                publication_type=row['publication_type'] or None,
+                publication_url=row['publication_url'] or None,
+                journal_name=row['journal_name'] or None,
+                num_authors=int(row['num_authors']) if row['num_authors'] else None,
+                researcher_id=int(row['researcher_id']) if row['researcher_id'] else None,
+                journal_id=int(row['journal_id']) if row['journal_id'] else None
+            )
+            session.add(pub)
+        session.commit()
+    finally:
+        session.close()
+        
 def switch_db(db_name):
     script_dir = Path(__file__).resolve().parent
     config_path = script_dir.parents[1] / "config.json"
