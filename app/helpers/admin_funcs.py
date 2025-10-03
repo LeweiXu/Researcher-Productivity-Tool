@@ -341,7 +341,6 @@ def switch_db(db_name):
     try:
         from app import database
         database.reload_engine(db_name)
-        print(f"Current DB URL: {database.DB_URL}")
     except Exception as e:
         print(f"Warning: Could not reload SQLAlchemy engine automatically. Please restart the server. Error: {e}")
     return f"Switched to {db_name}.db"
