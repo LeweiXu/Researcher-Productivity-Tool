@@ -48,12 +48,6 @@
 {% block content %}
 <div class="admin-card">
   <h1 class="mb-4">Admin Dashboard</h1>
-  <form action="/admin/edit-mode" method="post" style="display: {% if not request.session.get('edit_mode') %}block{% else %}none{% endif %}; margin-bottom: 16px;">
-    <button type="submit" class="btn btn-info">Enter Edit Mode</button>
-  </form>
-  <form action="/admin/exit-edit-mode" method="post" style="display: {% if request.session.get('edit_mode') %}block{% else %}none{% endif %}; margin-bottom: 16px;">
-    <button type="submit" class="btn btn-secondary">Exit Edit Mode</button>
-  </form>
   <div class="list-group mb-4">
     <a href="/admin/download/researchers.csv" class="list-group-item list-group-item-action">
       Download Master Spreadsheet
@@ -61,6 +55,12 @@
   </div>
   <div class="mb-4">
     <h4>Upload CSV</h4>
+  <form action="/admin/edit-mode" method="post" style="display: {% if not request.session.get('edit_mode') %}block{% else %}none{% endif %}; margin-bottom: 16px;">
+    <button type="submit" class="btn btn-info">Enter Edit Mode</button>
+  </form>
+  <form action="/admin/exit-edit-mode" method="post" style="display: {% if request.session.get('edit_mode') %}block{% else %}none{% endif %}; margin-bottom: 16px;">
+    <button type="submit" class="btn btn-secondary">Exit Edit Mode</button>
+  </form>
     <div style="display: {% if request.session.get('edit_mode') %}block{% else %}none{% endif %};">
       <div class="mb-3">
         <h6>Master Spreadsheet</h6>
