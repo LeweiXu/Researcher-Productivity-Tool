@@ -19,7 +19,7 @@ def scrape_UWA():
     profiles_url = "https://www.uwa.edu.au/schools/business/accounting-and-finance"
     base = "https://research-repository.uwa.edu.au"
 
-    profile_urls = find_profile_urls(profiles_url, base, driver)
+    profile_urls = ["https://research-repository.uwa.edu.au/en/persons/raymond-da-silva-rosa"]
     print(f"Found {len(profile_urls)} profile URLs")
 
     csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
@@ -33,7 +33,7 @@ def scrape_UWA():
         
         # Lookup field in csv
         print('Getting fields from "UWA Accounting Finance Staff_YW.csv"')
-        field = field_lookup.get(name, None)
+        field = "Finance"
         print(f"Researcher: {name}, Field: {field}")
 
         print(f"Found {len(publications_info)} publications in {profile_url}")
