@@ -1,13 +1,43 @@
 from selenium.webdriver.common.by import By
 import time
 
+def get_page_wait_captcha(page_url, driver, wait_interval=5):
+    """Load a page and block until any captcha challenge is cleared manually."""
+    driver.get(page_url)
+    time.sleep(2)
+
+    def has_captcha():
+        page_source = driver.page_source.lower()
+        indicators = (
+            "captcha",
+            "verify you are human",
+            "cloudflare",
+            "security check",
+        )
+        return any(indicator in page_source for indicator in indicators)
+
+    notified = False
+    while True:
+        if has_captcha():
+            if not notified:
+                print(f"Captcha detected at {driver.current_url}. Waiting for manual resolution...")
+                notified = True
+            time.sleep(wait_interval)
+            continue
+        if driver.current_url != page_url:
+            driver.get(page_url)
+            time.sleep(2)
+            notified = False
+            continue
+        return
+
 def find_profile_urls(page_url, base, driver):
     """Finds all researcher profile URLs on all paginated pages using Selenium by matching href prefix."""
     profile_urls = set()
     page = 0
     while True:
         paged_url = f"{page_url}?page={page}"
-        driver.get(paged_url)
+        get_page_wait_captcha(paged_url, driver)
         time.sleep(8)
         a_tags = driver.find_elements(By.TAG_NAME, "a")
         found_on_page = 0
@@ -28,7 +58,7 @@ def scrape_publications(profile_url, driver):
     Finds publication info for a given researcher
     Returns: (name, job_title, publications_info) where publications_info is a list of [Title, Date, Type, Journal, Article URL]
     """
-    driver.get(profile_url)
+    get_page_wait_captcha(profile_url, driver)
     time.sleep(2)
     # Try to get name robustly
     try:
@@ -62,7 +92,7 @@ def scrape_publications(profile_url, driver):
     while True:
         if page == 0: page_url = f"{profile_url}/publications/"
         else: page_url = f"{profile_url}/publications/?page={page}"
-        driver.get(page_url)
+        get_page_wait_captcha(page_url, driver)
         time.sleep(10)
         publication_divs = driver.find_elements(By.CSS_SELECTOR, "div.rendering_researchoutput_portal-short")
         if not publication_divs:
@@ -103,3 +133,21 @@ def scrape_publications(profile_url, driver):
             print(f"Found publication: {pub_title}")
         page += 1
     return name, job_title, publications_info
+
+if __name__ == "__main__":
+    import undetected_chromedriver as uc
+    import csv
+    options = uc.ChromeOptions()
+    driver = uc.Chrome()
+    name, job_title, publications_info = scrape_publications("https://research-repository.uwa.edu.au/en/persons/raymond-da-silva-rosa", driver)
+    field = "Finance"
+    print(f"Researcher: {name}, Field: {field}")
+
+    csv_header = ["Title", "Year", "Type", "Journal Name", "Article URL", "Researcher Name", "Profile URL", "Job Title", "Field"]
+    with open("app/files/temp/raymond.csv", mode="w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header)
+    for line in publications_info:
+        with open("app/files/temp/raymond.csv", mode="a", newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(line + [name, "https://research-repository.uwa.edu.au/en/persons/raymond-da-silva-rosa", job_title, field])  # Append fields
