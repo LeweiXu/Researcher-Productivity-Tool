@@ -1,5 +1,4 @@
-{% extends "base.html" %} 
-{% block head %}
+{% extends "base.html" %} {% block head %}
 <style>
   .admin-card {
     background: #fff;
@@ -43,22 +42,32 @@
     max-height: 300px;
     overflow-y: auto;
   }
-  .db-table th, .db-table td { vertical-align: middle; }
+  .db-table th,
+  .db-table td {
+    vertical-align: middle;
+  }
+  .status-text.text-success {
+    color: #198754 !important;
+  }
+  .status-text.text-danger {
+    color: #dc3545 !important;
+  }
 </style>
-{% endblock %} 
-{% block content %}
+{% endblock %} {% block content %}
 <div class="admin-card">
   <h1 class="mb-4">Admin Dashboard</h1>
+
   {% if flash %}
-    <div class="alert alert-info mt-3" role="alert">
-      {{ flash|safe }}
-    </div>
+  <div class="alert alert-info mt-3" role="alert">{{ flash|safe }}</div>
   {% endif %}
+
   <div class="mb-4">
     <h4>Database Management</h4>
     <form action="/admin/download-db" method="post" class="mb-3">
-      <input type="hidden" name="db_name" value="{{ current_db }}">
-      <button type="submit" class="btn btn-outline-primary btn-sm">Download Current DB</button>
+      <input type="hidden" name="db_name" value="{{ current_db }}" />
+      <button type="submit" class="btn btn-outline-primary btn-sm">
+        Download Current DB
+      </button>
     </form>
 
     <table class="table db-table mb-3">
@@ -76,33 +85,69 @@
           <td>{{ loop.index }}</td>
           <td>
             {% if db == current_db %}
-              <strong>{{ db }}</strong> <span class="badge bg-primary">Current</span>
+            <strong>{{ db }}</strong>
+            <span class="badge bg-primary">Current</span>
             {% else %}
-              <form action="/admin/switch-db" method="post" class="m-0">
-                <input type="hidden" name="db_name" value="{{ db }}">
-                <button type="submit" class="btn btn-link p-0 align-baseline">{{ db }}</button>
-              </form>
+            <form action="/admin/switch-db" method="post" class="m-0">
+              <input type="hidden" name="db_name" value="{{ db }}" />
+              <button type="submit" class="btn btn-link p-0 align-baseline">
+                {{ db }}
+              </button>
+            </form>
             {% endif %}
           </td>
           <td>
-            <form action="/admin/delete-db" method="post" style="display:inline;">
-              <input type="hidden" name="db_name" value="{{ db }}">
-              <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete database {{ db }}?')">Delete</button>
+            <form
+              action="/admin/delete-db"
+              method="post"
+              style="display: inline"
+            >
+              <input type="hidden" name="db_name" value="{{ db }}" />
+              <button
+                type="submit"
+                class="btn btn-danger btn-sm"
+                onclick="return confirm('Delete database {{ db }}?')"
+              >
+                Delete
+              </button>
             </form>
           </td>
           <td>
-            <form action="/admin/rename-db" method="post" class="d-inline-flex align-items-center">
-              <input type="hidden" name="old_db_name" value="{{ db }}">
-              <input type="text" name="new_db_name" class="form-control form-control-sm me-1" placeholder="New name" style="width: 100px;" required>
-              <button type="submit" class="btn btn-secondary btn-sm">Rename</button>
+            <form
+              action="/admin/rename-db"
+              method="post"
+              class="d-inline-flex align-items-center"
+            >
+              <input type="hidden" name="old_db_name" value="{{ db }}" />
+              <input
+                type="text"
+                name="new_db_name"
+                class="form-control form-control-sm me-1"
+                placeholder="New name"
+                style="width: 100px"
+                required
+              />
+              <button type="submit" class="btn btn-secondary btn-sm">
+                Rename
+              </button>
             </form>
           </td>
         </tr>
         {% endfor %}
         <tr>
-          <form action="/admin/switch-db" method="post" class="d-flex align-items-center">
+          <form
+            action="/admin/switch-db"
+            method="post"
+            class="d-flex align-items-center"
+          >
             <td colspan="2">
-              <input type="text" name="db_name" class="form-control" placeholder="New database name" required>
+              <input
+                type="text"
+                name="db_name"
+                class="form-control"
+                placeholder="New database name"
+                required
+              />
             </td>
             <td colspan="2">
               <button type="submit" class="btn btn-success">Create</button>
@@ -112,58 +157,221 @@
       </tbody>
     </table>
   </div>
+
   <div class="mb-4" data-current-db="{{ current_db }}">
     <h4>Upload CSV</h4>
     <div>
-      <p>Note: the download button will download the data in the current selected database, this also doubles as required CSV template for uploads. You can have other columns in the CSV and they will be ignored.</p>
+      <p>
+        Note: the download button will download the data in the current selected
+        database, this also doubles as required CSV template for uploads. You
+        can have other columns in the CSV and they will be ignored.
+      </p>
+
       <div class="mb-3">
         <h6>Master Spreadsheet</h6>
-        <form class="d-flex align-items-center mt-2 upload-form" action="/admin/upload/master_csv" method="post" enctype="multipart/form-data">
-          <input type="file" class="form-control me-2" name="master_csv" accept=".csv">
+        <form
+          class="d-flex align-items-center upload-form"
+          action="/admin/upload/master_csv"
+          method="post"
+          enctype="multipart/form-data"
+        >
+          <input
+            type="file"
+            class="form-control me-2"
+            name="master_csv"
+            accept=".csv"
+            required
+          />
           <button type="submit" class="btn btn-primary me-2">Upload</button>
-          <a href="/admin/download/researchers.csv" class="btn btn-link">Download</a>
+          <a href="/admin/download/researchers.csv" class="btn btn-link"
+            >Download</a
+          >
         </form>
+        <div class="progress-container mt-2" style="display: none">
+          <div class="progress">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              0%
+            </div>
+          </div>
+          <small class="status-text text-muted mt-1"></small>
+        </div>
       </div>
+
       <div class="mb-3">
         <h6>ABDC Rankings</h6>
-        <form class="d-flex align-items-center upload-form" action="/admin/upload/abdc" method="post" enctype="multipart/form-data">
-          <input type="file" class="form-control me-2" name="abdc_csv" accept=".csv">
+        <form
+          class="d-flex align-items-center upload-form"
+          action="/admin/upload/abdc"
+          method="post"
+          enctype="multipart/form-data"
+        >
+          <input
+            type="file"
+            class="form-control me-2"
+            name="abdc_csv"
+            accept=".csv"
+            required
+          />
           <button type="submit" class="btn btn-primary me-2">Upload</button>
-          <a href="/admin/download/abdc_template.csv" class="btn btn-link">Download</a>
+          <a href="/admin/download/abdc_template.csv" class="btn btn-link"
+            >Download</a
+          >
         </form>
+        <div class="progress-container mt-2" style="display: none">
+          <div class="progress">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              0%
+            </div>
+          </div>
+          <small class="status-text text-muted mt-1"></small>
+        </div>
       </div>
+
       <div class="mb-3">
         <h6>Clarivate Rankings</h6>
-        <form class="d-flex align-items-center upload-form" action="/admin/upload/clarivate" method="post" enctype="multipart/form-data">
-          <input type="file" class="form-control me-2" name="clarivate_csv" accept=".csv">
+        <form
+          class="d-flex align-items-center upload-form"
+          action="/admin/upload/clarivate"
+          method="post"
+          enctype="multipart/form-data"
+        >
+          <input
+            type="file"
+            class="form-control me-2"
+            name="clarivate_csv"
+            accept=".csv"
+            required
+          />
           <button type="submit" class="btn btn-primary me-2">Upload</button>
-          <a href="/admin/download/clarivate_template.csv" class="btn btn-link">Download</a>
+          <a href="/admin/download/clarivate_template.csv" class="btn btn-link"
+            >Download</a
+          >
         </form>
+        <div class="progress-container mt-2" style="display: none">
+          <div class="progress">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              0%
+            </div>
+          </div>
+          <small class="status-text text-muted mt-1"></small>
+        </div>
       </div>
+
       <div class="mb-3">
         <h6>Researchers</h6>
-        <form class="d-flex align-items-center upload-form" action="/admin/upload/researchers" method="post" enctype="multipart/form-data">
-          <input type="file" class="form-control me-2" name="researchers_csv" accept=".csv">
+        <form
+          class="d-flex align-items-center upload-form"
+          action="/admin/upload/researchers"
+          method="post"
+          enctype="multipart/form-data"
+        >
+          <input
+            type="file"
+            class="form-control me-2"
+            name="researchers_csv"
+            accept=".csv"
+            required
+          />
           <button type="submit" class="btn btn-primary me-2">Upload</button>
-          <a href="/admin/download/researchers_template.csv" class="btn btn-link">Download</a>
+          <a
+            href="/admin/download/researchers_template.csv"
+            class="btn btn-link"
+            >Download</a
+          >
         </form>
+        <div class="progress-container mt-2" style="display: none">
+          <div class="progress">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              0%
+            </div>
+          </div>
+          <small class="status-text text-muted mt-1"></small>
+        </div>
       </div>
+
       <div class="mb-3">
         <h6>Publications</h6>
-        <form class="d-flex align-items-center upload-form" action="/admin/upload/publications" method="post" enctype="multipart/form-data">
-          <input type="file" class="form-control me-2" name="publications_csv" accept=".csv">
+        <form
+          class="d-flex align-items-center upload-form"
+          action="/admin/upload/publications"
+          method="post"
+          enctype="multipart/form-data"
+        >
+          <input
+            type="file"
+            class="form-control me-2"
+            name="publications_csv"
+            accept=".csv"
+            required
+          />
           <button type="submit" class="btn btn-primary me-2">Upload</button>
-          <a href="/admin/download/publications_template.csv" class="btn btn-link">Download</a>
+          <a
+            href="/admin/download/publications_template.csv"
+            class="btn btn-link"
+            >Download</a
+          >
         </form>
+        <div class="progress-container mt-2" style="display: none">
+          <div class="progress">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              0%
+            </div>
+          </div>
+          <small class="status-text text-muted mt-1"></small>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="mb-4">
     <h4>ISSN Batches</h4>
-    <p>Use this utility to print batches of 600 ISSNs separated by ; to paste into the clarivate filter to get JIF, 5 year JIF and % Citation.</p>
-    <button id="show-issn-batches" class="btn btn-secondary mt-2" type="button">Show ISSN Batches</button>
-    <div id="issn-batches-content">{% if issn_batches_content %}{{ issn_batches_content }}{% endif %}</div>
+    <p>
+      Use this utility to print batches of 600 ISSNs separated by ; to paste
+      into the clarivate filter to get JIF, 5 year JIF and % Citation.
+    </p>
+    <button id="show-issn-batches" class="btn btn-secondary mt-2" type="button">
+      Show ISSN Batches
+    </button>
+    <div id="issn-batches-content">
+      {% if issn_batches_content %}{{ issn_batches_content }}{% endif %}
+    </div>
   </div>
-  <!-- This is the section for running the scraper -->
+
   <div class="mt-4">
     <h4>Run Scraper (Depreciated)</h4>
     <button id="run-scraper" class="btn btn-warning">Run Scraper</button>
@@ -183,143 +391,281 @@
     <small id="scraper-message" class="form-text text-muted mt-1"></small>
     <pre id="scraper-logs"></pre>
   </div>
+
   <div class="mt-4">
     <form action="/logout" method="post">
       <button type="submit" class="btn btn-danger">Logout</button>
     </form>
   </div>
 </div>
+
 <script>
-  document.getElementById('run-scraper').addEventListener('click', function () {
-    var button = this;
-    var progressBar = document.getElementById('scraper-progress');
-    var progressContainer = document.querySelector('.progress');
-    var messageElement = document.getElementById('scraper-message');
-    var logsElement = document.getElementById('scraper-logs');
+  document.addEventListener('DOMContentLoaded', function () {
+    // --- Polling function to get real-time progress ---
+    function pollStatus(taskId, form) {
+      const progressContainer = form.nextElementSibling;
+      const progressBar = progressContainer.querySelector('.progress-bar');
+      const statusText = progressContainer.querySelector('.status-text');
+      const submitButton = form.querySelector('button[type="submit"]');
 
-    // --- Reset UI state on click ---
-    button.disabled = true;
-    button.textContent = 'Scraping...';
-    messageElement.textContent = '';
+      const interval = setInterval(() => {
+        fetch(`/admin/upload/status/${taskId}`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            const progress = Math.round(data.progress);
+            progressBar.style.width = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+            progressBar.textContent = progress + '%';
+            statusText.textContent = data.message;
 
-    progressBar.classList.remove('bg-success', 'bg-danger');
-    progressBar.classList.add('bg-primary');
+            if (data.status === 'complete' || data.status === 'error') {
+              clearInterval(interval);
+              submitButton.disabled = false;
+              submitButton.textContent = 'Upload';
+              progressBar.classList.remove(
+                'progress-bar-striped',
+                'progress-bar-animated'
+              );
 
-    progressBar.style.width = '0%';
-    progressBar.textContent = '0%';
-    progressContainer.style.display = 'block';
-
-    logsElement.style.display = 'block';
-    logsElement.textContent = 'Initializing scraper, waiting for logs...';
-
-    // --- Start the scraper task ---
-    fetch('/admin/run-scraper', { method: 'POST' })
-      .then((response) => {
-        if (!response.ok) {
-          response.json().then((data) => {
-            messageElement.textContent =
-              data.message || 'Failed to start scraper.';
-          });
-          throw new Error('Failed to start scraper');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        messageElement.textContent = data.message;
-        // --- Poll for progress and logs ---
-        var interval = setInterval(function () {
-          fetch('/admin/scraper-status')
-            .then((response) => response.json())
-            .then((data) => {
-              var progress = data.progress;
-
-              // Update the logs display
-              if (data.logs && data.logs.length > 0) {
-                logsElement.textContent = data.logs.join('\n');
-                // Auto-scroll to the bottom to show the latest logs
-                logsElement.scrollTop = logsElement.scrollHeight;
-              }
-
-              // Update progress bar and overall status
-              if (progress < 0) {
-                // Error state
-                clearInterval(interval);
-                progressBar.style.width = '100%';
-                progressBar.textContent = 'Error!';
-                progressBar.classList.remove('bg-primary', 'bg-success');
-                progressBar.classList.add('bg-danger');
-                button.disabled = false;
-                button.textContent = 'Run Scraper Again';
-                messageElement.textContent = data.message || 'Scraping failed.';
-              } else if (progress >= 100) {
-                // Completion state
-                clearInterval(interval);
-                progressBar.style.width = '100%';
-                progressBar.textContent = 'Completed!';
+              if (data.status === 'complete') {
+                progressBar.textContent = 'Complete!';
                 progressBar.classList.remove('bg-primary');
                 progressBar.classList.add('bg-success');
-                button.disabled = false;
-                button.textContent = 'Run Scraper';
-                messageElement.textContent = data.message;
+                statusText.className = 'status-text text-success mt-1';
               } else {
-                // In-progress state
-                progressBar.style.width = progress + '%';
-                progressBar.textContent = progress + '%';
+                progressBar.textContent = 'Error!';
+                progressBar.classList.remove('bg-primary');
+                progressBar.classList.add('bg-danger');
+                statusText.className = 'status-text text-danger mt-1';
               }
-            });
-        }, 2000); // Poll every 2 seconds
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-        button.disabled = false;
-        button.textContent = 'Run Scraper';
-        logsElement.textContent =
-          'Failed to start the scraper task. Check the browser console for errors.';
-      });
-  });
-
-  document.addEventListener("DOMContentLoaded", function() {
-    var btn = document.getElementById("show-issn-batches");
-    var content = document.getElementById("issn-batches-content");
-    if (btn && content) {
-        btn.addEventListener("click", function() {
-            if (content.style.display === "none" || content.style.display === "") {
-                // If content is empty, fetch from server
-                if (!content.textContent.trim()) {
-                    fetch("/admin/issn_batches")
-                        .then(resp => resp.text())
-                        .then(html => {
-                            // Parse the returned HTML and extract the issn_batches_content
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(html, "text/html");
-                            var newContent = doc.getElementById("issn-batches-content");
-                            if (newContent) {
-                                content.innerHTML = newContent.innerHTML;
-                            }
-                            content.style.display = "block";
-                        });
-                } else {
-                    content.style.display = "block";
-                }
-            } else {
-                content.style.display = "none";
             }
-        });
+          })
+          .catch((error) => {
+            console.error('Polling error:', error);
+            clearInterval(interval);
+            progressBar.textContent = 'Error!';
+            progressBar.classList.remove('bg-primary');
+            progressBar.classList.add('bg-danger');
+            statusText.textContent = 'Could not get status from server.';
+            statusText.className = 'status-text text-danger mt-1';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Upload';
+          });
+      }, 2000); // Poll every 2 seconds
     }
-  });
-  (function() {
-    var uploadSection = document.querySelector('[data-current-db]');
-    if (!uploadSection) return;
-    var currentDb = (uploadSection.dataset.currentDb || '').trim().toLowerCase();
-    if (currentDb !== 'main') return;
-    var forms = uploadSection.querySelectorAll('form.upload-form');
-    forms.forEach(function(form) {
-      form.addEventListener('submit', function(evt) {
-        if (!confirm('You are uploading to the "main" database. Are you sure you want to continue?')) {
-          evt.preventDefault();
+
+    // --- File Upload Logic (NEW) ---
+    document.querySelectorAll('.upload-form').forEach((form) => {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const fileInput = form.querySelector('input[type="file"]');
+        if (fileInput.files.length === 0) {
+          alert('Please select a file to upload.');
+          return;
         }
+
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        const progressContainer = form.nextElementSibling;
+        const progressBar = progressContainer.querySelector('.progress-bar');
+        const statusText = progressContainer.querySelector('.status-text');
+
+        // Reset UI
+        submitButton.disabled = true;
+        submitButton.textContent = 'Uploading...';
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressBar.setAttribute('aria-valuenow', '0');
+        progressBar.textContent = '0%';
+        progressBar.className = 'progress-bar bg-primary';
+        statusText.className = 'status-text text-muted mt-1';
+        statusText.textContent = 'Initializing upload...';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action);
+
+        // Track UPLOAD progress (file being sent to server)
+        xhr.upload.addEventListener('progress', function (event) {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round(
+              (event.loaded / event.total) * 100
+            );
+            progressBar.style.width = percentComplete + '%';
+            progressBar.setAttribute('aria-valuenow', percentComplete);
+            progressBar.textContent = percentComplete + '%';
+            if (percentComplete < 100) {
+              statusText.textContent = 'Uploading file...';
+            } else {
+              statusText.textContent =
+                'Upload complete. Starting server processing...';
+              progressBar.classList.add(
+                'progress-bar-striped',
+                'progress-bar-animated'
+              );
+            }
+          }
+        });
+
+        // Handle completion of the INITIAL request (which returns a task_id)
+        xhr.addEventListener('load', function () {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300 && response.task_id) {
+              // Start polling for the real-time processing status
+              statusText.textContent = 'Server is processing the file...';
+              pollStatus(response.task_id, form);
+            } else {
+              throw new Error(
+                response.detail ||
+                  response.error ||
+                  'Failed to start task on server.'
+              );
+            }
+          } catch (err) {
+            progressBar.style.width = '100%';
+            progressBar.textContent = 'Error!';
+            progressBar.classList.remove(
+              'bg-primary',
+              'progress-bar-striped',
+              'progress-bar-animated'
+            );
+            progressBar.classList.add('bg-danger');
+            statusText.textContent =
+              err.message || 'Received an invalid response from the server.';
+            statusText.className = 'status-text text-danger mt-1';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Upload';
+          }
+        });
+
+        // Handle network errors
+        xhr.addEventListener('error', function () {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Upload';
+          progressBar.style.width = '100%';
+          progressBar.textContent = 'Error!';
+          progressBar.classList.remove(
+            'bg-primary',
+            'progress-bar-striped',
+            'progress-bar-animated'
+          );
+          progressBar.classList.add('bg-danger');
+          statusText.textContent =
+            'A network error occurred during the upload.';
+          statusText.className = 'status-text text-danger mt-1';
+        });
+
+        xhr.send(formData);
       });
     });
-  })();
+
+    // --- Scraper Logic (Existing) ---
+    document
+      .getElementById('run-scraper')
+      .addEventListener('click', function () {
+        var button = this;
+        var progressBar = document.getElementById('scraper-progress');
+        var progressContainer = progressBar.parentElement;
+        var messageElement = document.getElementById('scraper-message');
+        var logsElement = document.getElementById('scraper-logs');
+
+        button.disabled = true;
+        button.textContent = 'Scraping...';
+        messageElement.textContent = '';
+        progressBar.className = 'progress-bar';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        progressContainer.style.display = 'block';
+        logsElement.style.display = 'block';
+        logsElement.textContent = 'Initializing scraper...';
+
+        fetch('/admin/run-scraper', { method: 'POST' })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Failed to start scraper');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            messageElement.textContent = data.message;
+            var interval = setInterval(function () {
+              fetch('/admin/scraper-status')
+                .then((response) => response.json())
+                .then((data) => {
+                  var progress = data.progress;
+                  if (data.logs && data.logs.length > 0) {
+                    logsElement.textContent = data.logs.join('\n');
+                    logsElement.scrollTop = logsElement.scrollHeight;
+                  }
+                  if (progress < 0 || data.status === 'error') {
+                    clearInterval(interval);
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = 'Error!';
+                    progressBar.classList.add('bg-danger');
+                    button.disabled = false;
+                    button.textContent = 'Run Scraper Again';
+                    messageElement.textContent =
+                      data.message || 'Scraping failed.';
+                  } else if (progress >= 100) {
+                    clearInterval(interval);
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = 'Completed!';
+                    progressBar.classList.add('bg-success');
+                    button.disabled = false;
+                    button.textContent = 'Run Scraper';
+                    messageElement.textContent = data.message;
+                  } else {
+                    progressBar.style.width = progress + '%';
+                    progressBar.textContent = progress + '%';
+                  }
+                });
+            }, 2000);
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+            button.disabled = false;
+            button.textContent = 'Run Scraper';
+            logsElement.textContent = 'Failed to start the scraper task.';
+            messageElement.textContent = 'Error starting task.';
+          });
+      });
+
+    // --- ISSN Batches Logic (Existing) ---
+    var btn = document.getElementById('show-issn-batches');
+    var content = document.getElementById('issn-batches-content');
+    if (btn && content) {
+      btn.addEventListener('click', function () {
+        if (content.style.display === 'none' || content.style.display === '') {
+          if (!content.textContent.trim()) {
+            content.textContent = 'Loading...';
+            fetch('/admin/issn_batches')
+              .then((resp) => resp.text())
+              .then((html) => {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContent = doc.getElementById('issn-batches-content');
+                content.innerHTML = newContent
+                  ? newContent.innerHTML
+                  : 'Could not load content.';
+                content.style.display = 'block';
+              })
+              .catch(() => {
+                content.textContent = 'Failed to load content.';
+              });
+          } else {
+            content.style.display = 'block';
+          }
+        } else {
+          content.style.display = 'none';
+        }
+      });
+    }
+  });
 </script>
 {% endblock %}
