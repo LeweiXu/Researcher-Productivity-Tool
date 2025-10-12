@@ -300,136 +300,106 @@ async def download_db_route(request: Request):
     return FileResponse(path=db_path, filename=f"{db_name}.db", media_type="application/octet-stream")
 
 # ------------------------
-# Admin Upload Functionalities
+# Admin Upload Functionalities (UPDATED)
 # ------------------------
 
 @router.post("/admin/upload/master_csv")
-async def upload_master_csv(
-    request: Request,
-    master_csv: UploadFile = File(None)
-):
-    if not master_csv:
-        return templates.TemplateResponse(
-            "admin.html",
-            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
-        )
+async def upload_master_csv(master_csv: UploadFile = File(...)):
     file_path = save_uploaded_file(master_csv, "master_spreadsheet_upload.csv")
-    # Flash message
-    request.session["flash"] = (
-        f"File '{master_csv.filename}' uploaded successfully."
-    )
     try:
         reupload_master_spreadsheet(file_path)
-    except:
-        request.session["flash"] += f" However, there was an error processing the file. Please ensure it is correctly formatted."
-    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
-    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated data
-    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated data
-    return RedirectResponse(url="/admin", status_code=303)
+        global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+        RESEARCHER_STATS_CACHE = None
+        UNIVERSITY_STATS_CACHE = None
+        return JSONResponse(
+            content={"message": f"'{master_csv.filename}' uploaded and processed successfully."}
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error processing file: {e}. Please check format and try again."}
+        )
 
 @router.post("/admin/upload/abdc")
-async def upload_abdc(
-    request: Request,
-    abdc_csv: UploadFile = File(None)
-):
-    if not abdc_csv:
-        return templates.TemplateResponse(
-            "admin.html",
-            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
-        )
+async def upload_abdc(abdc_csv: UploadFile = File(...)):
     file_path = save_uploaded_file(abdc_csv, "ABDC_upload.csv")
-    # Flash message
-    request.session["flash"] = (
-        f"File '{abdc_csv.filename}' uploaded successfully."
-    )
     try:
         replace_ABDC_rankings(file_path)
+        try:
+            # Re-import clarivate and re-match journals to ensure data integrity
+            import_clarivate("/app/files/uploads_current/clarivate_upload.csv")
+        except Exception:
+            pass # Non-critical if clarivate data isn't present
+        match_journals(force=True)
+        
+        global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+        RESEARCHER_STATS_CACHE = None
+        UNIVERSITY_STATS_CACHE = None
+        
+        return JSONResponse(
+            content={"message": f"'{abdc_csv.filename}' uploaded. ABDC rankings updated and journals re-matched."}
+        )
     except Exception as e:
-        request.session["flash"] += f" However, there was an error processing the file. Please ensure it is correctly formatted."
-    try:
-        import_clarivate("/app/files/uploads_current/clarivate_upload.csv")  # Re-import all JIF data to refresh journal matches
-    except Exception as e:
-        request.session["flash"] += f"No clarivate data found, please upload clarivate data as well."
-    match_journals(force=True)  # Re-match journals after ABDC update
-    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
-    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated journal data
-    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated journal data
-    return RedirectResponse(url="/admin", status_code=303)
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error processing ABDC file: {e}. Please check the format."}
+        )
 
 @router.post("/admin/upload/clarivate")
-async def upload_clarivate(
-    request: Request,
-    clarivate_csv: UploadFile = File(None)
-):
-    if not clarivate_csv:
-        return templates.TemplateResponse(
-            "admin.html",
-            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
-        )
-    # Save the uploaded file (you may want to implement a save_uploaded_file for clarivate as well)
+async def upload_clarivate(clarivate_csv: UploadFile = File(...)):
     file_path = save_uploaded_file(clarivate_csv, "clarivate_upload.csv")
-    # Flash message
-    request.session["flash"] = (
-        f"File '{clarivate_csv.filename}' uploaded successfully"
-    )
     try:
         import_clarivate(file_path)
+        global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+        RESEARCHER_STATS_CACHE = None
+        UNIVERSITY_STATS_CACHE = None
+        return JSONResponse(
+            content={"message": f"'{clarivate_csv.filename}' uploaded and processed successfully."}
+        )
     except Exception as e:
-        request.session["flash"] += f" However, there was an error processing the file. Please ensure it is correctly formatted."
-    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
-    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated journal data
-    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated journal data
-    return RedirectResponse(url="/admin", status_code=303)
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error processing Clarivate file: {e}. Please check the format."}
+        )
 
 @router.post("/admin/upload/researchers")
-async def upload_researchers(
-    request: Request,
-    researchers_csv: UploadFile = File(None)
-):
-    if not researchers_csv:
-        return templates.TemplateResponse(
-            "admin.html",
-            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
-        )
-    # Save the uploaded file
+async def upload_researchers(researchers_csv: UploadFile = File(...)):
     file_path = save_uploaded_file(researchers_csv, "researchers_upload.csv")
-    # Flash message
-    request.session["flash"] = (
-        f"File '{researchers_csv.filename}' uploaded successfully."
-    )
     try:
         update_researchers(file_path)
+        global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+        RESEARCHER_STATS_CACHE = None
+        UNIVERSITY_STATS_CACHE = None
+        return JSONResponse(
+            content={"message": f"'{researchers_csv.filename}' uploaded and processed successfully."}
+        )
     except Exception as e:
-        request.session["flash"] += f" However, there was an error processing the file. Please ensure it is correctly formatted."
-    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
-    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated journal data
-    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated journal data
-    return RedirectResponse(url="/admin", status_code=303)
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error processing researchers file: {e}. Please check the format."}
+        )
 
 @router.post("/admin/upload/publications")
-async def upload_publications(
-    request: Request,
-    publications_csv: UploadFile = File(None)
-):
-    if not publications_csv:
-        return templates.TemplateResponse(
-            "admin.html",
-            {"request": request, "user": request.session.get("user"), "error": "No file uploaded."}
-        )
-    # Save the uploaded file
+async def upload_publications(publications_csv: UploadFile = File(...)):
     file_path = save_uploaded_file(publications_csv, "publications_upload.csv")
-    # Flash message
-    request.session["flash"] = (
-        f"File '{publications_csv.filename}' uploaded successfully."
-    )
     try:
         update_publications(file_path)
+        global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
+        RESEARCHER_STATS_CACHE = None
+        UNIVERSITY_STATS_CACHE = None
+        return JSONResponse(
+            content={"message": f"'{publications_csv.filename}' uploaded and processed successfully."}
+        )
     except Exception as e:
-        request.session["flash"] += f" However, there was an error processing the file. Please ensure it is correctly formatted."
-    global RESEARCHER_STATS_CACHE, UNIVERSITY_STATS_CACHE
-    RESEARCHER_STATS_CACHE = None  # Clear researcher cache to reflect updated journal data
-    UNIVERSITY_STATS_CACHE = None  # Clear university cache to reflect updated journal data
-    return RedirectResponse(url="/admin", status_code=303)
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error processing publications file: {e}. Please check the format."}
+        )
 
 @router.get("/admin/issn_batches")
 async def issn_batches(request: Request):
